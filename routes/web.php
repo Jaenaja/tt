@@ -1,28 +1,47 @@
 <?php
 // routes/web.php
-
-use App\Http\Controllers\BetController;
-use App\Http\Controllers\LotteryResultController;
+use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\LotteryBetController;
+use App\Http\Controllers\LotteryDrawController;
+use App\Http\Controllers\AdminController;
 use Illuminate\Support\Facades\Route;
 
-// หน้าแรก
-Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
+// Auth Routes
+Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
+Route::post('/login', [AuthController::class, 'login'])->name('login.post');
+Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
-// เส้นทางการเดิมพัน
-Route::prefix('bets')->name('bets.')->group(function () {
-    Route::get('/', [BetController::class, 'index'])->name('index');
-    Route::post('/', [BetController::class, 'store'])->name('store');
-    Route::get('/statistics', [BetController::class, 'statistics'])->name('statistics');
-    Route::get('/sales', [BetController::class, 'sales'])->name('sales');
-    Route::get('/history', [BetController::class, 'history'])->name('history');
+// Protected Routes
+Route::middleware(['auth'])->group(function () {
+
+    // Dashboard
+    Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
+
+    // Lottery Bets (General + Admin)
+    Route::prefix('bets')->name('bets.')->group(function () {
+        Route::get('/', [LotteryBetController::class, 'index'])->name('index');
+        Route::post('/store', [LotteryBetController::class, 'store'])->name('store');
+        Route::get('/history', [LotteryBetController::class, 'history'])->name('history');
+        Route::delete('/{id}', [LotteryBetController::class, 'destroy'])->name('destroy');
+    });
+
+    // Admin Only Routes
+    Route::middleware(['admin'])->prefix('admin')->name('admin.')->group(function () {
+
+        // User Management
+        Route::get('/users', [AdminController::class, 'users'])->name('users');
+        Route::post('/users', [AdminController::class, 'createUser'])->name('users.create');
+        Route::put('/users/{id}', [AdminController::class, 'updateUser'])->name('users.update');
+        Route::delete('/users/{id}', [AdminController::class, 'deleteUser'])->name('users.delete');
+
+        // Config Management
+        Route::get('/config', [AdminController::class, 'config'])->name('config');
+        Route::post('/config', [AdminController::class, 'updateConfig'])->name('config.update');
+
+        // Lottery Draw Results
+        Route::get('/draws', [LotteryDrawController::class, 'index'])->name('draws');
+        Route::post('/draws', [LotteryDrawController::class, 'store'])->name('draws.store');
+        Route::get('/draws/{id}/results', [LotteryDrawController::class, 'results'])->name('draws.results');
+    });
 });
-
-// เส้นทางผลหวย
-Route::prefix('lottery')->name('lottery.')->group(function () {
-    Route::get('/', [LotteryResultController::class, 'index'])->name('index');
-    Route::post('/', [LotteryResultController::class, 'store'])->name('store');
-});
-
-// API routes สำหรับ real-time updates
-Route::get('/api/sales/realtime', [DashboardController::class, 'realtimeSales']);
