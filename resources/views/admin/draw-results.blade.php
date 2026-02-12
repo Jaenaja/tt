@@ -5,14 +5,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ผลรางวัล - งวด {{ $draw->draw_date->format('d/m/') . ($draw->draw_date->format('Y') - 2500) }}</title>
+    <title>ผลรางวัล - งวด {{ $draw->draw_date->format('d/m/') . ($draw->draw_date->format('Y') + 543 - 2500) }}</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 
 <body class="bg-gray-100">
     <div class="container mx-auto px-4 py-8">
-        <div class="mb-6">
+        <div class="flex justify-between items-center mb-6">
             <a href="{{ route('admin.draws') }}" class="text-blue-600 hover:text-blue-800">&larr; กลับ</a>
+            <a href="{{ route('admin.reports.summary', $draw->id) }}"
+                class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-6 rounded-lg">
+                📊 ดูสรุปและพิมพ์ PDF
+            </a>
         </div>
 
         <!-- ผลหวย -->
@@ -34,7 +38,7 @@
             </div>
             <p class="text-center mt-4 text-sm">
                 งวดวันที่:
-                <strong>{{ $draw->draw_date->format('d/m/') . ($draw->draw_date->format('Y') - 2500) }}</strong> |
+                <strong>{{ $draw->draw_date->format('d/m/') . ($draw->draw_date->format('Y') + 543 - 2500) }}</strong> |
                 ประกาศโดย: <strong>{{ $draw->announcedBy->name }}</strong> |
                 เมื่อ: {{ $draw->announced_at->format('d/m/Y H:i') }}
             </p>

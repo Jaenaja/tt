@@ -5,6 +5,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\LotteryBetController;
 use App\Http\Controllers\LotteryDrawController;
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\ReportController;
 use Illuminate\Support\Facades\Route;
 
 // Auth Routes
@@ -43,5 +44,10 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/draws', [LotteryDrawController::class, 'index'])->name('draws');
         Route::post('/draws', [LotteryDrawController::class, 'store'])->name('draws.store');
         Route::get('/draws/{id}/results', [LotteryDrawController::class, 'results'])->name('draws.results');
+
+        // Reports
+        Route::get('/reports/summary/{drawId}', [ReportController::class, 'summary'])->name('reports.summary');
+        Route::get('/reports/pdf/{drawId}', [ReportController::class, 'exportPDF'])->name('reports.pdf');
+        Route::get('/reports/statistics', [ReportController::class, 'statistics'])->name('reports.statistics');
     });
 });

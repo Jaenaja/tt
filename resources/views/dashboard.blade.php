@@ -38,29 +38,25 @@
             <div class="bg-white rounded-lg shadow-md p-4 text-center">
                 <p class="text-sm text-gray-600">ยอดแทงวันนี้</p>
                 <p class="text-3xl font-bold text-blue-600" id="totalSales">
-                    {{ number_format($todayStats['total_amount'], 2) }}
-                </p>
+                    {{ number_format($todayStats['total_amount'], 2) }}</p>
                 <p class="text-xs text-gray-500">บาท</p>
             </div>
             <div class="bg-white rounded-lg shadow-md p-4 text-center">
                 <p class="text-sm text-gray-600">บน</p>
                 <p class="text-3xl font-bold text-purple-600" id="totalTop">
-                    {{ number_format($todayStats['total_top'], 2) }}
-                </p>
+                    {{ number_format($todayStats['total_top'], 2) }}</p>
                 <p class="text-xs text-gray-500">บาท</p>
             </div>
             <div class="bg-white rounded-lg shadow-md p-4 text-center">
                 <p class="text-sm text-gray-600">ล่าง</p>
                 <p class="text-3xl font-bold text-green-600" id="totalBottom">
-                    {{ number_format($todayStats['total_bottom'], 2) }}
-                </p>
+                    {{ number_format($todayStats['total_bottom'], 2) }}</p>
                 <p class="text-xs text-gray-500">บาท</p>
             </div>
             <div class="bg-white rounded-lg shadow-md p-4 text-center">
                 <p class="text-sm text-gray-600">โต๊ด</p>
                 <p class="text-3xl font-bold text-orange-600" id="totalToad">
-                    {{ number_format($todayStats['total_toad'], 2) }}
-                </p>
+                    {{ number_format($todayStats['total_toad'], 2) }}</p>
                 <p class="text-xs text-gray-500">บาท</p>
             </div>
         </div>
@@ -73,7 +69,7 @@
                 @if($upcomingDraw)
                     <div class="bg-white bg-opacity-90 rounded-lg p-4">
                         <p class="text-3xl font-bold text-center">
-                            {{ $upcomingDraw->draw_date->format('d/m/') . ($upcomingDraw->draw_date->format('Y') - 2500) }}
+                            {{ $upcomingDraw->draw_date->format('d/m/') . ($upcomingDraw->draw_date->format('Y') + 543 - 2500) }}
                         </p>
                         <p class="text-sm text-center text-gray-600 mt-2">รอประกาศผล</p>
                     </div>
@@ -88,7 +84,7 @@
                 @if($latestDraw)
                     <div class="bg-white bg-opacity-90 rounded-lg p-4 text-gray-900">
                         <p class="text-sm text-center text-gray-600">
-                            {{ $latestDraw->draw_date->format('d/m/') . ($latestDraw->draw_date->format('Y') - 2500) }}
+                            {{ $latestDraw->draw_date->format('d/m/') . ($latestDraw->draw_date->format('Y') + 543 - 2500) }}
                         </p>
                         <div class="grid grid-cols-3 gap-2 mt-2 text-center">
                             <div>
@@ -129,6 +125,11 @@
                     class="bg-green-600 hover:bg-green-700 text-white rounded-lg shadow-md p-6 text-center transition">
                     <div class="text-4xl mb-2">🎯</div>
                     <p class="font-bold">กรอกผลหวย</p>
+                </a>
+                <a href="{{ route('admin.reports.statistics') }}"
+                    class="bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg shadow-md p-6 text-center transition">
+                    <div class="text-4xl mb-2">📊</div>
+                    <p class="font-bold">สถิติและกราฟ</p>
                 </a>
                 <a href="{{ route('admin.users') }}"
                     class="bg-orange-600 hover:bg-orange-700 text-white rounded-lg shadow-md p-6 text-center transition">
@@ -186,7 +187,7 @@
                                     {{ $bet->created_at->format('H:i') }}
                                 </td>
                                 <td class="px-3 py-2">
-                                    {{ $bet->draw_date->format('d/m/') . ($bet->draw_date->format('Y') - 2500) }}
+                                    {{ $bet->draw_date->format('d/m/') . ($bet->draw_date->format('Y') + 543 - 2500) }}
                                 </td>
                                 <td class="px-3 py-2 font-semibold">{{ $bet->customer_name }}</td>
                                 <td class="px-3 py-2 text-center">
