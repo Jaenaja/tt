@@ -187,7 +187,29 @@ class ReportController extends Controller
                 'total_payout' => LotteryBet::whereNull('deleted_at')->sum('payout_toad'),
             ],
         ];
+        $pastDraws = LotteryDraw::where('is_announced', true)
+            ->orderBy('draw_date', 'desc')
+            ->get()
+            ->map(function ($draw) {
+                $bets = LotteryBet::where('draw_date', $draw->draw_date)
+                    ->whereNull('deleted_at')
+                    ->get();
 
-        return view('admin.reports.statistics', compact('recentDraws', 'frequentNumbers', 'monthlyStats', 'betTypeStats'));
+                return [
+                    'id' => $draw->id,
+                    'draw_date' => $draw->draw_date,
+                    'result_2_top' => $draw->result_2_top,
+                    'result_2_bottom' => $draw->result_2_bottom,
+                    'total_bet' => $bets->sum('total_amount'),
+                    'total_payout' => $bets->sum('total_payout'),
+                    'profit' => $bets->sum('total_amount') - $bets->sum('total_payout'),
+                    'bet_count' => $bets->count(),
+                ];
+            });
+        // แก้ไข return statement ให้เป็น:
+        return view('admin.reports.statistics', compact('recentDraws', 'frequentNumbers', 'monthlyStats', 'betTypeStats', 'pastDraws'));
+
+
+
     }
 }
