@@ -76,7 +76,7 @@
                             <tr class="hover:bg-gray-50 transition-colors">
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <div class="text-sm font-medium text-gray-900">
-                                        {{ \Carbon\Carbon::parse($draw['draw_date'])->format('d/m/') . (\Carbon\Carbon::parse($draw['draw_date'])->format('Y') + 543 - 2500) }}
+                                        {{ thai_date($draw['draw_date']) }}
                                     </div>
                                     <div class="text-xs text-gray-500">
                                         {{ \Carbon\Carbon::parse($draw['draw_date'])->diffForHumans() }}
