@@ -190,6 +190,7 @@
             populateDrawDates();
         };
 
+        // --- แก้ไขฟังก์ชัน populateDrawDates ใน history.blade.php ---
         function populateDrawDates() {
             const select = document.getElementById('searchDrawDate');
             const drawDates = @json($drawDates);
@@ -198,19 +199,29 @@
             let html = '<option value="">ทั้งหมด</option>';
 
             drawDates.forEach(item => {
+                // 1. สร้าง Date Object จากค่าที่ส่งมา
                 const date = new Date(item.draw_date);
-                const day = date.getDate();
-                const month = thaiMonths[date.getMonth() + 1];
-                const year = date.getFullYear() + 543;
-                const label = `${day} ${month} ${year}`;
-                const selected = item.draw_date === currentDrawDate ? 'selected' : '';
 
-                html += `<option value="${item.draw_date}" ${selected}>${label}</option>`;
+                // 2. แปลงให้เป็นรูปแบบ YYYY-MM-DD (เช่น 2026-02-16) เพื่อใช้เป็น value สำหรับ Query
+                const year = date.getFullYear();
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const day = String(date.getDate()).padStart(2, '0');
+                const dateValue = `${year}-${month}-${day}`;
+
+                // 3. เตรียมคำแสดงผลภาษาไทย (เช่น 16 กุมภาพันธ์ 2569)
+                const dayThai = date.getDate();
+                const monthThai = thaiMonths[date.getMonth() + 1];
+                const yearThai = date.getFullYear() + 543;
+                const label = `${dayThai} ${monthThai} ${yearThai}`;
+
+                // 4. เช็คว่าตัวนี้คือค่าที่กำลังเลือกอยู่หรือไม่
+                const selected = dateValue === currentDrawDate ? 'selected' : '';
+
+                html += `<option value="${dateValue}" ${selected}>${label}</option>`;
             });
 
             select.innerHTML = html;
         }
-
         function search() {
             const customer = document.getElementById('searchCustomer').value;
             const drawDate = document.getElementById('searchDrawDate').value;

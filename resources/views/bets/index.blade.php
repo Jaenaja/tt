@@ -30,7 +30,6 @@
             <p class="text-blue-100">หวยออกทุกวันที่ 1 และ 16 ของทุกเดือน</p>
         </div>
 
-        <!-- ฟอร์มกรอกข้อมูล -->
         <div class="bg-white rounded-lg shadow-md p-6 mb-6">
             <h2 class="text-2xl font-bold text-gray-800 mb-6">📝 ข้อมูลการแทง</h2>
 
@@ -51,54 +50,48 @@
             </div>
 
             <div class="mb-4">
-                <label class="block text-gray-700 font-semibold mb-2">โพย (เลือกรูปแบบ)</label>
-                <div class="flex gap-2 mb-2">
+                <label class="block text-gray-700 font-semibold mb-2">รูปแบบการกรอก</label>
+                <div class="flex gap-2 mb-4">
                     <button type="button" onclick="switchFormat('short')" id="btnShort"
-                        class="px-4 py-2 bg-blue-600 text-white rounded-lg font-semibold">
-                        แบบพิมพ์ย่อ
-                    </button>
-                    <button type="button" onclick="switchFormat('full')" id="btnFull"
-                        class="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg font-semibold">
-                        แบบก๊อปจากแชท
+                        class="px-4 py-2 bg-blue-600 text-white rounded-lg font-semibold transition">
+                        พิมพ์ย่อ / ก๊อปจากแชท
                     </button>
                     <button type="button" onclick="switchFormat('manual')" id="btnManual"
-                        class="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg font-semibold">
+                        class="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg font-semibold transition">
                         กรอกแบบเลือกประเภท
                     </button>
                 </div>
 
-                <!-- Tab 1 & 2: แบบพิมพ์ย่อ และ แบบก๊อปจากแชท -->
                 <div id="textInputArea">
                     <textarea id="betInput" rows="10"
                         class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 font-mono"
-                        placeholder="91 20*20 19 20*20 17 20*20"></textarea>
+                        placeholder="ตัวอย่างการกรอก:&#10;91 20&#10;19 20*20&#10;77=100*0&#10;365 10*6 กลับ"></textarea>
 
                     <div class="mt-2 p-3 bg-blue-50 border border-blue-200 rounded text-sm">
-                        <p class="font-bold mb-1">📋 รูปแบบที่รองรับ:</p>
-                        <div id="formatExample" class="font-mono text-gray-700 space-y-1">
-                            <p class="font-semibold text-blue-600">แบบพิมพ์ย่อ:</p>
-                            <p>• 91 20*20 19 20*20 (แยกด้วยเว้นวรรค)</p>
-                            <p>• 91 20*20 / 19 20*20 (แยกด้วย /)</p>
-                            <p>• 91 20*20 - 19 20*20 (แยกด้วย -)</p>
-                            <p>• 365 10*6 กลับ (3 ตัวกลับ 6 ประตู)</p>
-                            <p>• 365 10*6 (3 ตัวกลับ - auto detect)</p>
-                            <p>• 365 10*6 ก (3 ตัวกลับ แบบสั้น)</p>
+                        <p class="font-bold mb-1 text-blue-800">📋 รูปแบบที่รองรับ (พิมพ์รวมหรือแยกบรรทัดก็ได้):</p>
+                        <div id="formatExample" class="font-mono text-gray-700 grid grid-cols-1 md:grid-cols-2 gap-x-4">
+                            <p>• 91 20 (บนอย่างเดียว)</p>
+                            <p>• 91=20 (บนอย่างเดียว)</p>
+                            <p>• 91 20*20 (บน*ล่าง)</p>
+                            <p>• 91=20*20 (บน*ล่าง)</p>
+                            <p>• 941 100 (3 ตัวบน)</p>
+                            <p>• 941=100 (3 ตัวบน)</p>
                             <p>• 941 100*100 (3 ตัว: บน*โต๊ด)</p>
-                            <p>• 91 20 (2 ตัว: บนอย่างเดียว)</p>
-                            <hr class="my-2 border-gray-300">
-                            <p class="font-semibold text-blue-600">แบบก๊อปจากแชท:</p>
-                            <p>• 91=10*10 (รูปแบบเดิม)</p>
-                            <p>• 91 10*10 (รูปแบบใหม่ ไม่ต้องมี =)</p>
-                            <p>• 365=10*6 กลับ (3 ตัวกลับ 6 ประตู)</p>
-                            <p>• 365 10*6 ก (3 ตัวกลับ 6 ประตู)</p>
+                            <p>• 941=100*100 (3 ตัว: บน*โต๊ด)</p>
+                            <p>• 365 10*6 (6 ประตูอัตโนมัติ)</p>
+                            <p>• 365=10*6 (6 ประตูอัตโนมัติ)</p>
+                            <p>• 365 10 ก (6 ประตู)</p>
+                            <p>• 365=10 ก (6 ประตู)</p>
+                            <p>• 365 10 กลับ (6 ประตู)</p>
+                            <p>• 365=10 กลับ (6 ประตู)</p>
+                            <p class="text-red-600 font-bold col-span-2 mt-1">⚠️ ห้ามใช้เครื่องหมาย / และ - (ระบบจะแจ้ง
+                                Error)</p>
                         </div>
                     </div>
                 </div>
 
-                <!-- Tab 3: กรอกแบบเลือกประเภท -->
                 <div id="manualInputArea" class="hidden">
                     <div class="bg-white border-2 border-gray-300 rounded-lg p-4">
-                        <!-- ประเภทการแทง -->
                         <div class="mb-4">
                             <label class="block text-gray-700 font-semibold mb-2">เลือกประเภท:</label>
                             <div class="grid grid-cols-3 gap-3">
@@ -120,7 +113,6 @@
                             </div>
                         </div>
 
-                        <!-- ช่องกรอกตัวเลข -->
                         <div class="mb-4">
                             <label class="block text-gray-700 font-semibold mb-2">กรอกตัวเลข (คั่นด้วยเว้นวรรค):</label>
                             <textarea id="manualNumbers" rows="3"
@@ -128,14 +120,7 @@
                                 placeholder="เช่น: 91 20 19 41 52"></textarea>
                         </div>
 
-                        <!-- ช่องกรอกราคา -->
-                        <div id="manualPriceFields" class="mb-4">
-                            <!-- Fields will be dynamically updated by updateManualInputFields() -->
-                        </div>
-
-                        <div class="mt-2 p-3 bg-purple-50 border border-purple-200 rounded text-sm">
-                            <p class="text-purple-700">💡 กรอกตัวเลขและราคาแล้วกดปุ่ม "🔍 อ่านโพยและแสดงผล" ด้านล่าง</p>
-                        </div>
+                        <div id="manualPriceFields" class="mb-4"></div>
                     </div>
                 </div>
             </div>
@@ -146,7 +131,6 @@
             </button>
         </div>
 
-        <!-- แสดงผลลัพธ์ -->
         <div id="resultSection" class="hidden">
             <div class="bg-white rounded-lg shadow-md p-6 mb-6">
                 <h2 class="text-2xl font-bold text-gray-800 mb-4">📊 ผลการแปลโพย</h2>
@@ -220,11 +204,9 @@
         let parsedBets = [];
         let currentFormat = 'short';
 
-        // อักษรย่อเดือนภาษาไทย
         const thaiMonths = ['', 'มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน',
             'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
 
-        // โหลดชื่อลูกค้าที่บันทึกไว้
         window.onload = function () {
             generateDrawDates();
             const savedCustomer = localStorage.getItem('lastCustomerName');
@@ -245,528 +227,231 @@
             for (let i = -3; i <= 2; i++) {
                 let month = currentMonth + Math.floor(i / 2);
                 let year = currentYear;
-                if (month < 0) {
-                    month += 12;
-                    year--;
-                }
-                if (month > 11) {
-                    month -= 12;
-                    year++;
-                }
-
-                dates.push(createDateOption(new Date(year, month, 1)));
-                dates.push(createDateOption(new Date(year, month, 16)));
+                if (month < 0) { month += 12; year--; }
+                if (month > 11) { month -= 12; year++; }
+                dates.push({ value: formatDateForDatabase(new Date(year, month, 1)), label: formatDateThai(new Date(year, month, 1)) });
+                dates.push({ value: formatDateForDatabase(new Date(year, month, 16)), label: formatDateThai(new Date(year, month, 16)) });
             }
 
-            const uniqueDates = [...new Map(dates.map(d => [d.value, d])).values()]
-                .sort((a, b) => new Date(b.value) - new Date(a.value));
+            const uniqueDates = [...new Map(dates.map(d => [d.value, d])).values()].sort((a, b) => new Date(b.value) - new Date(a.value));
 
-            let selectedIndex = 0;
-            if (currentDay >= 16) {
-                const nextMonth = new Date(currentYear, currentMonth + 1, 1);
-                const targetValue = formatDateForDatabase(nextMonth);
-                selectedIndex = uniqueDates.findIndex(d => d.value === targetValue);
-            } else {
-                const thisMonth16 = new Date(currentYear, currentMonth, 16);
-                const targetValue = formatDateForDatabase(thisMonth16);
-                selectedIndex = uniqueDates.findIndex(d => d.value === targetValue);
-            }
+            let selectedIndex = currentDay >= 16 ? uniqueDates.findIndex(d => d.value === formatDateForDatabase(new Date(currentYear, currentMonth + 1, 1))) : uniqueDates.findIndex(d => d.value === formatDateForDatabase(new Date(currentYear, currentMonth, 16)));
+            if (selectedIndex === -1) selectedIndex = 0;
 
-            select.innerHTML = uniqueDates.map((dateOption, idx) =>
-                `<option value="${dateOption.value}" ${idx === selectedIndex ? 'selected' : ''}>
-                ${dateOption.label}
-            </option>`
-            ).join('');
-        }
-
-        function createDateOption(date) {
-            return {
-                value: formatDateForDatabase(date),
-                label: formatDateThai(date)
-            };
+            select.innerHTML = uniqueDates.map((d, idx) => `<option value="${d.value}" ${idx === selectedIndex ? 'selected' : ''}>${d.label}</option>`).join('');
         }
 
         function formatDateForDatabase(date) {
-            const year = date.getFullYear();
-            const month = String(date.getMonth() + 1).padStart(2, '0');
-            const day = String(date.getDate()).padStart(2, '0');
-            return `${year}-${month}-${day}`;
+            return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
         }
 
         function formatDateThai(date) {
-            const day = date.getDate();
-            const month = thaiMonths[date.getMonth() + 1];
-            const year = date.getFullYear() + 543;
-            return `${day} ${month} ${year}`;
+            return `${date.getDate()} ${thaiMonths[date.getMonth() + 1]} ${date.getFullYear() + 543}`;
         }
 
         function switchFormat(format) {
             currentFormat = format;
-
-            // Reset button styles
-            document.getElementById('btnShort').className = 'px-4 py-2 bg-gray-300 text-gray-700 rounded-lg font-semibold';
-            document.getElementById('btnFull').className = 'px-4 py-2 bg-gray-300 text-gray-700 rounded-lg font-semibold';
-            document.getElementById('btnManual').className = 'px-4 py-2 bg-gray-300 text-gray-700 rounded-lg font-semibold';
-
-            if (format === 'short') {
-                document.getElementById('btnShort').className = 'px-4 py-2 bg-blue-600 text-white rounded-lg font-semibold';
-                document.getElementById('textInputArea').classList.remove('hidden');
-                document.getElementById('manualInputArea').classList.add('hidden');
-                document.getElementById('betInput').placeholder = '91 20*20 19 20*20 17 20*20';
-            } else if (format === 'full') {
-                document.getElementById('btnFull').className = 'px-4 py-2 bg-blue-600 text-white rounded-lg font-semibold';
-                document.getElementById('textInputArea').classList.remove('hidden');
-                document.getElementById('manualInputArea').classList.add('hidden');
-                document.getElementById('betInput').placeholder = '91 20*20\n19 20*20';
-            } else if (format === 'manual') {
-                document.getElementById('btnManual').className = 'px-4 py-2 bg-blue-600 text-white rounded-lg font-semibold';
-                document.getElementById('textInputArea').classList.add('hidden');
-                document.getElementById('manualInputArea').classList.remove('hidden');
-            }
+            document.getElementById('btnShort').className = format === 'short' ? 'px-4 py-2 bg-blue-600 text-white rounded-lg font-semibold' : 'px-4 py-2 bg-gray-300 text-gray-700 rounded-lg font-semibold';
+            document.getElementById('btnManual').className = format === 'manual' ? 'px-4 py-2 bg-blue-600 text-white rounded-lg font-semibold' : 'px-4 py-2 bg-gray-300 text-gray-700 rounded-lg font-semibold';
+            document.getElementById('textInputArea').classList.toggle('hidden', format !== 'short');
+            document.getElementById('manualInputArea').classList.toggle('hidden', format !== 'manual');
         }
 
-        // อัปเดตช่องกรอกราคาตามประเภทที่เลือก
         function updateManualInputFields() {
             const betType = document.querySelector('input[name="betType"]:checked').value;
             const container = document.getElementById('manualPriceFields');
-
             let html = '<div class="grid grid-cols-2 gap-4">';
-
             if (betType === '2digit') {
-                html += `
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">ราคาบน (บาท)</label>
-                        <input type="number" id="priceTop" min="0" step="0.01" value="10"
-                            class="w-full px-3 py-2 border border-gray-300 rounded-lg">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">ราคาล่าง (บาท)</label>
-                        <input type="number" id="priceBottom" min="0" step="0.01" value="10"
-                            class="w-full px-3 py-2 border border-gray-300 rounded-lg">
-                    </div>
-                `;
+                html += `<div><label class="block text-sm font-medium mb-1">ราคาบน</label><input type="number" id="priceTop" value="10" class="w-full px-3 py-2 border rounded-lg"></div>
+                         <div><label class="block text-sm font-medium mb-1">ราคาล่าง</label><input type="number" id="priceBottom" value="10" class="w-full px-3 py-2 border rounded-lg"></div>`;
             } else if (betType === '3digit') {
-                html += `
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">ราคาบน (บาท)</label>
-                        <input type="number" id="priceTop" min="0" step="0.01" value="10"
-                            class="w-full px-3 py-2 border border-gray-300 rounded-lg">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">ราคาโต๊ด (บาท)</label>
-                        <input type="number" id="priceToad" min="0" step="0.01" value="10"
-                            class="w-full px-3 py-2 border border-gray-300 rounded-lg">
-                    </div>
-                `;
-            } else if (betType === '3reverse') {
-                html += `
-                    <div class="col-span-2">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">ยอดต่อประตู (บาท)</label>
-                        <input type="number" id="pricePerDoor" min="0" step="0.01" value="10"
-                            class="w-full px-3 py-2 border border-gray-300 rounded-lg">
-                        <p class="text-xs text-gray-500 mt-1">ระบบจะกระจายเป็น 6 ประตูอัตโนมัติ</p>
-                    </div>
-                `;
+                html += `<div><label class="block text-sm font-medium mb-1">ราคาบน</label><input type="number" id="priceTop" value="10" class="w-full px-3 py-2 border rounded-lg"></div>
+                         <div><label class="block text-sm font-medium mb-1">ราคาโต๊ด</label><input type="number" id="priceToad" value="10" class="w-full px-3 py-2 border rounded-lg"></div>`;
+            } else {
+                html += `<div class="col-span-2"><label class="block text-sm font-medium mb-1">ยอดต่อประตู</label><input type="number" id="pricePerDoor" value="10" class="w-full px-3 py-2 border rounded-lg"></div>`;
             }
-
-            html += '</div>';
-            container.innerHTML = html;
+            container.innerHTML = html + '</div>';
         }
 
         function parseAndPreview() {
+            parsedBets = [];
             const drawDate = document.getElementById('drawDate').value;
             const customerName = document.getElementById('customerName').value.trim();
 
             if (!drawDate || !customerName) {
-                Swal.fire({ icon: 'error', title: 'ERROR', text: 'กรุณากรอกข้อมูลให้ครบ: งวดวันที่ และ ชื่อลูกค้า' });
+                Swal.fire({ icon: 'error', title: 'ผิดพลาด', text: 'กรุณากรอกวันที่และชื่อลูกค้า' });
                 return;
             }
 
-            // 1. รีเซ็ต parsedBets ทุกครั้งเพื่อป้องกันเลขซ้ำ
-            parsedBets = [];
-
             try {
-                // ตรวจสอบว่าอยู่ Tab ไหน
                 if (currentFormat === 'manual') {
-                    // Tab 3: กรอกแบบเลือกประเภท - Strict Validation
                     const numbersInput = document.getElementById('manualNumbers').value.trim();
-
-                    if (!numbersInput) {
-                        Swal.fire({ icon: 'error', title: 'ERROR', text: 'กรุณากรอกตัวเลข' });
-                        return;
-                    }
+                    if (!numbersInput) return Swal.fire({ icon: 'warning', title: 'ว่างเปล่า', text: 'กรุณากรอกตัวเลข' });
 
                     const betType = document.querySelector('input[name="betType"]:checked').value;
-                    const numbers = numbersInput.split(/\s+/).filter(n => n.match(/^\d+$/));
-
-                    if (numbers.length === 0) {
-                        Swal.fire({ icon: 'error', title: 'ERROR', text: 'ไม่พบตัวเลขที่ถูกต้อง' });
-                        return;
-                    }
-
-                    // 2. Strict Validation - ตรวจสอบความถูกต้องก่อนทำงาน
-                    const invalidNumbers = [];
+                    const tokens = numbersInput.split(/\s+/).filter(n => n.length > 0);
                     const expectedLength = betType === '2digit' ? 2 : 3;
+                    const invalid = tokens.filter(n => !/^\d+$/.test(n) || n.length !== expectedLength);
 
-                    numbers.forEach(number => {
-                        if (number.length !== expectedLength) {
-                            invalidNumbers.push(number);
-                        }
-                    });
-
-                    if (invalidNumbers.length > 0) {
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'พบเลขผิดประเภท!',
-                            html: `<p>ประเภทที่เลือก: <strong>${betType === '2digit' ? '2 ตัว' : (betType === '3digit' ? '3 ตัว' : '3 ตัวกลับ')}</strong></p>
-                                   <p class="text-red-600 mt-2">เลขที่ผิด: <strong>${invalidNumbers.join(', ')}</strong></p>
-                                   <p class="text-sm text-gray-600 mt-2">กรุณาแก้ไขให้ตรงตามประเภทที่เลือก</p>`
-                        });
-                        return;
+                    if (invalid.length > 0) {
+                        Swal.fire({ icon: 'error', title: 'พบเลขผิดประเภท!', html: `พบเลขที่ไม่ใช่ ${expectedLength} หลัก: <b class="text-red-600">${invalid.join(', ')}</b>` });
+                        return document.getElementById('resultSection').classList.add('hidden');
                     }
 
-                    // ผ่านการตรวจสอบแล้ว - เริ่มประมวลผล
-                    numbers.forEach(number => {
-                        if (betType === '2digit') {
-                            const top = parseFloat(document.getElementById('priceTop').value) || 0;
-                            const bottom = parseFloat(document.getElementById('priceBottom').value) || 0;
-                            parsedBets.push({ number, top, bottom, toad: 0 });
-
-                        } else if (betType === '3digit') {
-                            const top = parseFloat(document.getElementById('priceTop').value) || 0;
-                            const toad = parseFloat(document.getElementById('priceToad').value) || 0;
-                            parsedBets.push({ number, top, bottom: 0, toad });
-
-                        } else if (betType === '3reverse') {
-                            const pricePerDoor = parseFloat(document.getElementById('pricePerDoor').value) || 0;
-                            const permutations = getAllPermutations(number);
-                            permutations.forEach(num => {
-                                parsedBets.push({ number: num, top: pricePerDoor, bottom: 0, toad: 0 });
-                            });
-                        }
+                    tokens.forEach(number => {
+                        if (betType === '2digit') parsedBets.push({ number, top: parseFloat(document.getElementById('priceTop').value) || 0, bottom: parseFloat(document.getElementById('priceBottom').value) || 0, toad: 0 });
+                        else if (betType === '3digit') parsedBets.push({ number, top: parseFloat(document.getElementById('priceTop').value) || 0, bottom: 0, toad: parseFloat(document.getElementById('priceToad').value) || 0 });
+                        else getAllPermutations(number).forEach(num => parsedBets.push({ number: num, top: parseFloat(document.getElementById('pricePerDoor').value) || 0, bottom: 0, toad: 0 }));
                     });
-
                 } else {
-                    // Tab 1 & 2: แบบพิมพ์ย่อ และ แบบก๊อปจากแชท
                     const input = document.getElementById('betInput').value.trim();
-
-                    if (!input) {
-                        Swal.fire({ icon: 'error', title: 'ERROR', text: 'กรุณากรอกโพย' });
-                        return;
-                    }
-
-                    parsedBets = currentFormat === 'short' ? parseShortFormat(input) : parseFullFormat(input);
+                    if (!input) return Swal.fire({ icon: 'warning', title: 'ว่างเปล่า', text: 'กรุณากรอกโพย' });
+                    parsedBets = parseShortFormat(input);
                 }
 
-                // แสดงผล
                 const dateParts = drawDate.split('-');
-                const displayDate = new Date(dateParts[0], dateParts[1] - 1, dateParts[2]);
-                const thaiDate = formatDateThai(displayDate);
-
-                displayResults(thaiDate, customerName, parsedBets);
-
-                document.getElementById('resultSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+                displayResults(formatDateThai(new Date(dateParts[0], dateParts[1] - 1, dateParts[2])), customerName, parsedBets);
+                document.getElementById('resultSection').scrollIntoView({ behavior: 'smooth' });
 
             } catch (error) {
-                parsedBets = []; // รีเซ็ตถ้าเกิด error
-                Swal.fire({ icon: 'error', title: 'ERROR', text: error.message });
+                parsedBets = [];
+                Swal.fire({ icon: 'error', title: 'ข้อมูลไม่ถูกต้อง', text: error.message });
+                document.getElementById('resultSection').classList.add('hidden');
             }
         }
 
         function parseShortFormat(input) {
-            // Normalize: แทนที่ - / = ซ้ำซ้อนด้วย space + ลบ space ซ้ำ
-            input = input.replace(/[\-\/=]+/g, ' ').replace(/\s+/g, ' ').trim();
+            // 1. ตรวจสอบ Strict Rules: ห้ามใช้ / และ -
+            if (input.includes('/') || input.includes('-')) {
+                let char = input.includes('/') ? '/' : '-';
+                throw new Error(`พบเครื่องหมายที่ไม่อนุญาต: "${char}" กรุณาใช้เว้นวรรค หรือเครื่องหมาย * และ = เท่านั้น`);
+            }
 
             const bets = [];
-            const tokens = input.split(/\s+/).filter(s => s);
+            // เปลี่ยนการขึ้นบรรทัดใหม่เป็นเว้นวรรคเพื่อให้ Logic อ่านได้เหมือนกันทั้ง 2 รูปแบบ
+            let cleanInput = input.replace(/\n/g, ' ').replace(/\s+/g, ' ').trim();
+            const tokens = cleanInput.split(' ');
 
             let i = 0;
             while (i < tokens.length) {
-                if (!/^\d{1,3}$/.test(tokens[i])) {
+                let token = tokens[i];
+                let number, amounts;
+
+                if (token.includes('=')) {
+                    let parts = token.split('=');
+                    number = parts[0];
+                    amounts = parts[1];
                     i++;
-                    continue;
-                }
-
-                const number = tokens[i];
-
-                if (i + 1 >= tokens.length) {
-                    throw new Error(`เลข "${number}" ไม่มีจำนวนเงิน`);
-                }
-
-                const amounts = tokens[i + 1];
-
-                // Auto-Detect: *6 = 3 ตัวกลับ
-                const hasReverseKeyword = (i + 2 < tokens.length) && (tokens[i + 2] === 'กลับ' || tokens[i + 2] === 'ก');
-                const isAutoReverse = number.length === 3 && amounts.includes('*6');
-                const hasReverse = hasReverseKeyword || isAutoReverse;
-
-                if (hasReverse) {
-                    const reversedBets = parseBetAmountReverse(number, amounts);
-                    bets.push(...reversedBets);
-                    i += hasReverseKeyword ? 3 : 2;
                 } else {
-                    const bet = parseAmounts(number, amounts);
-                    bets.push(bet);
+                    number = token;
+                    amounts = tokens[i + 1] || "";
                     i += 2;
                 }
-            }
 
-            if (bets.length === 0) {
-                throw new Error('ไม่พบรายการเดิมพันที่ถูกต้อง');
-            }
+                if (!number || !/^\d+$/.test(number)) continue;
 
-            return bets;
-        }
-
-        function parseFullFormat(input) {
-            const bets = [];
-            const lines = input.split('\n').map(s => s.trim());
-
-            for (let line of lines) {
-                if (!line) continue;
-
-                if (/^[ก-๙a-zA-Z]+$/.test(line) && !line.includes('=') && !line.includes('*')) {
-                    continue;
+                let isReverse = false;
+                if (i < tokens.length && (tokens[i] === 'กลับ' || tokens[i] === 'ก')) {
+                    isReverse = true;
+                    i++;
+                } else if (number.length === 3 && amounts && amounts.includes('*6')) {
+                    isReverse = true;
                 }
 
-                let number, amounts;
-                if (line.includes('=')) {
-                    const match = line.match(/^(\d{1,3})\s*=\s*(.+)$/);
-                    if (!match) continue;
-                    number = match[1];
-                    amounts = match[2].trim();
+                if (isReverse) {
+                    bets.push(...parseBetAmountReverse(number, amounts));
                 } else {
-                    const parts = line.split(/\s+/);
-                    if (parts.length < 2 || !/^\d{1,3}$/.test(parts[0])) {
-                        continue;
-                    }
-                    number = parts[0];
-                    amounts = parts.slice(1).join(' ');
-                }
-
-                const hasReverseKeyword = amounts.includes('กลับ') || amounts.endsWith(' ก') || amounts.endsWith('\tก');
-                const isAutoReverse = number.length === 3 && amounts.includes('*6');
-                const hasReverse = hasReverseKeyword || isAutoReverse;
-
-                if (hasReverse) {
-                    amounts = amounts.replace(/\s*(กลับ|ก)\s*$/, '').trim();
-                    const reversedBets = parseBetAmountReverse(number, amounts);
-                    bets.push(...reversedBets);
-                } else {
-                    const bet = parseAmounts(number, amounts);
-                    bets.push(bet);
+                    bets.push(parseAmounts(number, amounts));
                 }
             }
 
+            if (bets.length === 0) throw new Error('ไม่พบรูปแบบตัวเลขและราคาที่ถูกต้อง');
             return bets;
         }
 
         function parseAmounts(number, amounts) {
-            const is2Digit = number.length === 2;
-
-            if (!number || !/^\d{1,3}$/.test(number)) {
-                throw new Error(`เลขผิดรูปแบบ: "${number}"`);
-            }
-
-            amounts = amounts.replace(/×/g, '*');
-
+            amounts = (amounts || "0").replace(/×/g, '*');
             if (amounts.includes('*')) {
-                const parts = amounts.split('*').map(s => s.trim());
-                if (parts.length !== 2) throw new Error(`จำนวนเงินผิด: "${amounts}"`);
-                const [first, second] = parts.map(a => {
-                    const num = parseFloat(a);
-                    if (isNaN(num) || num < 0) throw new Error(`จำนวนเงินผิด: "${a}"`);
-                    return num;
-                });
-                if (is2Digit) return { number, top: first, bottom: second, toad: 0 };
-                else return { number, top: first, bottom: 0, toad: second };
-            } else {
-                const amount = parseFloat(amounts);
-                if (isNaN(amount) || amount < 0) throw new Error(`จำนวนเงินผิด: "${amounts}"`);
-                return { number, top: amount, bottom: 0, toad: 0 };
+                const parts = amounts.split('*');
+                const [first, second] = [parseFloat(parts[0]), parseFloat(parts[1])];
+                if (number.length === 2) return { number, top: first || 0, bottom: second || 0, toad: 0 };
+                return { number, top: first || 0, bottom: 0, toad: second || 0 };
             }
+            return { number, top: parseFloat(amounts) || 0, bottom: 0, toad: 0 };
         }
 
         function parseBetAmountReverse(number, amounts) {
-            if (number.length !== 3) throw new Error(`รูปแบบ "กลับ 6 ประตู" ใช้ได้เฉพาะเลข 3 หลักเท่านั้น`);
-            if (!/^\d+$/.test(number)) throw new Error(`เลขผิดรูปแบบ: "${number}"`);
-
-            amounts = amounts.replace(/×/g, '*');
-
-            let topAmount, doorCount;
-            if (amounts.includes('*')) {
-                const parts = amounts.split('*');
-                if (parts.length !== 2) throw new Error(`รูปแบบผิด: "${amounts}" - ต้องเป็น top*door`);
-                topAmount = parseFloat(parts[0].trim());
-                doorCount = parseInt(parts[1].trim());
-                if (isNaN(topAmount) || topAmount < 0) throw new Error(`จำนวนเงินผิด: "${parts[0]}"`);
-                if (isNaN(doorCount) || doorCount <= 0 || doorCount > 6) throw new Error(`จำนวนประตูผิด: "${parts[1]}" - ต้องเป็น 1-6`);
-            } else {
-                throw new Error(`รูปแบบผิด: "${amounts}" - ต้องเป็น top*door`);
-            }
-
-            const permutations = getAllPermutations(number);
-
-            if (permutations.length !== doorCount) {
-                console.warn(`เลข ${number} มีประตูที่ไม่ซ้ำ ${permutations.length} ประตู แต่ระบุ ${doorCount} ประตู`);
-            }
-
-            return permutations.map(num => ({
-                number: num,
-                top: topAmount,
-                bottom: 0,
-                toad: 0
-            }));
+            if (number.length !== 3) throw new Error(`เลขกลับใช้ได้กับ 3 หลักเท่านั้น: "${number}"`);
+            amounts = (amounts || "0").replace(/×/g, '*').replace(/กลับ|ก/g, '');
+            let topAmount = amounts.includes('*') ? parseFloat(amounts.split('*')[0]) : parseFloat(amounts);
+            return getAllPermutations(number).map(num => ({ number: num, top: topAmount || 0, bottom: 0, toad: 0 }));
         }
 
         function getAllPermutations(str) {
-            const digits = str.split('');
-            const permSet = new Set();
-
-            function permute(arr, m = []) {
-                if (arr.length === 0) {
-                    permSet.add(m.join(''));
-                } else {
-                    for (let i = 0; i < arr.length; i++) {
-                        let curr = arr.slice();
-                        let next = curr.splice(i, 1);
-                        permute(curr.slice(), m.concat(next));
-                    }
+            const results = new Set();
+            const arr = str.split('');
+            const permute = (a, m = []) => {
+                if (a.length === 0) results.add(m.join(''));
+                else for (let i = 0; i < a.length; i++) {
+                    let curr = a.slice();
+                    let next = curr.splice(i, 1);
+                    permute(curr.slice(), m.concat(next));
                 }
-            }
-
-            permute(digits);
-            return Array.from(permSet).sort();
+            };
+            permute(arr);
+            return Array.from(results).sort();
         }
 
         function displayResults(drawDate, customerName, bets) {
             document.getElementById('displayDrawDate').textContent = drawDate;
             document.getElementById('displayCustomer').textContent = customerName;
-
-            let totalTop = 0, totalBottom = 0, totalToad = 0, html = '';
-
+            let html = '';
             bets.forEach((bet, index) => {
-                const rowTotal = bet.top + bet.bottom + bet.toad;
-                totalTop += bet.top;
-                totalBottom += bet.bottom;
-                totalToad += bet.toad;
-
-                // แสดงสีแยกตามประเภท: 2 ตัว น้ำเงิน / 3 ตัว ม่วง
-                const numberClass = bet.number.length === 2 ? 'text-blue-600' : 'text-purple-600';
-                const bgClass = bet.number.length === 2 ? 'bg-blue-50' : 'bg-purple-50';
-
-                html += `<tr class="hover:${bgClass}" data-index="${index}">
-                <td class="px-4 py-3 font-bold text-xl ${numberClass}">${bet.number}</td>
-                <td class="px-4 py-3 text-right ${bet.top > 0 ? 'font-semibold text-gray-900' : 'text-gray-400'}">${bet.top > 0 ? bet.top.toFixed(2) : '-'}</td>
-                <td class="px-4 py-3 text-right ${bet.bottom > 0 ? 'font-semibold text-gray-900' : 'text-gray-400'}">${bet.bottom > 0 ? bet.bottom.toFixed(2) : '-'}</td>
-                <td class="px-4 py-3 text-right ${bet.toad > 0 ? 'font-semibold text-gray-900' : 'text-gray-400'}">${bet.toad > 0 ? bet.toad.toFixed(2) : '-'}</td>
-                <td class="px-4 py-3 text-right font-bold text-gray-900">${rowTotal.toFixed(2)}</td>
-                <td class="px-4 py-3 text-center">
-                    <button onclick="deleteRow(${index})" class="text-red-600 hover:text-red-800 font-bold transition">❌</button>
-                </td>
-            </tr>`;
+                const numClass = bet.number.length === 2 ? 'text-blue-600' : 'text-purple-600';
+                html += `<tr class="hover:bg-gray-50">
+                    <td class="px-4 py-3 font-bold text-xl ${numClass}">${bet.number}</td>
+                    <td class="px-4 py-3 text-right">${bet.top > 0 ? bet.top.toFixed(2) : '-'}</td>
+                    <td class="px-4 py-3 text-right">${bet.bottom > 0 ? bet.bottom.toFixed(2) : '-'}</td>
+                    <td class="px-4 py-3 text-right">${bet.toad > 0 ? bet.toad.toFixed(2) : '-'}</td>
+                    <td class="px-4 py-3 text-right font-bold">${(bet.top + bet.bottom + bet.toad).toFixed(2)}</td>
+                    <td class="px-4 py-3 text-center"><button onclick="deleteRow(${index})" class="text-red-600">❌</button></td>
+                </tr>`;
             });
-
             document.getElementById('resultTable').innerHTML = html;
             updateTotals();
             document.getElementById('resultSection').classList.remove('hidden');
         }
 
         function deleteRow(index) {
-            Swal.fire({
-                title: 'ยืนยันการลบ',
-                text: `ต้องการลบรายการ ${parsedBets[index].number} หรือไม่?`,
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#d33',
-                cancelButtonColor: '#3085d6',
-                confirmButtonText: 'ลบ',
-                cancelButtonText: 'ยกเลิก'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    parsedBets.splice(index, 1);
-
-                    if (parsedBets.length === 0) {
-                        document.getElementById('resultSection').classList.add('hidden');
-                        Swal.fire({
-                            icon: 'info',
-                            title: 'ลบหมดแล้ว',
-                            text: 'ไม่มีรายการเหลืออยู่',
-                            timer: 1500,
-                            showConfirmButton: false
-                        });
-                    } else {
-                        // อัปเดตตารางและยอดรวมใหม่
-                        const drawDate = document.getElementById('drawDate').value;
-                        const customerName = document.getElementById('customerName').value.trim();
-                        const dateParts = drawDate.split('-');
-                        const displayDate = new Date(dateParts[0], dateParts[1] - 1, dateParts[2]);
-                        const thaiDate = formatDateThai(displayDate);
-                        displayResults(thaiDate, customerName, parsedBets);
-
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'ลบแล้ว!',
-                            text: 'รายการถูกลบเรียบร้อย',
-                            timer: 1000,
-                            showConfirmButton: false
-                        });
-                    }
-                }
-            });
+            parsedBets.splice(index, 1);
+            if (parsedBets.length === 0) document.getElementById('resultSection').classList.add('hidden');
+            else displayResults(document.getElementById('displayDrawDate').textContent, document.getElementById('displayCustomer').textContent, parsedBets);
         }
 
         function updateTotals() {
-            let totalTop = 0, totalBottom = 0, totalToad = 0;
-            parsedBets.forEach(bet => {
-                totalTop += bet.top;
-                totalBottom += bet.bottom;
-                totalToad += bet.toad;
-            });
-
-            document.getElementById('totalTop').textContent = totalTop.toFixed(2);
-            document.getElementById('totalBottom').textContent = totalBottom.toFixed(2);
-            document.getElementById('totalToad').textContent = totalToad.toFixed(2);
-            document.getElementById('grandTotal').textContent = (totalTop + totalBottom + totalToad).toFixed(2);
+            let tTop = 0, tBottom = 0, tToad = 0;
+            parsedBets.forEach(b => { tTop += b.top; tBottom += b.bottom; tToad += b.toad; });
+            document.getElementById('totalTop').textContent = tTop.toFixed(2);
+            document.getElementById('totalBottom').textContent = tBottom.toFixed(2);
+            document.getElementById('totalToad').textContent = tToad.toFixed(2);
+            document.getElementById('grandTotal').textContent = (tTop + tBottom + tToad).toFixed(2);
         }
 
         async function saveBets() {
             const drawDate = document.getElementById('drawDate').value;
             const customerName = document.getElementById('customerName').value.trim();
-
-            if (parsedBets.length === 0) {
-                Swal.fire({ icon: 'warning', title: 'ไม่มีรายการ', text: 'ไม่มีรายการให้บันทึก' });
-                return;
-            }
-
+            if (parsedBets.length === 0) return;
             try {
                 const response = await fetch('{{ route("bets.store") }}', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-                    },
-                    body: JSON.stringify({
-                        draw_date: drawDate,
-                        customer_name: customerName,
-                        bets: parsedBets
-                    })
+                    headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content },
+                    body: JSON.stringify({ draw_date: drawDate, customer_name: customerName, bets: parsedBets })
                 });
-
                 const data = await response.json();
-
                 if (data.success) {
                     localStorage.setItem('lastCustomerName', customerName);
-                    await Swal.fire({
-                        icon: 'success',
-                        title: 'สำเร็จ!',
-                        text: `บันทึก ${parsedBets.length} รายการเรียบร้อย`,
-                        timer: 2000
-                    });
-                    document.getElementById('betInput').value = '';
-                    document.getElementById('manualNumbers').value = '';
-                    document.getElementById('resultSection').classList.add('hidden');
-                    parsedBets = [];
+                    await Swal.fire({ icon: 'success', title: 'สำเร็จ!', text: `บันทึกเรียบร้อย`, timer: 2000 });
+                    location.reload();
                 } else {
                     Swal.fire({ icon: 'error', title: 'ERROR', text: data.message });
                 }
