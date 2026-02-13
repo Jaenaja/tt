@@ -89,7 +89,7 @@
                         @forelse($draws as $draw)
                             <tr class="hover:bg-gray-50">
                                 <td class="px-4 py-3 font-semibold">
-                                    {{ $draw->draw_date->format('d/m/') . ($draw->draw_date->format('Y') - 2500) }}
+                                    {{ thai_date($draw->draw_date) }}
                                 </td>
                                 <td class="px-4 py-3 text-center">
                                     <span class="text-2xl font-bold text-purple-600">
@@ -154,42 +154,219 @@
         </div>
     </div>
 
+    <!-- แทนที่ส่วน <script> ใน resources/views/admin/draws.blade.php -->
+
     <script>
+        // อักษรย่อเดือนภาษาไทย
+        const thaiMonths = ['', 'มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน',
+            'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
+
+        /**
+         * สร้างรายการวันที่งวดหวย
+         * - งวดย้อนหลัง 3 งวด
+         * - งวดในอนาคต 4 งวด
+         * - Auto-select งวดถัดไปที่ใกล้ที่สุด
+         */
         function generateDrawDates() {
             const select = document.getElementById('drawDate');
             const today = new Date();
-            const dates = [];
-            const currentDay = today.getDate();
-            const currentMonth = today.getMonth();
-            const currentYear = today.getFullYear();
+            today.setHours(0, 0, 0, 0); // ตั้งเวลาเป็น 00:00:00
 
-            for (let i = -3; i <= 2; i++) {
-                let month = currentMonth + Math.floor(i / 2);
-                let year = currentYear;
-                if (month < 0) { month += 12; year--; }
-                if (month > 11) { month -= 12; year++; }
+            // หาวันที่งวดทั้งหมด
+            const allDrawDates = getAllDrawDates(today, 3, 4); // 3 งวดย้อนหลัง, 4 งวดอนาคต
 
-                dates.push(formatDateThai(new Date(year, month, 1)));
-                dates.push(formatDateThai(new Date(year, month, 16)));
+            // หางวดถัดไปที่ควรเลือก
+            const nextDrawDate = getNextDrawDate(today);
+
+            // สร้าง options
+            select.innerHTML = allDrawDates.map((dateOption) => {
+                const isSelected = dateOption.value === formatDateForDatabase(nextDrawDate);
+                return `<option value="${dateOption.value}" ${isSelected ? 'selected' : ''}>
+                ${dateOption.label}
+            </option>`;
+            }).join('');
+        }
+
+        /**
+         * หาวันที่งวดทั้งหมด (ย้อนหลัง + อนาคต)
+         * @param {Date} today - วันที่ปัจจุบัน
+         * @param {number} pastCount - จำนวนงวดย้อนหลัง
+         * @param {number} futureCount - จำนวนงวดในอนาคต
+         * @returns {Array} - รายการวันที่งวด
+         */
+        function getAllDrawDates(today, pastCount, futureCount) {
+            const draws = [];
+
+            // เพิ่มงวดย้อนหลัง
+            const pastDates = getPastDrawDates(today, pastCount);
+            draws.push(...pastDates);
+
+            // เพิ่มงวดในอนาคต
+            const futureDates = getFutureDrawDates(today, futureCount);
+            draws.push(...futureDates);
+
+            // เรียงจากใหม่ไปเก่า
+            draws.sort((a, b) => new Date(b.value) - new Date(a.value));
+
+            return draws;
+        }
+
+        /**
+         * หางวดย้อนหลัง
+         * @param {Date} today - วันที่ปัจจุบัน
+         * @param {number} count - จำนวนงวด
+         * @returns {Array} - รายการวันที่งวดย้อนหลัง
+         */
+        function getPastDrawDates(today, count) {
+            const draws = [];
+            let currentDate = new Date(today);
+
+            while (draws.length < count) {
+                const prevDraw = getPreviousDrawDate(currentDate);
+                draws.push(createDateOption(prevDraw));
+                currentDate = new Date(prevDraw);
+                currentDate.setDate(currentDate.getDate() - 1); // ถอยหลัง 1 วัน
             }
 
-            const uniqueDates = [...new Set(dates)].sort((a, b) => parseThaiDate(b) - parseThaiDate(a));
-
-            select.innerHTML = uniqueDates.map((date, idx) =>
-                `<option value="${date}">${date}</option>`
-            ).join('');
+            return draws;
         }
 
+        /**
+         * หางวดในอนาคต
+         * @param {Date} today - วันที่ปัจจุบัน
+         * @param {number} count - จำนวนงวด
+         * @returns {Array} - รายการวันที่งวดในอนาคต
+         */
+        function getFutureDrawDates(today, count) {
+            const draws = [];
+            let currentDate = new Date(today);
+
+            while (draws.length < count) {
+                const nextDraw = getNextDrawDate(currentDate);
+
+                // ป้องกันการเพิ่มงวดซ้ำ
+                const alreadyExists = draws.some(d => d.value === formatDateForDatabase(nextDraw));
+                if (!alreadyExists) {
+                    draws.push(createDateOption(nextDraw));
+                }
+
+                currentDate = new Date(nextDraw);
+                currentDate.setDate(currentDate.getDate() + 1); // เดินหน้า 1 วัน
+            }
+
+            return draws;
+        }
+
+        /**
+         * หางวดถัดไป (งวดที่ใกล้ที่สุดในอนาคต)
+         * @param {Date} referenceDate - วันที่อ้างอิง
+         * @returns {Date} - วันที่งวดถัดไป
+         */
+        function getNextDrawDate(referenceDate) {
+            const date = new Date(referenceDate);
+            const day = date.getDate();
+            const month = date.getMonth();
+            const year = date.getFullYear();
+
+            // กรณีที่ 1: ถ้าวันที่ปัจจุบัน < 1 → งวดถัดไปคือวันที่ 1 เดือนนี้
+            if (day < 1) {
+                return new Date(year, month, 1);
+            }
+            // กรณีที่ 2: ถ้าวันที่ 1 <= วันที่ปัจจุบัน < 16 → งวดถัดไปคือวันที่ 16 เดือนนี้
+            else if (day >= 1 && day < 16) {
+                return new Date(year, month, 16);
+            }
+            // กรณีที่ 3: ถ้าวันที่ปัจจุบัน >= 16 → งวดถัดไปคือวันที่ 1 เดือนหน้า
+            else {
+                return new Date(year, month + 1, 1);
+            }
+        }
+
+        /**
+         * หางวดก่อนหน้า (งวดย้อนหลัง)
+         * @param {Date} referenceDate - วันที่อ้างอิง
+         * @returns {Date} - วันที่งวดก่อนหน้า
+         */
+        function getPreviousDrawDate(referenceDate) {
+            const date = new Date(referenceDate);
+            const day = date.getDate();
+            const month = date.getMonth();
+            const year = date.getFullYear();
+
+            // กรณีที่ 1: ถ้าวันที่ปัจจุบัน <= 1 → งวดก่อนหน้าคือวันที่ 16 เดือนที่แล้ว
+            if (day <= 1) {
+                return new Date(year, month - 1, 16);
+            }
+            // กรณีที่ 2: ถ้าวันที่ 1 < วันที่ปัจจุบัน <= 16 → งวดก่อนหน้าคือวันที่ 1 เดือนนี้
+            else if (day > 1 && day <= 16) {
+                return new Date(year, month, 1);
+            }
+            // กรณีที่ 3: ถ้าวันที่ปัจจุบัน > 16 → งวดก่อนหน้าคือวันที่ 16 เดือนนี้
+            else {
+                return new Date(year, month, 16);
+            }
+        }
+
+        /**
+         * สร้าง object ของวันที่สำหรับ option
+         */
+        function createDateOption(date) {
+            return {
+                value: formatDateForDatabase(date),  // 2026-03-16
+                label: formatDateThai(date)          // 16 มีนาคม 2569
+            };
+        }
+
+        /**
+         * แปลงวันที่เป็นรูปแบบ Y-m-d สำหรับ database
+         */
+        function formatDateForDatabase(date) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
+        /**
+         * แปลงวันที่เป็นรูปแบบไทย
+         */
         function formatDateThai(date) {
-            const d = date.getDate();
-            const m = date.getMonth() + 1;
-            const y = date.getFullYear() + 543;
-            return `${d}/${m}/${y - 2500}`;
+            const day = date.getDate();
+            const month = thaiMonths[date.getMonth() + 1];
+            const year = date.getFullYear() + 543;
+            return `${day} ${month} ${year}`;
         }
 
-        function parseThaiDate(dateStr) {
-            const [d, m, y] = dateStr.split('/').map(Number);
-            return new Date(y + 2500 - 543, m - 1, d);
+        /**
+         * สร้าง object ของวันที่สำหรับ option
+         */
+        function createDateOption(date) {
+            return {
+                value: formatDateForDatabase(date),  // 2026-03-16
+                label: formatDateThai(date)          // 16 มีนาคม 2569
+            };
+        }
+
+        /**
+         * แปลงวันที่เป็นรูปแบบ Y-m-d สำหรับ database
+         * เช่น: 2026-03-16
+         */
+        function formatDateForDatabase(date) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
+        /**
+         * แปลงวันที่เป็นรูปแบบไทย
+         * เช่น: 16 มีนาคม 2569
+         */
+        function formatDateThai(date) {
+            const day = date.getDate();
+            const month = thaiMonths[date.getMonth() + 1];
+            const year = date.getFullYear() + 543; // แปลงเป็น พ.ศ. 4 หลัก
+            return `${day} ${month} ${year}`;
         }
 
         window.onload = function () {
@@ -204,18 +381,10 @@
 
             const result = await Swal.fire({
                 title: 'ยืนยันการบันทึก?',
-                html: `<div class="text-left">
-                    <p><strong>งวดวันที่:</strong> ${drawDate}</p>
-                    <p><strong>3 ตัวบน:</strong> ${formData.get('result_3_top')}</p>
-                    <p><strong>2 ตัวบน:</strong> ${formData.get('result_2_top')}</p>
-                    <p><strong>2 ตัวล่าง:</strong> ${formData.get('result_2_bottom')}</p>
-                    <p class="text-red-600 mt-3">⚠️ ระบบจะคำนวณรางวัลอัตโนมัติ</p>
-                </div>`,
-                icon: 'warning',
+                text: `งวดวันที่ ${drawDate}`,
+                icon: 'question',
                 showCancelButton: true,
-                confirmButtonColor: '#3085d6',
-                cancelButtonColor: '#d33',
-                confirmButtonText: 'ยืนยัน',
+                confirmButtonText: 'บันทึก',
                 cancelButtonText: 'ยกเลิก'
             });
 
@@ -225,15 +394,14 @@
                 const response = await fetch('{{ route("admin.draws.store") }}', {
                     method: 'POST',
                     headers: {
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                        'Accept': 'application/json',
                         'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
                     },
                     body: JSON.stringify({
                         draw_date: formData.get('draw_date'),
                         result_3_top: formData.get('result_3_top'),
                         result_2_top: formData.get('result_2_top'),
-                        result_2_bottom: formData.get('result_2_bottom'),
+                        result_2_bottom: formData.get('result_2_bottom')
                     })
                 });
 
@@ -243,11 +411,10 @@
                     await Swal.fire({
                         icon: 'success',
                         title: 'สำเร็จ!',
-                        text: data.message,
-                        timer: 2000,
-                        showConfirmButton: false
+                        text: 'บันทึกผลหวยเรียบร้อย',
+                        timer: 2000
                     });
-                    location.reload();
+                    window.location.reload();
                 } else {
                     Swal.fire({ icon: 'error', title: 'ERROR', text: data.message });
                 }

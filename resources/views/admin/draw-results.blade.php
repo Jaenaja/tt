@@ -5,7 +5,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ผลรางวัล - งวด {{ $draw->draw_date->format('d/m/') . ($draw->draw_date->format('Y') + 543 - 2500) }}</title>
+    <title>ผลรางวัล - งวด {{ thai_date_full($draw->draw_date) }}</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 
@@ -38,7 +38,7 @@
             </div>
             <p class="text-center mt-4 text-sm">
                 งวดวันที่:
-                <strong>{{ $draw->draw_date->format('d/m/') . ($draw->draw_date->format('Y') + 543 - 2500) }}</strong> |
+                <strong>{{ thai_date_full($draw->draw_date) }}</strong> |
                 ประกาศโดย: <strong>{{ $draw->announcedBy->name }}</strong> |
                 เมื่อ: {{ $draw->announced_at->format('d/m/Y H:i') }}
             </p>

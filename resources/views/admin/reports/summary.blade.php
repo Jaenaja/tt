@@ -5,7 +5,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>สรุปผลงวด {{ $draw->draw_date->format('d/m/') . ($draw->draw_date->format('Y') + 543 - 2500) }}</title>
+    <title>สรุปผลงวด {{ thai_date_full($draw->draw_date) }}</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 
@@ -22,7 +22,7 @@
         <!-- ผลหวย -->
         <div class="bg-gradient-to-r from-yellow-400 to-orange-400 rounded-lg shadow-lg p-6 mb-6">
             <h1 class="text-3xl font-bold text-gray-900 mb-4">📊 สรุปผลงวด
-                {{ $draw->draw_date->format('d/m/') . ($draw->draw_date->format('Y') + 543 - 2500) }}
+                {{ thai_date_full($draw->draw_date) }}
             </h1>
             <div class="grid grid-cols-3 gap-4">
                 <div class="bg-white bg-opacity-90 rounded-lg p-4 text-center">

@@ -154,8 +154,12 @@
     </div>
 
     <script>
-        let currentFormat = 'short';
         let parsedBets = [];
+        let currentFormat = 'short';
+
+        // อักษรย่อเดือนภาษาไทย
+        const thaiMonths = ['', 'มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน',
+            'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
 
         // โหลดชื่อลูกค้าที่บันทึกไว้
         window.onload = function () {
@@ -166,6 +170,9 @@
             }
         };
 
+        /**
+         * สร้างรายการวันที่งวดหวย
+         */
         function generateDrawDates() {
             const select = document.getElementById('drawDate');
             const today = new Date();
@@ -174,44 +181,79 @@
             const currentMonth = today.getMonth();
             const currentYear = today.getFullYear();
 
+            // สร้างวันที่ 1 และ 16 ของแต่ละเดือน
             for (let i = -3; i <= 2; i++) {
                 let month = currentMonth + Math.floor(i / 2);
                 let year = currentYear;
-                if (month < 0) { month += 12; year--; }
-                if (month > 11) { month -= 12; year++; }
+                if (month < 0) {
+                    month += 12;
+                    year--;
+                }
+                if (month > 11) {
+                    month -= 12;
+                    year++;
+                }
 
-                dates.push(formatDateThai(new Date(year, month, 1)));
-                dates.push(formatDateThai(new Date(year, month, 16)));
+                dates.push(createDateOption(new Date(year, month, 1)));
+                dates.push(createDateOption(new Date(year, month, 16)));
             }
 
-            const uniqueDates = [...new Set(dates)].sort((a, b) => parseThaiDate(b) - parseThaiDate(a));
+            // เรียงลำดับจากใหม่ไปเก่า
+            const uniqueDates = [...new Map(dates.map(d => [d.value, d])).values()]
+                .sort((a, b) => new Date(b.value) - new Date(a.value));
 
+            // หาวันที่ที่ควรเลือก (งวดถัดไป)
             let selectedIndex = 0;
             if (currentDay >= 16) {
+                // ถ้าวันที่ >= 16 เลือกวันที่ 1 เดือนหน้า
                 const nextMonth = new Date(currentYear, currentMonth + 1, 1);
-                const targetDate = formatDateThai(nextMonth);
-                selectedIndex = uniqueDates.indexOf(targetDate);
+                const targetValue = formatDateForDatabase(nextMonth);
+                selectedIndex = uniqueDates.findIndex(d => d.value === targetValue);
             } else {
+                // ถ้าวันที่ < 16 เลือกวันที่ 16 เดือนนี้
                 const thisMonth16 = new Date(currentYear, currentMonth, 16);
-                const targetDate = formatDateThai(thisMonth16);
-                selectedIndex = uniqueDates.indexOf(targetDate);
+                const targetValue = formatDateForDatabase(thisMonth16);
+                selectedIndex = uniqueDates.findIndex(d => d.value === targetValue);
             }
 
-            select.innerHTML = uniqueDates.map((date, idx) =>
-                `<option value="${date}" ${idx === selectedIndex ? 'selected' : ''}>${date}</option>`
+            // สร้าง options
+            select.innerHTML = uniqueDates.map((dateOption, idx) =>
+                `<option value="${dateOption.value}" ${idx === selectedIndex ? 'selected' : ''}>
+                ${dateOption.label}
+            </option>`
             ).join('');
         }
 
-        function formatDateThai(date) {
-            const d = date.getDate();
-            const m = date.getMonth() + 1;
-            const y = date.getFullYear() + 543;
-            return `${d}/${m}/${y - 2500}`;
+        /**
+         * สร้าง object ของวันที่สำหรับ option
+         */
+        function createDateOption(date) {
+            return {
+                value: formatDateForDatabase(date),  // 2026-03-16
+                label: formatDateThai(date)          // 16 มีนาคม 2569
+            };
         }
 
-        function parseThaiDate(dateStr) {
-            const [d, m, y] = dateStr.split('/').map(Number);
-            return new Date(y + 2500 - 543, m - 1, d);
+        /**
+         * แปลงวันที่เป็นรูปแบบ Y-m-d สำหรับ database
+         * เช่น: 2026-03-16
+         */
+        function formatDateForDatabase(date) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
+        /**
+         * แปลงวันที่เป็นรูปแบบไทย
+         * เช่น: 16 มีนาคม 2569
+         */
+        function formatDateThai(date) {
+            const day = date.getDate();
+            const month = thaiMonths[date.getMonth() + 1];
+            const year = date.getFullYear() + 543; // แปลงเป็น พ.ศ. 4 หลัก
+            return `${day} ${month} ${year}`;
         }
 
         function switchFormat(format) {
@@ -245,61 +287,75 @@
             }
 
             try {
-                parsedBets = currentFormat === 'short' ? parseShortFormat(input) : parseFullFormat(input, customerName);
+                parsedBets = currentFormat === 'short' ? parseShortFormat(input) : parseFullFormat(input);
 
-                if (parsedBets.length === 0) {
-                    Swal.fire({ icon: 'error', title: 'ERROR', text: 'ไม่พบรายการเดิมพันที่ถูกต้อง' });
-                    return;
-                }
+                // แปลง drawDate เป็นรูปแบบไทยเพื่อแสดงผล
+                const dateParts = drawDate.split('-');
+                const displayDate = new Date(dateParts[0], dateParts[1] - 1, dateParts[2]);
+                const thaiDate = formatDateThai(displayDate);
 
-                displayResults(drawDate, customerName, parsedBets);
+                displayResults(thaiDate, customerName, parsedBets);
             } catch (error) {
                 Swal.fire({ icon: 'error', title: 'ERROR', text: error.message });
             }
         }
 
         function parseShortFormat(input) {
-            const entries = input.split('/').map(s => s.trim()).filter(s => s);
             const bets = [];
-            entries.forEach(entry => {
-                const parts = entry.trim().split(/\s+/);
-                if (parts.length < 2) throw new Error(`รูปแบบผิด: "${entry}" - ต้องมีเลขและจำนวนเงิน`);
-                const bet = parseBetAmount(parts[0], parts[1]);
-                bets.push(bet);
-            });
-            return bets;
-        }
+            const lines = input.split('/').map(s => s.trim());
 
-        function parseFullFormat(input, defaultCustomer) {
-            const lines = input.split('\n').map(s => s.trim()).filter(s => s);
-            const bets = [];
-            lines.forEach((line, idx) => {
-                if (idx === 0 && !line.includes('=') && !/^\d/.test(line)) {
-                    document.getElementById('customerName').value = line;
-                    return;
+            for (let line of lines) {
+                if (!line) continue;
+                const [numberPart, ...amountParts] = line.split(/\s+/);
+                const number = numberPart.trim();
+                const amounts = amountParts.join(' ').trim();
+
+                if (!number || !/^\d{2,3}$/.test(number)) {
+                    throw new Error(`เลขผิดรูปแบบ: "${number}"`);
                 }
-                if (!line.includes('=')) throw new Error(`รูปแบบผิด: "${line}" - ต้องมี =`);
-                const [number, amounts] = line.split('=').map(s => s.trim());
-                const bet = parseBetAmount(number, amounts);
+
+                const bet = parseAmounts(number, amounts);
                 bets.push(bet);
-            });
+            }
+
             return bets;
         }
 
-        function parseBetAmount(number, amounts) {
+        function parseFullFormat(input) {
+            const bets = [];
+            const lines = input.split('\n').map(s => s.trim());
+            let currentGroup = null;
+
+            for (let line of lines) {
+                if (!line) continue;
+
+                if (/^[ก-๙a-zA-Z]+$/.test(line)) {
+                    currentGroup = line;
+                    continue;
+                }
+
+                const match = line.match(/^(\d{2,3})\s*=\s*(.+)$/);
+                if (!match) {
+                    throw new Error(`รูปแบบผิด: "${line}"`);
+                }
+
+                const number = match[1];
+                const amounts = match[2].trim();
+                const bet = parseAmounts(number, amounts);
+                bets.push(bet);
+            }
+
+            return bets;
+        }
+
+        function parseAmounts(number, amounts) {
             const is2Digit = number.length === 2;
-            const is3Digit = number.length === 3;
-
-            if (!is2Digit && !is3Digit) throw new Error(`เลข "${number}" ต้องเป็น 2 หรือ 3 หลักเท่านั้น`);
-            if (!/^\d+$/.test(number)) throw new Error(`เลขผิดรูปแบบ: "${number}"`);
-
-            amounts = amounts.replace(/×/g, '*');
 
             if (amounts.includes('*')) {
-                const parts = amounts.split('*');
-                if (parts.length !== 2) throw new Error(`รูปแบบผิด: "${amounts}" - ต้องเป็น a*b`);
+                const parts = amounts.split('*').map(s => s.trim());
+                if (parts.length !== 2) throw new Error(`จำนวนเงินผิด: "${amounts}"`);
                 const [first, second] = parts.map(a => {
-                    const num = parseFloat(a.trim());
+                    const num = parseFloat(a);
                     if (isNaN(num) || num <= 0) throw new Error(`จำนวนเงินผิด: "${a}"`);
                     return num;
                 });
@@ -324,12 +380,12 @@
                 totalBottom += bet.bottom;
                 totalToad += bet.toad;
                 html += `<tr class="hover:bg-gray-50">
-                    <td class="px-4 py-3 font-bold text-xl text-blue-600">${bet.number}</td>
-                    <td class="px-4 py-3 text-right ${bet.top > 0 ? 'font-semibold' : 'text-gray-400'}">${bet.top > 0 ? bet.top : '-'}</td>
-                    <td class="px-4 py-3 text-right ${bet.bottom > 0 ? 'font-semibold' : 'text-gray-400'}">${bet.bottom > 0 ? bet.bottom : '-'}</td>
-                    <td class="px-4 py-3 text-right ${bet.toad > 0 ? 'font-semibold' : 'text-gray-400'}">${bet.toad > 0 ? bet.toad : '-'}</td>
-                    <td class="px-4 py-3 text-right font-bold">${rowTotal}</td>
-                </tr>`;
+                <td class="px-4 py-3 font-bold text-xl text-blue-600">${bet.number}</td>
+                <td class="px-4 py-3 text-right ${bet.top > 0 ? 'font-semibold' : 'text-gray-400'}">${bet.top > 0 ? bet.top : '-'}</td>
+                <td class="px-4 py-3 text-right ${bet.bottom > 0 ? 'font-semibold' : 'text-gray-400'}">${bet.bottom > 0 ? bet.bottom : '-'}</td>
+                <td class="px-4 py-3 text-right ${bet.toad > 0 ? 'font-semibold' : 'text-gray-400'}">${bet.toad > 0 ? bet.toad : '-'}</td>
+                <td class="px-4 py-3 text-right font-bold">${rowTotal}</td>
+            </tr>`;
             });
 
             document.getElementById('resultTable').innerHTML = html;
@@ -362,7 +418,12 @@
 
                 if (data.success) {
                     localStorage.setItem('lastCustomerName', customerName);
-                    await Swal.fire({ icon: 'success', title: 'สำเร็จ!', text: `บันทึก ${parsedBets.length} รายการเรียบร้อย`, timer: 2000 });
+                    await Swal.fire({
+                        icon: 'success',
+                        title: 'สำเร็จ!',
+                        text: `บันทึก ${parsedBets.length} รายการเรียบร้อย`,
+                        timer: 2000
+                    });
                     document.getElementById('betInput').value = '';
                     document.getElementById('resultSection').classList.add('hidden');
                     parsedBets = [];

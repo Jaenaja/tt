@@ -171,13 +171,25 @@ class LotteryDrawController extends Controller
         return view('admin.draw-results', compact('draw', 'summary'));
     }
 
-    private function convertThaiDateToYmd($thaiDate)
+    private function convertThaiDateToYmd($date)
     {
-        $parts = explode('/', $thaiDate);
-        $day = str_pad($parts[0], 2, '0', STR_PAD_LEFT);
-        $month = str_pad($parts[1], 2, '0', STR_PAD_LEFT);
-        $year = 2500 + intval($parts[2]);
+        // ถ้าเป็นรูปแบบ ISO (Y-m-d) อยู่แล้ว เช่น 2026-02-01 ให้ return ทันที
+        if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) {
+            return $date;
+        }
 
-        return "$year-$month-$day";
+        // ถ้าเป็นรูปแบบไทย d/m/yy เช่น 1/2/69 ให้แปลง
+        if (strpos($date, '/') !== false) {
+            $parts = explode('/', $date);
+            if (count($parts) === 3) {
+                $day = str_pad($parts[0], 2, '0', STR_PAD_LEFT);
+                $month = str_pad($parts[1], 2, '0', STR_PAD_LEFT);
+                $year = 2500 + intval($parts[2]); // แปลง พ.ศ. 2 หลัก เป็น 4 หลัก
+                return "$year-$month-$day";
+            }
+        }
+
+        // ถ้าไม่ตรงรูปแบบใดเลย ให้ throw error
+        throw new \Exception("รูปแบบวันที่ไม่ถูกต้อง: $date");
     }
 }

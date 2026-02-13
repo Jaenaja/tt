@@ -69,7 +69,7 @@
                         @forelse($bets as $bet)
                             <tr class="hover:bg-gray-50" id="bet-{{ $bet->id }}">
                                 <td class="px-3 py-2">
-                                    {{ $bet->draw_date->format('d/m/') . ($bet->draw_date->format('Y') - 2500) }}
+                                    {{ thai_date($bet->draw_date) }}
                                 </td>
                                 <td class="px-3 py-2 font-semibold">{{ $bet->customer_name }}</td>
                                 <td class="px-3 py-2 text-center">
