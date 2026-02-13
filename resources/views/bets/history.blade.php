@@ -31,8 +31,8 @@
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                 <div>
                     <label class="block text-gray-700 font-semibold mb-2">ค้นหาชื่อลูกค้า</label>
-                    <input type="text" id="searchCustomer" class="w-full px-4 py-2 border border-gray-300 rounded-lg"
-                        placeholder="ชื่อลูกค้า">
+                    <input type="text" id="searchCustomer" value="{{ request('customer_name') }}"
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="ชื่อลูกค้า">
                 </div>
                 <div>
                     <label class="block text-gray-700 font-semibold mb-2">งวดวันที่</label>
@@ -53,15 +53,43 @@
                 <table class="w-full text-sm">
                     <thead class="bg-gray-100">
                         <tr>
-                            <th class="px-3 py-2 text-left">งวดวันที่</th>
-                            <th class="px-3 py-2 text-left">ลูกค้า</th>
+                            <th class="px-3 py-2 text-left">
+                                <button onclick="sortBy('draw_date')"
+                                    class="flex items-center gap-1 hover:text-blue-600">
+                                    งวดวันที่
+                                    <span
+                                        class="text-xs">{{ request('sort_by') === 'draw_date' ? (request('sort_order') === 'asc' ? '▲' : '▼') : '⇅' }}</span>
+                                </button>
+                            </th>
+                            <th class="px-3 py-2 text-left">
+                                <button onclick="sortBy('customer_name')"
+                                    class="flex items-center gap-1 hover:text-blue-600">
+                                    ลูกค้า
+                                    <span
+                                        class="text-xs">{{ request('sort_by') === 'customer_name' ? (request('sort_order') === 'asc' ? '▲' : '▼') : '⇅' }}</span>
+                                </button>
+                            </th>
                             <th class="px-3 py-2 text-center">เลข</th>
                             <th class="px-3 py-2 text-right">บน</th>
                             <th class="px-3 py-2 text-right">ล่าง</th>
                             <th class="px-3 py-2 text-right">โต๊ด</th>
-                            <th class="px-3 py-2 text-right">รวม</th>
+                            <th class="px-3 py-2 text-right">
+                                <button onclick="sortBy('total_amount')"
+                                    class="flex items-center gap-1 hover:text-blue-600 ml-auto">
+                                    รวม
+                                    <span
+                                        class="text-xs">{{ request('sort_by') === 'total_amount' ? (request('sort_order') === 'asc' ? '▲' : '▼') : '⇅' }}</span>
+                                </button>
+                            </th>
                             <th class="px-3 py-2 text-center">สถานะ</th>
-                            <th class="px-3 py-2 text-left">บันทึกเมื่อ</th>
+                            <th class="px-3 py-2 text-left">
+                                <button onclick="sortBy('created_at')"
+                                    class="flex items-center gap-1 hover:text-blue-600">
+                                    บันทึกเมื่อ
+                                    <span
+                                        class="text-xs">{{ request('sort_by') === 'created_at' ? (request('sort_order') === 'asc' ? '▲' : '▼') : '⇅' }}</span>
+                                </button>
+                            </th>
                             <th class="px-3 py-2 text-center">จัดการ</th>
                         </tr>
                     </thead>
@@ -69,7 +97,28 @@
                         @forelse($bets as $bet)
                             <tr class="hover:bg-gray-50" id="bet-{{ $bet->id }}">
                                 <td class="px-3 py-2">
-                                    {{ thai_date($bet->draw_date) }}
+                                    @php
+                                        $date = \Carbon\Carbon::parse($bet->draw_date);
+                                        $thaiMonths = [
+                                            '',
+                                            'มกราคม',
+                                            'กุมภาพันธ์',
+                                            'มีนาคม',
+                                            'เมษายน',
+                                            'พฤษภาคม',
+                                            'มิถุนายน',
+                                            'กรกฎาคม',
+                                            'สิงหาคม',
+                                            'กันยายน',
+                                            'ตุลาคม',
+                                            'พฤศจิกายน',
+                                            'ธันวาคม'
+                                        ];
+                                        $day = $date->day;
+                                        $month = $thaiMonths[$date->month];
+                                        $year = $date->year + 543;
+                                    @endphp
+                                    <span class="text-xs text-gray-600">{{ $day }} {{ $month }} {{ $year }}</span>
                                 </td>
                                 <td class="px-3 py-2 font-semibold">{{ $bet->customer_name }}</td>
                                 <td class="px-3 py-2 text-center">
@@ -132,6 +181,36 @@
     </div>
 
     <script>
+        // อักษรเดือนภาษาไทย
+        const thaiMonths = ['', 'มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน',
+            'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
+
+        // โหลดข้อมูลงวดที่มีการซื้อ
+        window.onload = function () {
+            populateDrawDates();
+        };
+
+        function populateDrawDates() {
+            const select = document.getElementById('searchDrawDate');
+            const drawDates = @json($drawDates);
+            const currentDrawDate = "{{ request('draw_date') }}";
+
+            let html = '<option value="">ทั้งหมด</option>';
+
+            drawDates.forEach(item => {
+                const date = new Date(item.draw_date);
+                const day = date.getDate();
+                const month = thaiMonths[date.getMonth() + 1];
+                const year = date.getFullYear() + 543;
+                const label = `${day} ${month} ${year}`;
+                const selected = item.draw_date === currentDrawDate ? 'selected' : '';
+
+                html += `<option value="${item.draw_date}" ${selected}>${label}</option>`;
+            });
+
+            select.innerHTML = html;
+        }
+
         function search() {
             const customer = document.getElementById('searchCustomer').value;
             const drawDate = document.getElementById('searchDrawDate').value;
@@ -140,13 +219,36 @@
             if (customer) params.append('customer_name', customer);
             if (drawDate) params.append('draw_date', drawDate);
 
+            // รักษา sort parameters
+            const currentSort = "{{ request('sort_by') }}";
+            const currentOrder = "{{ request('sort_order') }}";
+            if (currentSort) params.append('sort_by', currentSort);
+            if (currentOrder) params.append('sort_order', currentOrder);
+
+            window.location.href = '{{ route("bets.history") }}?' + params.toString();
+        }
+
+        function sortBy(column) {
+            const params = new URLSearchParams(window.location.search);
+            const currentSort = "{{ request('sort_by', 'draw_date') }}";
+            const currentOrder = "{{ request('sort_order', 'desc') }}";
+
+            let newOrder = 'desc';
+            if (column === currentSort) {
+                // Toggle order
+                newOrder = currentOrder === 'desc' ? 'asc' : 'desc';
+            }
+
+            params.set('sort_by', column);
+            params.set('sort_order', newOrder);
+
             window.location.href = '{{ route("bets.history") }}?' + params.toString();
         }
 
         async function deleteBet(id, customerName, number) {
             const result = await Swal.fire({
                 title: 'ยืนยันการลบ?',
-                html: `ลูกค้า: <strong>${customerName}</strong><br>เลข: <strong>${number}</strong>`,
+                text: `ลบรายการ ${customerName} - ${number}`,
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#d33',
@@ -155,33 +257,27 @@
                 cancelButtonText: 'ยกเลิก'
             });
 
-            if (!result.isConfirmed) return;
-
-            try {
-                const response = await fetch(`/bets/${id}`, {
-                    method: 'DELETE',
-                    headers: {
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                        'Accept': 'application/json',
-                    }
-                });
-
-                const data = await response.json();
-
-                if (data.success) {
-                    await Swal.fire({
-                        icon: 'success',
-                        title: 'สำเร็จ!',
-                        text: data.message,
-                        timer: 1500,
-                        showConfirmButton: false
+            if (result.isConfirmed) {
+                try {
+                    const response = await fetch(`{{ url('/bets') }}/${id}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                            'Accept': 'application/json'
+                        }
                     });
-                    document.getElementById(`bet-${id}`).remove();
-                } else {
-                    Swal.fire({ icon: 'error', title: 'ERROR', text: data.message });
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                        Swal.fire('ลบแล้ว!', data.message, 'success');
+                        document.getElementById(`bet-${id}`).remove();
+                    } else {
+                        Swal.fire('ผิดพลาด!', data.message, 'error');
+                    }
+                } catch (error) {
+                    Swal.fire('ผิดพลาด!', 'เกิดข้อผิดพลาดในการลบข้อมูล', 'error');
                 }
-            } catch (error) {
-                Swal.fire({ icon: 'error', title: 'ERROR', text: 'เกิดข้อผิดพลาด' });
             }
         }
     </script>

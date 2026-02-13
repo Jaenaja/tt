@@ -28,8 +28,8 @@ class LotteryBetController extends Controller
         ]);
 
         try {
-            // แปลงวันที่จากรูปแบบไทยเป็น Y-m-d
-            $drawDate = $this->convertThaiDateToYmd($validated['draw_date']);
+            // draw_date มาในรูปแบบ Y-m-d แล้ว (เช่น 2026-03-16)
+            $drawDate = $validated['draw_date'];
 
             DB::transaction(function () use ($validated, $drawDate) {
                 foreach ($validated['bets'] as $bet) {
@@ -83,22 +83,41 @@ class LotteryBetController extends Controller
 
     public function history(Request $request)
     {
-        $query = LotteryBet::with(['creator', 'deleter'])
-            ->whereNull('deleted_at')
-            ->orderBy('created_at', 'desc');
+        // Query พื้นฐาน
+        $query = LotteryBet::with(['creator', 'deleter', 'draw'])
+            ->whereNull('deleted_at');
 
-        if ($request->has('draw_date')) {
-            $drawDate = $this->convertThaiDateToYmd($request->draw_date);
-            $query->where('draw_date', $drawDate);
-        }
-
-        if ($request->has('customer_name')) {
+        // ฟิลเตอร์ตามชื่อลูกค้า
+        if ($request->has('customer_name') && $request->customer_name) {
             $query->where('customer_name', 'like', '%' . $request->customer_name . '%');
         }
 
-        $bets = $query->paginate(50);
+        // ฟิลเตอร์ตามงวดวันที่
+        if ($request->has('draw_date') && $request->draw_date) {
+            $query->where('draw_date', $request->draw_date);
+        }
 
-        return view('bets.history', compact('bets'));
+        // เรียงลำดับ (default: งวดล่าสุด, วันที่บันทึกล่าสุด)
+        $sortBy = $request->get('sort_by', 'draw_date');
+        $sortOrder = $request->get('sort_order', 'desc');
+
+        if ($sortBy === 'draw_date') {
+            $query->orderBy('draw_date', $sortOrder)
+                ->orderBy('created_at', 'desc');
+        } else {
+            $query->orderBy($sortBy, $sortOrder);
+        }
+
+        $bets = $query->paginate(50)->appends($request->all());
+
+        // ดึงรายการงวดที่มีการซื้อ
+        $drawDates = LotteryBet::select('draw_date')
+            ->whereNull('deleted_at')
+            ->distinct()
+            ->orderBy('draw_date', 'desc')
+            ->get();
+
+        return view('bets.history', compact('bets', 'drawDates'));
     }
 
     public function destroy($id)
@@ -106,52 +125,31 @@ class LotteryBetController extends Controller
         try {
             $bet = LotteryBet::findOrFail($id);
 
-            // ตรวจสอบว่างวดนั้นออกผลแล้วหรือยัง
+            // ตรวจสอบว่างวดนั้นประกาศผลแล้วหรือยัง
             $draw = LotteryDraw::where('draw_date', $bet->draw_date)->first();
             if ($draw && $draw->is_announced) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'ไม่สามารถลบได้ เนื่องจากงวดนี้ออกผลแล้ว'
+                    'message' => 'ไม่สามารถลบได้ เพราะงวดนี้ประกาศผลแล้ว'
                 ], 400);
             }
 
+            // Soft delete
             $bet->update([
-                'deleted_by' => Auth::id(),
-                'deleted_at' => now()
+                'deleted_at' => now(),
+                'deleted_by' => Auth::id()
             ]);
 
             return response()->json([
                 'success' => true,
-                'message' => 'ลบรายการสำเร็จ'
+                'message' => 'ลบรายการเรียบร้อยแล้ว'
             ]);
 
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'เกิดข้อผิดพลาด: ' . $e->getMessage()
-            ], 400);
+            ], 500);
         }
-    }
-
-    private function convertThaiDateToYmd($date)
-    {
-        // ถ้าเป็นรูปแบบ ISO (Y-m-d) อยู่แล้ว เช่น 2026-02-01 ให้ return ทันที
-        if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) {
-            return $date;
-        }
-
-        // ถ้าเป็นรูปแบบไทย d/m/yy เช่น 1/2/69 ให้แปลง
-        if (strpos($date, '/') !== false) {
-            $parts = explode('/', $date);
-            if (count($parts) === 3) {
-                $day = str_pad($parts[0], 2, '0', STR_PAD_LEFT);
-                $month = str_pad($parts[1], 2, '0', STR_PAD_LEFT);
-                $year = 2500 + intval($parts[2]); // แปลง พ.ศ. 2 หลัก เป็น 4 หลัก
-                return "$year-$month-$day";
-            }
-        }
-
-        // ถ้าไม่ตรงรูปแบบใดเลย ให้ throw error
-        throw new \Exception("รูปแบบวันที่ไม่ถูกต้อง: $date");
     }
 }
