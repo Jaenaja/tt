@@ -38,11 +38,11 @@ class DashboardController extends Controller
             ->orderBy('draw_date', 'desc')
             ->first();
 
-        // รายการแทงล่าสุด
+        // รายการแทงล่าสุด 100 รายการ
         $recentBets = LotteryBet::with(['creator', 'draw'])
             ->whereNull('deleted_at')
             ->orderBy('created_at', 'desc')
-            ->take(10)
+            ->take(25)
             ->get();
 
         // สถิติเฉพาะ Admin
