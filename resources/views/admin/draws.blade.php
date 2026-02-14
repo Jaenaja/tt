@@ -1,127 +1,157 @@
 <!-- resources/views/admin/draws.blade.php -->
 <!DOCTYPE html>
-<html lang="th">
+<html lang="th" class="dark">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>กรอกผลหวย</title>
+    <title>กรอกผลหวย - ระบบหวย</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        tailwind.config = { darkMode: 'class' }
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800&display=swap" rel="stylesheet">
+    <script>
+        if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+    </script>
+    <style>
+        * { font-family: 'Sarabun', sans-serif; }
+    </style>
 </head>
 
-<body class="bg-gray-100">
+<body class="transition-all duration-300 bg-slate-50 dark:bg-slate-950 min-h-screen">
     <div class="container mx-auto px-4 py-8">
-        <div class="flex justify-between items-center mb-6">
-            <a href="{{ route('dashboard') }}" class="text-blue-600 hover:text-blue-800">&larr; กลับหน้าหลัก</a>
-            <div class="text-sm text-gray-600">
-                <span class="font-semibold">{{ Auth::user()->name }}</span>
-                <form action="{{ route('logout') }}" method="POST" class="inline ml-3">
-                    @csrf
-                    <button type="submit" class="text-red-600 hover:text-red-800">ออกจากระบบ</button>
-                </form>
+        <!-- Breadcrumb & Header -->
+        <div class="transition-all duration-300 bg-white dark:bg-slate-900 rounded-2xl shadow-xl dark:shadow-2xl p-6 mb-6 border border-slate-200 dark:border-slate-800">
+            <div class="flex justify-between items-center mb-4">
+                <nav class="text-sm text-slate-600 dark:text-slate-400">
+                    <a href="{{ route('dashboard') }}" class="hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">หน้าหลัก</a>
+                    <span class="mx-2">›</span>
+                    <span class="text-slate-900 dark:text-white font-semibold">กรอกผลหวย</span>
+                </nav>
+                <button id="themeToggle" class="relative inline-flex h-5 w-9 items-center rounded-full transition-colors duration-300 focus:outline-none bg-slate-300 dark:bg-emerald-600">
+                    <span class="inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow transition-transform duration-300 translate-x-0.5 dark:translate-x-4.5"></span>
+                </button>
+            </div>
+            <div class="flex justify-between items-center">
+                <div>
+                    <h1 class="text-3xl font-bold text-slate-900 dark:text-white mb-2">🎯 กรอกผลหวย</h1>
+                </div>
+                <div class="text-right">
+                    <div class="transition-all duration-300 inline-flex items-center gap-3 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-full px-4 py-2 mb-2">
+                        <span class="text-sm text-slate-900 dark:text-white font-medium">{{ Auth::user()->name }}</span>
+                    </div>
+                    <form action="{{ route('logout') }}" method="POST" class="inline">
+                        @csrf
+                        <button type="submit" class="text-sm text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 transition-colors">ออกจากระบบ</button>
+                    </form>
+                </div>
             </div>
         </div>
 
         <!-- ฟอร์มกรอกผล -->
-        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
-            <h1 class="text-3xl font-bold text-gray-800 mb-6">🎯 กรอกผลหวย</h1>
-
+        <div class="transition-all duration-300 bg-white dark:bg-slate-900 rounded-2xl shadow-xl dark:shadow-2xl p-6 mb-6 border border-slate-200 dark:border-slate-800">
             <form id="drawForm" class="space-y-6">
                 @csrf
 
                 <div>
-                    <label class="block text-gray-700 font-semibold mb-2">งวดวันที่ *</label>
+                    <label class="block text-slate-700 dark:text-slate-300 font-semibold mb-2">งวดวันที่ *</label>
                     <select id="drawDate" name="draw_date"
-                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                        class="w-full px-4 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white rounded-lg focus:ring-2 focus:ring-emerald-500 dark:focus:ring-emerald-600 transition-all">
                     </select>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div class="bg-purple-50 p-4 rounded-lg border-2 border-purple-300">
-                        <label class="block text-gray-800 font-bold mb-2">🟣 3 ตัวบน *</label>
+                    <div class="bg-violet-50 dark:bg-violet-900/20 p-4 rounded-lg border-2 border-violet-300 dark:border-violet-700">
+                        <label class="block text-slate-800 dark:text-slate-200 font-bold mb-2">🟣 3 ตัวบน *</label>
                         <input type="text" name="result_3_top" maxlength="3" pattern="[0-9]{3}" required
-                            class="w-full px-4 py-3 text-3xl font-bold text-center border-2 border-purple-400 rounded-lg focus:ring-2 focus:ring-purple-500"
+                            class="w-full px-4 py-3 text-3xl font-bold text-center border-2 border-violet-400 dark:border-violet-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white rounded-lg focus:ring-2 focus:ring-violet-500 dark:focus:ring-violet-600"
                             placeholder="123">
                     </div>
 
-                    <div class="bg-blue-50 p-4 rounded-lg border-2 border-blue-300">
-                        <label class="block text-gray-800 font-bold mb-2">🔵 2 ตัวบน *</label>
+                    <div class="bg-emerald-50 dark:bg-emerald-900/20 p-4 rounded-lg border-2 border-emerald-300 dark:border-emerald-700">
+                        <label class="block text-slate-800 dark:text-slate-200 font-bold mb-2">🔵 2 ตัวบน *</label>
                         <input type="text" name="result_2_top" maxlength="2" pattern="[0-9]{2}" required
-                            class="w-full px-4 py-3 text-3xl font-bold text-center border-2 border-blue-400 rounded-lg focus:ring-2 focus:ring-blue-500"
+                            class="w-full px-4 py-3 text-3xl font-bold text-center border-2 border-emerald-400 dark:border-emerald-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white rounded-lg focus:ring-2 focus:ring-emerald-500 dark:focus:ring-emerald-600"
                             placeholder="23">
                     </div>
 
-                    <div class="bg-green-50 p-4 rounded-lg border-2 border-green-300">
-                        <label class="block text-gray-800 font-bold mb-2">🟢 2 ตัวล่าง *</label>
+                    <div class="bg-teal-50 dark:bg-teal-900/20 p-4 rounded-lg border-2 border-teal-300 dark:border-teal-700">
+                        <label class="block text-slate-800 dark:text-slate-200 font-bold mb-2">🟢 2 ตัวล่าง *</label>
                         <input type="text" name="result_2_bottom" maxlength="2" pattern="[0-9]{2}" required
-                            class="w-full px-4 py-3 text-3xl font-bold text-center border-2 border-green-400 rounded-lg focus:ring-2 focus:ring-green-500"
+                            class="w-full px-4 py-3 text-3xl font-bold text-center border-2 border-teal-400 dark:border-teal-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white rounded-lg focus:ring-2 focus:ring-teal-500 dark:focus:ring-teal-600"
                             placeholder="45">
                     </div>
                 </div>
 
                 <button type="submit"
-                    class="w-full bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white font-bold py-4 rounded-lg transition text-lg shadow-lg">
+                    class="w-full bg-emerald-600 hover:bg-emerald-700 dark:bg-emerald-700 dark:hover:bg-emerald-600 text-white font-bold py-4 rounded-lg transition-all text-lg shadow-lg">
                     💾 บันทึกผลและคำนวณรางวัล
                 </button>
             </form>
         </div>
 
         <!-- รายการงวดที่ผ่านมา -->
-        <div class="bg-white rounded-lg shadow-md p-6">
-            <h2 class="text-2xl font-bold text-gray-800 mb-6">📋 รายการงวดที่ผ่านมา</h2>
+        <div class="transition-all duration-300 bg-white dark:bg-slate-900 rounded-2xl shadow-xl dark:shadow-2xl p-6 border border-slate-200 dark:border-slate-800">
+            <h2 class="text-2xl font-bold text-slate-900 dark:text-white mb-6">📋 รายการงวดที่ผ่านมา</h2>
 
-            <div class="overflow-x-auto">
-                <table class="w-full">
-                    <thead class="bg-gray-100">
-                        <tr>
-                            <th class="px-4 py-3 text-left">งวดวันที่</th>
-                            <th class="px-4 py-3 text-center">3 ตัวบน</th>
-                            <th class="px-4 py-3 text-center">2 ตัวบน</th>
-                            <th class="px-4 py-3 text-center">2 ตัวล่าง</th>
-                            <th class="px-4 py-3 text-center">สถานะ</th>
-                            <th class="px-4 py-3 text-center">ประกาศโดย</th>
-                            <th class="px-4 py-3 text-center">ดูรายละเอียด</th>
+            <div class="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-700">
+                <table class="w-full text-sm">
+                    <thead class="bg-slate-100 dark:bg-slate-800">
+                        <tr class="border-b-2 border-slate-200 dark:border-slate-700">
+                            <th class="px-4 py-3 text-left text-slate-900 dark:text-slate-200 font-bold">งวดวันที่</th>
+                            <th class="px-4 py-3 text-center text-slate-900 dark:text-slate-200 font-bold">3 ตัวบน</th>
+                            <th class="px-4 py-3 text-center text-slate-900 dark:text-slate-200 font-bold">2 ตัวบน</th>
+                            <th class="px-4 py-3 text-center text-slate-900 dark:text-slate-200 font-bold">2 ตัวล่าง</th>
+                            <th class="px-4 py-3 text-center text-slate-900 dark:text-slate-200 font-bold">สถานะ</th>
+                            <th class="px-4 py-3 text-center text-slate-900 dark:text-slate-200 font-bold">ประกาศโดย</th>
+                            <th class="px-4 py-3 text-center text-slate-900 dark:text-slate-200 font-bold">ดูรายละเอียด</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y">
+                    <tbody class="divide-y divide-slate-200 dark:divide-slate-700 bg-white dark:bg-slate-900">
                         @forelse($draws as $draw)
-                            <tr class="hover:bg-gray-50">
-                                <td class="px-4 py-3 font-semibold">
+                            <tr class="transition-all duration-200 hover:bg-slate-50 dark:hover:bg-slate-800">
+                                <td class="px-4 py-3 text-slate-800 dark:text-slate-300 font-semibold">
                                     {{ thai_date($draw->draw_date) }}
                                 </td>
                                 <td class="px-4 py-3 text-center">
-                                    <span class="text-2xl font-bold text-purple-600">
+                                    <span class="text-2xl font-bold text-violet-600 dark:text-violet-400">
                                         {{ $draw->result_3_top ?? '-' }}
                                     </span>
                                 </td>
                                 <td class="px-4 py-3 text-center">
-                                    <span class="text-2xl font-bold text-blue-600">
+                                    <span class="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
                                         {{ $draw->result_2_top ?? '-' }}
                                     </span>
                                 </td>
                                 <td class="px-4 py-3 text-center">
-                                    <span class="text-2xl font-bold text-green-600">
+                                    <span class="text-2xl font-bold text-teal-600 dark:text-teal-400">
                                         {{ $draw->result_2_bottom ?? '-' }}
                                     </span>
                                 </td>
                                 <td class="px-4 py-3 text-center">
                                     @if($draw->is_announced)
-                                        <span class="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-semibold">
+                                        <span class="inline-block px-3 py-1 rounded-md text-xs font-bold bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300">
                                             ประกาศแล้ว
                                         </span>
                                     @else
-                                        <span
-                                            class="px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-sm font-semibold">
+                                        <span class="inline-block px-3 py-1 rounded-md text-xs font-bold bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300">
                                             รอประกาศ
                                         </span>
                                     @endif
                                 </td>
-                                <td class="px-4 py-3 text-center text-sm">
+                                <td class="px-4 py-3 text-center text-sm text-slate-700 dark:text-slate-300">
                                     @if($draw->announcedBy)
                                         {{ $draw->announcedBy->name }}<br>
-                                        <span class="text-gray-500">{{ $draw->announced_at->format('d/m/y H:i') }}</span>
+                                        <span class="text-slate-500 dark:text-slate-500">{{ $draw->announced_at->format('d/m/y H:i') }}</span>
                                     @else
                                         -
                                     @endif
@@ -129,7 +159,7 @@
                                 <td class="px-4 py-3 text-center">
                                     @if($draw->is_announced)
                                         <a href="{{ route('admin.draws.results', $draw->id) }}"
-                                            class="text-blue-600 hover:text-blue-800 font-semibold">
+                                            class="text-emerald-600 dark:text-emerald-400 hover:text-emerald-800 dark:hover:text-emerald-300 font-semibold transition-colors">
                                             ดูผล
                                         </a>
                                     @else
@@ -139,8 +169,13 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="7" class="px-4 py-8 text-center text-gray-500">
-                                    ยังไม่มีข้อมูลงวดหวย
+                                <td colspan="7" class="px-4 py-16 text-center">
+                                    <div class="text-slate-400 dark:text-slate-500">
+                                        <svg class="w-16 h-16 mx-auto mb-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+                                        </svg>
+                                        <p class="text-lg font-medium text-slate-600 dark:text-slate-400">ยังไม่มีข้อมูลงวดหวย</p>
+                                    </div>
                                 </td>
                             </tr>
                         @endforelse
@@ -154,172 +189,91 @@
         </div>
     </div>
 
-    <!-- แทนที่ส่วน <script> ใน resources/views/admin/draws.blade.php -->
-
     <script>
-        // อักษรย่อเดือนภาษาไทย
+        // Theme Toggle
+        const themeToggle = document.getElementById('themeToggle');
+        const htmlElement = document.documentElement;
+        themeToggle.addEventListener('click', () => {
+            if (htmlElement.classList.contains('dark')) {
+                htmlElement.classList.remove('dark');
+                localStorage.theme = 'light';
+            } else {
+                htmlElement.classList.add('dark');
+                localStorage.theme = 'dark';
+            }
+        });
+
+        // === ORIGINAL LOGIC - DO NOT MODIFY ===
         const thaiMonths = ['', 'มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน',
             'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
 
-        /**
-         * สร้างรายการวันที่งวดหวย
-         * - งวดย้อนหลัง 3 งวด
-         * - งวดในอนาคต 4 งวด
-         * - Auto-select งวดถัดไปที่ใกล้ที่สุด
-         */
         function generateDrawDates() {
             const select = document.getElementById('drawDate');
             const today = new Date();
-            today.setHours(0, 0, 0, 0); // ตั้งเวลาเป็น 00:00:00
-
-            // หาวันที่งวดทั้งหมด
-            const allDrawDates = getAllDrawDates(today, 3, 4); // 3 งวดย้อนหลัง, 4 งวดอนาคต
-
-            // หางวดถัดไปที่ควรเลือก
+            today.setHours(0, 0, 0, 0);
+            const allDrawDates = getAllDrawDates(today, 3, 4);
             const nextDrawDate = getNextDrawDate(today);
-
-            // สร้าง options
             select.innerHTML = allDrawDates.map((dateOption) => {
                 const isSelected = dateOption.value === formatDateForDatabase(nextDrawDate);
-                return `<option value="${dateOption.value}" ${isSelected ? 'selected' : ''}>
-                ${dateOption.label}
-            </option>`;
+                return `<option value="${dateOption.value}" ${isSelected ? 'selected' : ''}>${dateOption.label}</option>`;
             }).join('');
         }
 
-        /**
-         * หาวันที่งวดทั้งหมด (ย้อนหลัง + อนาคต)
-         * @param {Date} today - วันที่ปัจจุบัน
-         * @param {number} pastCount - จำนวนงวดย้อนหลัง
-         * @param {number} futureCount - จำนวนงวดในอนาคต
-         * @returns {Array} - รายการวันที่งวด
-         */
-        function getAllDrawDates(today, pastCount, futureCount) {
+        function getAllDrawDates(referenceDate, pastCount, futureCount) {
             const draws = [];
-
-            // เพิ่มงวดย้อนหลัง
-            const pastDates = getPastDrawDates(today, pastCount);
-            draws.push(...pastDates);
-
-            // เพิ่มงวดในอนาคต
-            const futureDates = getFutureDrawDates(today, futureCount);
-            draws.push(...futureDates);
-
-            // เรียงจากใหม่ไปเก่า
-            draws.sort((a, b) => new Date(b.value) - new Date(a.value));
-
-            return draws;
-        }
-
-        /**
-         * หางวดย้อนหลัง
-         * @param {Date} today - วันที่ปัจจุบัน
-         * @param {number} count - จำนวนงวด
-         * @returns {Array} - รายการวันที่งวดย้อนหลัง
-         */
-        function getPastDrawDates(today, count) {
-            const draws = [];
-            let currentDate = new Date(today);
-
-            while (draws.length < count) {
-                const prevDraw = getPreviousDrawDate(currentDate);
-                draws.push(createDateOption(prevDraw));
-                currentDate = new Date(prevDraw);
-                currentDate.setDate(currentDate.getDate() - 1); // ถอยหลัง 1 วัน
+            let currentDate = new Date(referenceDate);
+            for (let i = 0; i < pastCount; i++) {
+                currentDate = getPreviousDrawDate(currentDate);
+                draws.unshift(createDateOption(new Date(currentDate)));
             }
-
-            return draws;
-        }
-
-        /**
-         * หางวดในอนาคต
-         * @param {Date} today - วันที่ปัจจุบัน
-         * @param {number} count - จำนวนงวด
-         * @returns {Array} - รายการวันที่งวดในอนาคต
-         */
-        function getFutureDrawDates(today, count) {
-            const draws = [];
-            let currentDate = new Date(today);
-
-            while (draws.length < count) {
+            currentDate = new Date(referenceDate);
+            for (let i = 0; i < futureCount; i++) {
                 const nextDraw = getNextDrawDate(currentDate);
-
-                // ป้องกันการเพิ่มงวดซ้ำ
                 const alreadyExists = draws.some(d => d.value === formatDateForDatabase(nextDraw));
                 if (!alreadyExists) {
                     draws.push(createDateOption(nextDraw));
                 }
-
                 currentDate = new Date(nextDraw);
-                currentDate.setDate(currentDate.getDate() + 1); // เดินหน้า 1 วัน
+                currentDate.setDate(currentDate.getDate() + 1);
             }
-
             return draws;
         }
 
-        /**
-         * หางวดถัดไป (งวดที่ใกล้ที่สุดในอนาคต)
-         * @param {Date} referenceDate - วันที่อ้างอิง
-         * @returns {Date} - วันที่งวดถัดไป
-         */
         function getNextDrawDate(referenceDate) {
             const date = new Date(referenceDate);
             const day = date.getDate();
             const month = date.getMonth();
             const year = date.getFullYear();
-
-            // กรณีที่ 1: ถ้าวันที่ปัจจุบัน < 1 → งวดถัดไปคือวันที่ 1 เดือนนี้
             if (day < 1) {
                 return new Date(year, month, 1);
-            }
-            // กรณีที่ 2: ถ้าวันที่ 1 <= วันที่ปัจจุบัน < 16 → งวดถัดไปคือวันที่ 16 เดือนนี้
-            else if (day >= 1 && day < 16) {
+            } else if (day >= 1 && day < 16) {
                 return new Date(year, month, 16);
-            }
-            // กรณีที่ 3: ถ้าวันที่ปัจจุบัน >= 16 → งวดถัดไปคือวันที่ 1 เดือนหน้า
-            else {
+            } else {
                 return new Date(year, month + 1, 1);
             }
         }
 
-        /**
-         * หางวดก่อนหน้า (งวดย้อนหลัง)
-         * @param {Date} referenceDate - วันที่อ้างอิง
-         * @returns {Date} - วันที่งวดก่อนหน้า
-         */
         function getPreviousDrawDate(referenceDate) {
             const date = new Date(referenceDate);
             const day = date.getDate();
             const month = date.getMonth();
             const year = date.getFullYear();
-
-            // กรณีที่ 1: ถ้าวันที่ปัจจุบัน <= 1 → งวดก่อนหน้าคือวันที่ 16 เดือนที่แล้ว
             if (day <= 1) {
                 return new Date(year, month - 1, 16);
-            }
-            // กรณีที่ 2: ถ้าวันที่ 1 < วันที่ปัจจุบัน <= 16 → งวดก่อนหน้าคือวันที่ 1 เดือนนี้
-            else if (day > 1 && day <= 16) {
+            } else if (day > 1 && day <= 16) {
                 return new Date(year, month, 1);
-            }
-            // กรณีที่ 3: ถ้าวันที่ปัจจุบัน > 16 → งวดก่อนหน้าคือวันที่ 16 เดือนนี้
-            else {
+            } else {
                 return new Date(year, month, 16);
             }
         }
 
-        /**
-         * สร้าง object ของวันที่สำหรับ option
-         */
         function createDateOption(date) {
             return {
-                value: formatDateForDatabase(date),  // 2026-03-16
-                label: formatDateThai(date)          // 16 มีนาคม 2569
+                value: formatDateForDatabase(date),
+                label: formatDateThai(date)
             };
         }
 
-        /**
-         * แปลงวันที่เป็นรูปแบบ Y-m-d สำหรับ database
-         */
         function formatDateForDatabase(date) {
             const year = date.getFullYear();
             const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -327,45 +281,10 @@
             return `${year}-${month}-${day}`;
         }
 
-        /**
-         * แปลงวันที่เป็นรูปแบบไทย
-         */
         function formatDateThai(date) {
             const day = date.getDate();
             const month = thaiMonths[date.getMonth() + 1];
             const year = date.getFullYear() + 543;
-            return `${day} ${month} ${year}`;
-        }
-
-        /**
-         * สร้าง object ของวันที่สำหรับ option
-         */
-        function createDateOption(date) {
-            return {
-                value: formatDateForDatabase(date),  // 2026-03-16
-                label: formatDateThai(date)          // 16 มีนาคม 2569
-            };
-        }
-
-        /**
-         * แปลงวันที่เป็นรูปแบบ Y-m-d สำหรับ database
-         * เช่น: 2026-03-16
-         */
-        function formatDateForDatabase(date) {
-            const year = date.getFullYear();
-            const month = String(date.getMonth() + 1).padStart(2, '0');
-            const day = String(date.getDate()).padStart(2, '0');
-            return `${year}-${month}-${day}`;
-        }
-
-        /**
-         * แปลงวันที่เป็นรูปแบบไทย
-         * เช่น: 16 มีนาคม 2569
-         */
-        function formatDateThai(date) {
-            const day = date.getDate();
-            const month = thaiMonths[date.getMonth() + 1];
-            const year = date.getFullYear() + 543; // แปลงเป็น พ.ศ. 4 หลัก
             return `${day} ${month} ${year}`;
         }
 
@@ -375,7 +294,6 @@
 
         document.getElementById('drawForm').addEventListener('submit', async function (e) {
             e.preventDefault();
-
             const formData = new FormData(this);
             const drawDate = formData.get('draw_date');
 

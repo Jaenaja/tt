@@ -1,75 +1,128 @@
 <!DOCTYPE html>
-<html lang="th">
+<html lang="th" class="dark">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>รับแทงหวย</title>
+    <title>รับแทงหวย - ระบบหวย</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        // Configure Tailwind Dark Mode
+        tailwind.config = {
+            darkMode: 'class'
+        }
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Sarabun:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800&display=swap"
+        rel="stylesheet">
+    <script>
+        // Theme initialization - Must run before page render
+        if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+    </script>
+    <style>
+        * {
+            font-family: 'Sarabun', sans-serif;
+        }
+    </style>
 </head>
 
-<body class="bg-gray-100">
+<body class="transition-all duration-300 bg-slate-50 dark:bg-slate-950 min-h-screen">
     <div class="container mx-auto px-4 py-8 max-w-5xl">
-        <div class="flex justify-between items-center mb-4">
-            <a href="{{ route('dashboard') }}" class="text-blue-600 hover:text-blue-800">&larr; กลับหน้าหลัก</a>
-            <div class="text-sm text-gray-600">
-                <span class="font-semibold">{{ Auth::user()->name }}</span>
-                <span class="text-gray-400">|</span>
-                <span class="text-gray-500">{{ Auth::user()->role === 'admin' ? 'ผู้ดูแลระบบ' : 'พนักงาน' }}</span>
-                <form action="{{ route('logout') }}" method="POST" class="inline ml-3">
-                    @csrf
-                    <button type="submit" class="text-red-600 hover:text-red-800">ออกจากระบบ</button>
-                </form>
+        <!-- Breadcrumb & Header -->
+        <div
+            class="transition-all duration-300 bg-white dark:bg-slate-900 rounded-2xl shadow-xl dark:shadow-2xl p-6 mb-6 border border-slate-200 dark:border-slate-800">
+            <div class="flex justify-between items-center mb-4">
+                <nav class="text-sm text-slate-600 dark:text-slate-400">
+                    <a href="{{ route('dashboard') }}"
+                        class="hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">หน้าหลัก</a>
+                    <span class="mx-2">›</span>
+                    <span class="text-slate-900 dark:text-white font-semibold">รับแทงหวย</span>
+                </nav>
+                <div class="flex items-center gap-3">
+                    <!-- Theme Toggle -->
+                    <button id="themeToggle"
+                        class="relative inline-flex h-5 w-9 items-center rounded-full transition-colors duration-300 focus:outline-none bg-slate-300 dark:bg-emerald-600">
+                        <span
+                            class="inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow transition-transform duration-300 translate-x-0.5 dark:translate-x-4.5"></span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="flex justify-between items-center">
+                <div>
+                    <h1 class="text-3xl font-bold text-slate-900 dark:text-white mb-2">🎰 รับแทงหวย</h1>
+                    <p class="text-slate-600 dark:text-slate-400 text-sm">หวยออกทุกวันที่ 1 และ 16 ของทุกเดือน</p>
+                </div>
+                <div class="text-right">
+                    <div
+                        class="transition-all duration-300 inline-flex items-center gap-3 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-full px-4 py-2 mb-2">
+                        <span class="text-sm text-slate-900 dark:text-white font-medium">{{ Auth::user()->name }}</span>
+                        <span class="text-slate-400">|</span>
+                        <span
+                            class="text-sm text-slate-600 dark:text-slate-400">{{ Auth::user()->role === 'admin' ? '👑 ผู้ดูแลระบบ' : '👤 พนักงาน' }}</span>
+                    </div>
+                    <form action="{{ route('logout') }}" method="POST" class="inline">
+                        @csrf
+                        <button type="submit"
+                            class="text-sm text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 transition-colors">ออกจากระบบ</button>
+                    </form>
+                </div>
             </div>
         </div>
 
-        <div class="bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg shadow-lg p-6 mb-6 text-white">
-            <h1 class="text-3xl font-bold">🎰 รับแทงหวย</h1>
-            <p class="text-blue-100">หวยออกทุกวันที่ 1 และ 16 ของทุกเดือน</p>
-        </div>
-
-        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
-            <h2 class="text-2xl font-bold text-gray-800 mb-6">📝 ข้อมูลการแทง</h2>
+        <!-- Input Form -->
+        <div
+            class="transition-all duration-300 bg-white dark:bg-slate-900 rounded-2xl shadow-xl dark:shadow-2xl p-6 mb-6 border border-slate-200 dark:border-slate-800">
+            <h2 class="text-2xl font-bold text-slate-900 dark:text-white mb-6">📝 ข้อมูลการแทง</h2>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                 <div>
-                    <label class="block text-gray-700 font-semibold mb-2">งวดวันที่ *</label>
+                    <label class="block text-slate-700 dark:text-slate-300 font-semibold mb-2">งวดวันที่ *</label>
                     <select id="drawDate"
-                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                        class="w-full px-4 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white rounded-lg focus:ring-2 focus:ring-emerald-500 dark:focus:ring-emerald-600 transition-all">
                     </select>
                 </div>
 
                 <div>
-                    <label class="block text-gray-700 font-semibold mb-2">ชื่อลูกค้า *</label>
+                    <label class="block text-slate-700 dark:text-slate-300 font-semibold mb-2">ชื่อลูกค้า *</label>
                     <input type="text" id="customerName"
-                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                        class="w-full px-4 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white rounded-lg focus:ring-2 focus:ring-emerald-500 dark:focus:ring-emerald-600 transition-all"
                         placeholder="ชื่อลูกค้า">
                 </div>
             </div>
 
             <div class="mb-4">
-                <label class="block text-gray-700 font-semibold mb-2">รูปแบบการกรอก</label>
+                <label class="block text-slate-700 dark:text-slate-300 font-semibold mb-2">รูปแบบการกรอก</label>
                 <div class="flex gap-2 mb-4">
                     <button type="button" onclick="switchFormat('short')" id="btnShort"
-                        class="px-4 py-2 bg-blue-600 text-white rounded-lg font-semibold transition">
+                        class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 dark:bg-emerald-700 dark:hover:bg-emerald-600 text-white rounded-lg font-semibold transition-all">
                         พิมพ์ย่อ / ก๊อปจากแชท
                     </button>
                     <button type="button" onclick="switchFormat('manual')" id="btnManual"
-                        class="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg font-semibold transition">
+                        class="px-4 py-2 bg-slate-300 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-400 dark:hover:bg-slate-600 rounded-lg font-semibold transition-all">
                         กรอกแบบเลือกประเภท
                     </button>
                 </div>
 
                 <div id="textInputArea">
                     <textarea id="betInput" rows="10"
-                        class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 font-mono"
+                        class="w-full px-4 py-3 border-2 border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white rounded-lg focus:ring-2 focus:ring-emerald-500 dark:focus:ring-emerald-600 font-mono transition-all"
                         placeholder="ตัวอย่างการกรอก:&#10;91 20&#10;19 20*20&#10;77=100*0&#10;365 10*6 กลับ"></textarea>
 
-                    <div class="mt-2 p-3 bg-blue-50 border border-blue-200 rounded text-sm">
-                        <p class="font-bold mb-1 text-blue-800">📋 รูปแบบที่รองรับ (พิมพ์รวมหรือแยกบรรทัดก็ได้):</p>
-                        <div id="formatExample" class="font-mono text-gray-700 grid grid-cols-1 md:grid-cols-2 gap-x-4">
+                    <div
+                        class="mt-2 p-3 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded text-sm">
+                        <p class="font-bold mb-1 text-emerald-800 dark:text-emerald-300">📋 รูปแบบที่รองรับ
+                            (พิมพ์รวมหรือแยกบรรทัดก็ได้):</p>
+                        <div id="formatExample"
+                            class="font-mono text-slate-700 dark:text-slate-300 grid grid-cols-1 md:grid-cols-2 gap-x-4">
                             <p>• 91 20 (บนอย่างเดียว)</p>
                             <p>• 91=20 (บนอย่างเดียว)</p>
                             <p>• 91 20*20 (บน*ล่าง)</p>
@@ -84,39 +137,43 @@
                             <p>• 365=10 ก (6 ประตู)</p>
                             <p>• 365 10 กลับ (6 ประตู)</p>
                             <p>• 365=10 กลับ (6 ประตู)</p>
-                            <p class="text-red-600 font-bold col-span-2 mt-1">⚠️ ห้ามใช้เครื่องหมาย / และ - (ระบบจะแจ้ง
-                                Error)</p>
+                            <p class="text-red-600 dark:text-red-400 font-bold col-span-2 mt-1">⚠️ ห้ามใช้เครื่องหมาย /
+                                และ - (ระบบจะแจ้ง Error)</p>
                         </div>
                     </div>
                 </div>
 
                 <div id="manualInputArea" class="hidden">
-                    <div class="bg-white border-2 border-gray-300 rounded-lg p-4">
+                    <div
+                        class="bg-white dark:bg-slate-800 border-2 border-slate-300 dark:border-slate-700 rounded-lg p-4">
                         <div class="mb-4">
-                            <label class="block text-gray-700 font-semibold mb-2">เลือกประเภท:</label>
+                            <label
+                                class="block text-slate-700 dark:text-slate-300 font-semibold mb-2">เลือกประเภท:</label>
                             <div class="grid grid-cols-3 gap-3">
                                 <label class="flex items-center space-x-2 cursor-pointer">
                                     <input type="radio" name="betType" value="2digit" checked
-                                        onchange="updateManualInputFields()" class="w-4 h-4 text-blue-600">
-                                    <span class="text-sm font-medium">2 ตัว</span>
+                                        onchange="updateManualInputFields()" class="w-4 h-4 text-emerald-600">
+                                    <span class="text-sm font-medium text-slate-900 dark:text-white">2 ตัว</span>
                                 </label>
                                 <label class="flex items-center space-x-2 cursor-pointer">
                                     <input type="radio" name="betType" value="3digit"
-                                        onchange="updateManualInputFields()" class="w-4 h-4 text-blue-600">
-                                    <span class="text-sm font-medium">3 ตัว</span>
+                                        onchange="updateManualInputFields()" class="w-4 h-4 text-emerald-600">
+                                    <span class="text-sm font-medium text-slate-900 dark:text-white">3 ตัว</span>
                                 </label>
                                 <label class="flex items-center space-x-2 cursor-pointer">
                                     <input type="radio" name="betType" value="3reverse"
-                                        onchange="updateManualInputFields()" class="w-4 h-4 text-blue-600">
-                                    <span class="text-sm font-medium">3 ตัวกลับ (6 ประตู)</span>
+                                        onchange="updateManualInputFields()" class="w-4 h-4 text-emerald-600">
+                                    <span class="text-sm font-medium text-slate-900 dark:text-white">3 ตัวกลับ (6
+                                        ประตู)</span>
                                 </label>
                             </div>
                         </div>
 
                         <div class="mb-4">
-                            <label class="block text-gray-700 font-semibold mb-2">กรอกตัวเลข (คั่นด้วยเว้นวรรค):</label>
+                            <label class="block text-slate-700 dark:text-slate-300 font-semibold mb-2">กรอกตัวเลข
+                                (คั่นด้วยเว้นวรรค):</label>
                             <textarea id="manualNumbers" rows="3"
-                                class="w-full px-4 py-2 border border-gray-300 rounded-lg font-mono"
+                                class="w-full px-4 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white rounded-lg font-mono"
                                 placeholder="เช่น: 91 20 19 41 52"></textarea>
                         </div>
 
@@ -126,81 +183,100 @@
             </div>
 
             <button onclick="parseAndPreview()"
-                class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-lg transition">
+                class="w-full bg-emerald-600 hover:bg-emerald-700 dark:bg-emerald-700 dark:hover:bg-emerald-600 text-white font-bold py-3 rounded-lg transition-all">
                 🔍 อ่านโพยและแสดงผล
             </button>
         </div>
 
+        <!-- Results Section -->
         <div id="resultSection" class="hidden">
-            <div class="bg-white rounded-lg shadow-md p-6 mb-6">
-                <h2 class="text-2xl font-bold text-gray-800 mb-4">📊 ผลการแปลโพย</h2>
+            <div
+                class="transition-all duration-300 bg-white dark:bg-slate-900 rounded-2xl shadow-xl dark:shadow-2xl p-6 mb-6 border border-slate-200 dark:border-slate-800">
+                <h2 class="text-2xl font-bold text-slate-900 dark:text-white mb-4">📊 ผลการแปลโพย</h2>
 
-                <div class="mb-6 p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border border-blue-200">
+                <div
+                    class="mb-6 p-4 bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/20 rounded-lg border border-emerald-200 dark:border-emerald-800">
                     <div class="grid grid-cols-3 gap-4 text-center">
                         <div>
-                            <p class="text-sm text-gray-600">งวดวันที่</p>
-                            <p class="text-lg font-bold text-blue-600" id="displayDrawDate"></p>
+                            <p class="text-sm text-slate-600 dark:text-slate-400">งวดวันที่</p>
+                            <p class="text-lg font-bold text-emerald-600 dark:text-emerald-400" id="displayDrawDate">
+                            </p>
                         </div>
                         <div>
-                            <p class="text-sm text-gray-600">ลูกค้า</p>
-                            <p class="text-lg font-bold text-purple-600" id="displayCustomer"></p>
+                            <p class="text-sm text-slate-600 dark:text-slate-400">ลูกค้า</p>
+                            <p class="text-lg font-bold text-teal-600 dark:text-teal-400" id="displayCustomer"></p>
                         </div>
                         <div>
-                            <p class="text-sm text-gray-600">สร้างโดย</p>
-                            <p class="text-lg font-bold text-green-600">{{ Auth::user()->name }}</p>
+                            <p class="text-sm text-slate-600 dark:text-slate-400">สร้างโดย</p>
+                            <p class="text-lg font-bold text-violet-600 dark:text-violet-400">{{ Auth::user()->name }}
+                            </p>
                         </div>
                     </div>
                 </div>
 
-                <div class="overflow-x-auto mb-6">
-                    <table class="w-full border-collapse">
-                        <thead>
-                            <tr class="bg-gradient-to-r from-gray-700 to-gray-800 text-white">
-                                <th class="px-4 py-3 text-left">เลข</th>
-                                <th class="px-4 py-3 text-right">บน</th>
-                                <th class="px-4 py-3 text-right">ล่าง</th>
-                                <th class="px-4 py-3 text-right">โต๊ด</th>
-                                <th class="px-4 py-3 text-right">รวม</th>
-                                <th class="px-4 py-3 text-center">ลบ</th>
+                <div class="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-700">
+                    <table class="w-full text-sm">
+                        <thead class="bg-slate-100 dark:bg-slate-800">
+                            <tr>
+                                <th class="px-4 py-3 text-left text-slate-900 dark:text-slate-200 font-bold">เลข</th>
+                                <th class="px-4 py-3 text-right text-slate-900 dark:text-slate-200 font-bold">บน</th>
+                                <th class="px-4 py-3 text-right text-slate-900 dark:text-slate-200 font-bold">ล่าง</th>
+                                <th class="px-4 py-3 text-right text-slate-900 dark:text-slate-200 font-bold">โต๊ด</th>
+                                <th class="px-4 py-3 text-right text-slate-900 dark:text-slate-200 font-bold">รวม</th>
+                                <th class="px-4 py-3 text-center text-slate-900 dark:text-slate-200 font-bold">ลบ</th>
                             </tr>
                         </thead>
-                        <tbody id="resultTable" class="divide-y divide-gray-200"></tbody>
+                        <tbody id="resultTable"
+                            class="divide-y divide-slate-200 dark:divide-slate-700 bg-white dark:bg-slate-900">
+                        </tbody>
                     </table>
                 </div>
 
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                    <div class="bg-blue-100 rounded-lg p-4 text-center border-2 border-blue-300">
-                        <p class="text-sm text-gray-700 font-semibold">บนรวม</p>
-                        <p class="text-2xl font-bold text-blue-700" id="totalTop">0</p>
-                        <p class="text-xs text-gray-600">บาท</p>
-                    </div>
-                    <div class="bg-green-100 rounded-lg p-4 text-center border-2 border-green-300">
-                        <p class="text-sm text-gray-700 font-semibold">ล่างรวม</p>
-                        <p class="text-2xl font-bold text-green-700" id="totalBottom">0</p>
-                        <p class="text-xs text-gray-600">บาท</p>
-                    </div>
-                    <div class="bg-purple-100 rounded-lg p-4 text-center border-2 border-purple-300">
-                        <p class="text-sm text-gray-700 font-semibold">โต๊ดรวม</p>
-                        <p class="text-2xl font-bold text-purple-700" id="totalToad">0</p>
-                        <p class="text-xs text-gray-600">บาท</p>
-                    </div>
-                    <div
-                        class="bg-gradient-to-br from-orange-100 to-red-100 rounded-lg p-4 text-center border-2 border-orange-300">
-                        <p class="text-sm text-gray-700 font-semibold">ยอดแทงรวม</p>
-                        <p class="text-3xl font-bold text-red-700" id="grandTotal">0</p>
-                        <p class="text-xs text-gray-600">บาท</p>
+                <div
+                    class="mt-6 p-4 bg-slate-100 dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700">
+                    <div class="grid grid-cols-4 gap-4 text-center">
+                        <div>
+                            <p class="text-xs text-slate-600 dark:text-slate-400 mb-1">บน</p>
+                            <p class="text-2xl font-bold text-emerald-600 dark:text-emerald-400" id="totalTop">0.00</p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-slate-600 dark:text-slate-400 mb-1">ล่าง</p>
+                            <p class="text-2xl font-bold text-blue-600 dark:text-blue-400" id="totalBottom">0.00</p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-slate-600 dark:text-slate-400 mb-1">โต๊ด</p>
+                            <p class="text-2xl font-bold text-violet-600 dark:text-violet-400" id="totalToad">0.00</p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-slate-600 dark:text-slate-400 mb-1">รวมทั้งหมด</p>
+                            <p class="text-3xl font-bold text-slate-900 dark:text-white" id="grandTotal">0.00</p>
+                        </div>
                     </div>
                 </div>
 
                 <button onclick="saveBets()"
-                    class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-4 rounded-lg transition text-lg">
-                    💾 บันทึกการแทง
+                    class="w-full mt-6 bg-emerald-600 hover:bg-emerald-700 dark:bg-emerald-700 dark:hover:bg-emerald-600 text-white font-bold py-3 rounded-lg transition-all">
+                    💾 บันทึกข้อมูล
                 </button>
             </div>
         </div>
     </div>
 
     <script>
+        // Theme Toggle Functionality
+        const themeToggle = document.getElementById('themeToggle');
+        const htmlElement = document.documentElement;
+
+        themeToggle.addEventListener('click', () => {
+            if (htmlElement.classList.contains('dark')) {
+                htmlElement.classList.remove('dark');
+                localStorage.theme = 'light';
+            } else {
+                htmlElement.classList.add('dark');
+                localStorage.theme = 'dark';
+            }
+        });
+
         let parsedBets = [];
         let currentFormat = 'short';
 
@@ -251,8 +327,12 @@
 
         function switchFormat(format) {
             currentFormat = format;
-            document.getElementById('btnShort').className = format === 'short' ? 'px-4 py-2 bg-blue-600 text-white rounded-lg font-semibold' : 'px-4 py-2 bg-gray-300 text-gray-700 rounded-lg font-semibold';
-            document.getElementById('btnManual').className = format === 'manual' ? 'px-4 py-2 bg-blue-600 text-white rounded-lg font-semibold' : 'px-4 py-2 bg-gray-300 text-gray-700 rounded-lg font-semibold';
+            document.getElementById('btnShort').className = format === 'short'
+                ? 'px-4 py-2 bg-emerald-600 hover:bg-emerald-700 dark:bg-emerald-700 dark:hover:bg-emerald-600 text-white rounded-lg font-semibold transition-all'
+                : 'px-4 py-2 bg-slate-300 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-400 dark:hover:bg-slate-600 rounded-lg font-semibold transition-all';
+            document.getElementById('btnManual').className = format === 'manual'
+                ? 'px-4 py-2 bg-emerald-600 hover:bg-emerald-700 dark:bg-emerald-700 dark:hover:bg-emerald-600 text-white rounded-lg font-semibold transition-all'
+                : 'px-4 py-2 bg-slate-300 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-400 dark:hover:bg-slate-600 rounded-lg font-semibold transition-all';
             document.getElementById('textInputArea').classList.toggle('hidden', format !== 'short');
             document.getElementById('manualInputArea').classList.toggle('hidden', format !== 'manual');
         }
@@ -262,13 +342,13 @@
             const container = document.getElementById('manualPriceFields');
             let html = '<div class="grid grid-cols-2 gap-4">';
             if (betType === '2digit') {
-                html += `<div><label class="block text-sm font-medium mb-1">ราคาบน</label><input type="number" id="priceTop" value="10" class="w-full px-3 py-2 border rounded-lg"></div>
-                         <div><label class="block text-sm font-medium mb-1">ราคาล่าง</label><input type="number" id="priceBottom" value="10" class="w-full px-3 py-2 border rounded-lg"></div>`;
+                html += `<div><label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">ราคาบน</label><input type="number" id="priceTop" value="10" class="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white rounded-lg"></div>
+                         <div><label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">ราคาล่าง</label><input type="number" id="priceBottom" value="10" class="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white rounded-lg"></div>`;
             } else if (betType === '3digit') {
-                html += `<div><label class="block text-sm font-medium mb-1">ราคาบน</label><input type="number" id="priceTop" value="10" class="w-full px-3 py-2 border rounded-lg"></div>
-                         <div><label class="block text-sm font-medium mb-1">ราคาโต๊ด</label><input type="number" id="priceToad" value="10" class="w-full px-3 py-2 border rounded-lg"></div>`;
+                html += `<div><label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">ราคาบน</label><input type="number" id="priceTop" value="10" class="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white rounded-lg"></div>
+                         <div><label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">ราคาโต๊ด</label><input type="number" id="priceToad" value="10" class="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white rounded-lg"></div>`;
             } else {
-                html += `<div class="col-span-2"><label class="block text-sm font-medium mb-1">ยอดต่อประตู</label><input type="number" id="pricePerDoor" value="10" class="w-full px-3 py-2 border rounded-lg"></div>`;
+                html += `<div class="col-span-2"><label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">ยอดต่อประตู</label><input type="number" id="pricePerDoor" value="10" class="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white rounded-lg"></div>`;
             }
             container.innerHTML = html + '</div>';
         }
@@ -407,14 +487,14 @@
             document.getElementById('displayCustomer').textContent = customerName;
             let html = '';
             bets.forEach((bet, index) => {
-                const numClass = bet.number.length === 2 ? 'text-blue-600' : 'text-purple-600';
-                html += `<tr class="hover:bg-gray-50">
+                const numClass = bet.number.length === 2 ? 'text-emerald-600 dark:text-emerald-400' : 'text-violet-600 dark:text-violet-400';
+                html += `<tr class="transition-all duration-200 hover:bg-slate-50 dark:hover:bg-slate-800">
                     <td class="px-4 py-3 font-bold text-xl ${numClass}">${bet.number}</td>
-                    <td class="px-4 py-3 text-right">${bet.top > 0 ? bet.top.toFixed(2) : '-'}</td>
-                    <td class="px-4 py-3 text-right">${bet.bottom > 0 ? bet.bottom.toFixed(2) : '-'}</td>
-                    <td class="px-4 py-3 text-right">${bet.toad > 0 ? bet.toad.toFixed(2) : '-'}</td>
-                    <td class="px-4 py-3 text-right font-bold">${(bet.top + bet.bottom + bet.toad).toFixed(2)}</td>
-                    <td class="px-4 py-3 text-center"><button onclick="deleteRow(${index})" class="text-red-600">❌</button></td>
+                    <td class="px-4 py-3 text-right text-slate-800 dark:text-slate-300">${bet.top > 0 ? bet.top.toFixed(2) : '-'}</td>
+                    <td class="px-4 py-3 text-right text-slate-800 dark:text-slate-300">${bet.bottom > 0 ? bet.bottom.toFixed(2) : '-'}</td>
+                    <td class="px-4 py-3 text-right text-slate-800 dark:text-slate-300">${bet.toad > 0 ? bet.toad.toFixed(2) : '-'}</td>
+                    <td class="px-4 py-3 text-right font-bold text-slate-900 dark:text-white">${(bet.top + bet.bottom + bet.toad).toFixed(2)}</td>
+                    <td class="px-4 py-3 text-center"><button onclick="deleteRow(${index})" class="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300">❌</button></td>
                 </tr>`;
             });
             document.getElementById('resultTable').innerHTML = html;
