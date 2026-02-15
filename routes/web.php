@@ -45,9 +45,19 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/draws', [LotteryDrawController::class, 'store'])->name('draws.store');
         Route::get('/draws/{id}/results', [LotteryDrawController::class, 'results'])->name('draws.results');
 
-        // Reports
-        Route::get('/reports/summary/{drawId}', [ReportController::class, 'summary'])->name('reports.summary');
-        Route::get('/reports/pdf/{drawId}', [ReportController::class, 'exportPDF'])->name('reports.pdf');
-        Route::get('/reports/statistics', [ReportController::class, 'statistics'])->name('reports.statistics');
+        // Reports - หน้าสรุปรายงาน (ฟีเจอร์ใหม่)
+        Route::prefix('reports')->name('reports.')->group(function () {
+            // หน้ารายการงวดทั้งหมด
+            Route::get('/', [ReportController::class, 'index'])->name('index');
+
+            // หน้าสรุปรายละเอียดแต่ละงวด
+            Route::get('/summary/{drawId}', [ReportController::class, 'summary'])->name('summary');
+
+            // Export PDF
+            Route::get('/pdf/{drawId}', [ReportController::class, 'exportPDF'])->name('pdf');
+
+            // สถิติรวม
+            Route::get('/statistics', [ReportController::class, 'statistics'])->name('statistics');
+        });
     });
 });
