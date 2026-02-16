@@ -1,11 +1,13 @@
 <?php
 // routes/web.php
+
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\LotteryBetController;
 use App\Http\Controllers\LotteryDrawController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\ReportController;
+use App\Http\Controllers\RiskSettingsController;
 use Illuminate\Support\Facades\Route;
 
 // Auth Routes
@@ -36,28 +38,29 @@ Route::middleware(['auth'])->group(function () {
         Route::put('/users/{id}', [AdminController::class, 'updateUser'])->name('users.update');
         Route::delete('/users/{id}', [AdminController::class, 'deleteUser'])->name('users.delete');
 
-        // Config Management
+        // Config Management (เก่า - อาจลบทิ้งได้)
         Route::get('/config', [AdminController::class, 'config'])->name('config');
         Route::post('/config', [AdminController::class, 'updateConfig'])->name('config.update');
+
+        // Risk Settings (ใหม่ - แทนที่ Config)
+        Route::get('/risk-settings', [RiskSettingsController::class, 'index'])->name('risk-settings');
+        Route::put('/risk-settings', [RiskSettingsController::class, 'update'])->name('risk-settings.update');
 
         // Lottery Draw Results
         Route::get('/draws', [LotteryDrawController::class, 'index'])->name('draws');
         Route::post('/draws', [LotteryDrawController::class, 'store'])->name('draws.store');
         Route::get('/draws/{id}/results', [LotteryDrawController::class, 'results'])->name('draws.results');
 
-        // Reports - หน้าสรุปรายงาน (ฟีเจอร์ใหม่)
+        // Reports
         Route::prefix('reports')->name('reports.')->group(function () {
-            // หน้ารายการงวดทั้งหมด
             Route::get('/', [ReportController::class, 'index'])->name('index');
-
-            // หน้าสรุปรายละเอียดแต่ละงวด
             Route::get('/summary/{drawId}', [ReportController::class, 'summary'])->name('summary');
-
-            // Export PDF
             Route::get('/pdf/{drawId}', [ReportController::class, 'exportPDF'])->name('pdf');
-
-            // สถิติรวม
             Route::get('/statistics', [ReportController::class, 'statistics'])->name('statistics');
+            // เพิ่ม Route สำหรับลบ Bet (เฉพาะงวดที่ยังไม่ประกาศผล)
+            Route::delete('/bets/{betId}', [ReportController::class, 'deleteBet'])->name('bets.delete');
+            Route::delete('/admin/reports/bets/{betId}', [ReportController::class, 'deleteBet'])
+                ->name('admin.reports.bets.delete');
         });
     });
 });
