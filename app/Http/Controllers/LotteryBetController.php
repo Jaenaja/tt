@@ -120,9 +120,35 @@ class LotteryBetController extends Controller
         return view('bets.history', compact('bets', 'drawDates'));
     }
 
-    public function destroy($id)
+    public function destroy(Request $request, $id)
     {
         try {
+            // ตรวจสอบรหัสลบจาก Setting
+            $deleteCode = \App\Models\Setting::get('delete_code', '');
+
+            if (empty($deleteCode)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'กรุณาตั้งรหัสลบในหน้าตั้งค่าความเสี่ยงก่อนใช้งาน'
+                ], 400);
+            }
+
+            // Validate รหัสที่กรอกเข้ามา
+            $request->validate([
+                'delete_code' => 'required|digits:6'
+            ], [
+                'delete_code.required' => 'กรุณากรอกรหัสลบ',
+                'delete_code.digits' => 'รหัสลบต้องเป็นตัวเลข 6 หลัก'
+            ]);
+
+            // ตรวจสอบความถูกต้องของรหัส
+            if ($request->delete_code !== $deleteCode) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'รหัสลบไม่ถูกต้อง กรุณาลองใหม่อีกครั้ง'
+                ], 403);
+            }
+
             $bet = LotteryBet::findOrFail($id);
 
             // ตรวจสอบว่างวดนั้นประกาศผลแล้วหรือยัง
@@ -145,6 +171,11 @@ class LotteryBetController extends Controller
                 'message' => 'ลบรายการเรียบร้อยแล้ว'
             ]);
 
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->validator->errors()->first()
+            ], 422);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,

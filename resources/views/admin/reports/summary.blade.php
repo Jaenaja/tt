@@ -98,6 +98,60 @@
             transition: transform 0.3s ease;
         }
 
+        /* Back to Top Button - Glassmorphism */
+        #backToTop {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            opacity: 0;
+            visibility: hidden;
+            z-index: 1000;
+        }
+
+        #backToTop.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        #backToTop:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-5px);
+            box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.45);
+        }
+
+        .dark #backToTop {
+            background: rgba(16, 185, 129, 0.15);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        .dark #backToTop:hover {
+            background: rgba(16, 185, 129, 0.25);
+        }
+
+        #backToTop svg {
+            width: 24px;
+            height: 24px;
+            color: #10b981;
+        }
+
+        .dark #backToTop svg {
+            color: #6ee7b7;
+        }
+
+
         .rotate-icon.active {
             transform: rotate(180deg);
         }
@@ -690,16 +744,15 @@
                 <table class="w-full">
                     <thead class="bg-slate-100 dark:bg-slate-800">
                         <tr>
-                            <th class="px-4 py-3 text-left text-slate-700 dark:text-slate-300 font-semibold">เวลา</th>
                             <th class="px-4 py-3 text-left text-slate-700 dark:text-slate-300 font-semibold">ชื่อลูกค้า
                             </th>
-                            <th class="px-4 py-3 text-left text-slate-700 dark:text-slate-300 font-semibold text-xs">
-                                บันทึกโดย</th>
                             <th class="px-4 py-3 text-center text-slate-700 dark:text-slate-300 font-semibold">เลข</th>
                             <th class="px-4 py-3 text-right text-slate-700 dark:text-slate-300 font-semibold">บน</th>
                             <th class="px-4 py-3 text-right text-slate-700 dark:text-slate-300 font-semibold">ล่าง</th>
                             <th class="px-4 py-3 text-right text-slate-700 dark:text-slate-300 font-semibold">โต๊ด</th>
                             <th class="px-4 py-3 text-right text-slate-700 dark:text-slate-300 font-semibold">รวม</th>
+                            <th class="px-4 py-3 text-left text-slate-700 dark:text-slate-300 font-semibold text-xs">
+                                บันทึกเมื่อ</th>
                             @if($draw->is_announced)
                                 <th class="px-4 py-3 text-center text-slate-700 dark:text-slate-300 font-semibold">ผล</th>
                             @else
@@ -712,14 +765,8 @@
                         @forelse($betsHistory as $bet)
                             <tr class="hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
                                 data-bet-id="{{ $bet->id }}">
-                                <td class="px-4 py-3 text-sm text-slate-600 dark:text-slate-400">
-                                    {{ \Carbon\Carbon::parse($bet->created_at)->format('H:i:s') }}
-                                </td>
                                 <td class="px-4 py-3 font-semibold text-slate-900 dark:text-white">
                                     {{ $bet->customer_name }}
-                                </td>
-                                <td class="px-4 py-3 text-xs text-slate-600 dark:text-slate-400">
-                                    {{ $bet->creator ? $bet->creator->name : '-' }}
                                 </td>
                                 <td class="px-4 py-3 text-center">
                                     {{-- แยกสีเลข: 2 ตัว = emerald, 3 ตัว = violet --}}
@@ -740,6 +787,10 @@
                                 <td class="px-4 py-3 text-right font-bold text-blue-600 dark:text-blue-400">
                                     {{ number_format($bet->amount_top + $bet->amount_bottom + $bet->amount_toad, 0) }} ฿
                                 </td>
+                                <td class="px-4 py-3 text-xs text-slate-600 dark:text-slate-400">
+                                    <div>{{ $bet->creator ? $bet->creator->name : '-' }}</div>
+                                    <div>{{ \Carbon\Carbon::parse($bet->created_at)->format('d/m/y H:i') }}</div>
+                                </td>
                                 @if($draw->is_announced)
                                     <td class="px-4 py-3 text-center">
                                         @if($bet->is_win_top || $bet->is_win_bottom || $bet->is_win_toad)
@@ -757,16 +808,11 @@
                                     </td>
                                 @else
                                     <td class="px-4 py-3 text-center no-print">
-                                        {{-- ใช้ Form แทน AJAX เพื่อแก้ปัญหา 405 --}}
-                                        <form action="{{ route('admin.reports.bets.delete', $bet->id) }}" method="POST"
-                                            class="inline-block delete-form">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="button" onclick="confirmDelete(this)"
-                                                class="px-3 py-1 bg-red-500 hover:bg-red-600 text-white rounded-lg text-sm font-semibold transition-colors">
-                                                🗑️ ลบ
-                                            </button>
-                                        </form>
+                                        <button
+                                            onclick="deleteBet({{ $bet->id }}, '{{ $bet->customer_name }}', '{{ $bet->number }}')"
+                                            class="px-3 py-1 bg-red-500 hover:bg-red-600 text-white rounded-lg text-sm font-semibold transition-colors">
+                                            🗑️ ลบ
+                                        </button>
                                     </td>
                                 @endif
                             </tr>
@@ -840,22 +886,75 @@
             }
         });
 
-        // Delete Function ใช้ Form แทน AJAX
-        function confirmDelete(button) {
-            Swal.fire({
-                title: 'ยืนยันการลบ?',
-                text: 'คุณต้องการลบรายการนี้ใช่หรือไม่?',
+        async function deleteBet(id, customerName, number) {
+            const { value: deleteCode } = await Swal.fire({
+                title: '🔐 กรอกรหัสลบ',
+                html: `
+                    <p class="text-slate-600 dark:text-slate-400 mb-4">
+                        ลบรายการ: <strong>${customerName} - ${number}</strong>
+                    </p>
+                    <input type="text" id="deleteCode" class="swal2-input" placeholder="รหัส 6 หลัก" maxlength="6" pattern="[0-9]{6}">
+                `,
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#ef4444',
                 cancelButtonColor: '#64748b',
-                confirmButtonText: 'ใช่, ลบเลย',
-                cancelButtonText: 'ยกเลิก'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    button.closest('form').submit();
+                confirmButtonText: 'ยืนยันการลบ',
+                cancelButtonText: 'ยกเลิก',
+                preConfirm: () => {
+                    const code = document.getElementById('deleteCode').value;
+                    if (!code) {
+                        Swal.showValidationMessage('กรุณากรอกรหัสลบ');
+                        return false;
+                    }
+                    if (!/^\d{6}$/.test(code)) {
+                        Swal.showValidationMessage('รหัสลบต้องเป็นตัวเลข 6 หลัก');
+                        return false;
+                    }
+                    return code;
                 }
             });
+
+            if (!deleteCode) return;
+
+            try {
+                const response = await fetch(`{{ url('/admin/reports/bets') }}/${id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        delete_code: deleteCode
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    await Swal.fire({
+                        title: 'ลบแล้ว!',
+                        text: data.message,
+                        icon: 'success',
+                        timer: 1500,
+                        showConfirmButton: false
+                    });
+
+                    const section = document.getElementById('betsHistorySection');
+                    if (section) {
+                        section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
+
+                    setTimeout(() => {
+                        location.reload();
+                    }, 1000);
+                } else {
+                    Swal.fire('ผิดพลาด!', data.message, 'error');
+                }
+            } catch (error) {
+                Swal.fire('ผิดพลาด!', 'เกิดข้อผิดพลาดในการลบข้อมูล', 'error');
+            }
         }
 
         // ข้อมูลจาก Controller
@@ -1095,6 +1194,34 @@
 
         renderCharts();
     </script>
+
+    <!-- Back to Top Button -->
+    <div id="backToTop">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18" />
+        </svg>
+    </div>
+
+    <script>
+        // Back to Top Button
+        const backToTop = document.getElementById('backToTop');
+
+        window.addEventListener('scroll', () => {
+            if (window.pageYOffset > 300) {
+                backToTop.classList.add('show');
+            } else {
+                backToTop.classList.remove('show');
+            }
+        });
+
+        backToTop.addEventListener('click', () => {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        });
+    </script>
+
 </body>
 
 </html>
