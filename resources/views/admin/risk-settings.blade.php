@@ -59,7 +59,7 @@
                     <h1 class="text-4xl font-bold text-slate-900 dark:text-white mb-2 flex items-center gap-3">
                         <span>⚙️</span> ตั้งค่าความเสี่ยง
                     </h1>
-                    <p class="text-slate-700 dark:text-slate-400">กำหนดเพดานการจ่าย อัตราจ่าย และระบบตัดยอดอัตโนมัติ</p>
+                    <p class="text-slate-700 dark:text-slate-400">กำหนดเพดานการจ่าย อัตราจ่าย และค่าคอมมิชชั่น</p>
                 </div>
                 <button id="themeToggle" 
                         class="relative inline-flex h-5 w-9 items-center rounded-full transition-colors duration-300 focus:outline-none bg-slate-300 dark:bg-emerald-600">
@@ -182,44 +182,6 @@
                 </div>
             </div>
 
-            {{-- Auto Transfer --}}
-            <div class="transition-all duration-300 premium-card bg-white dark:bg-slate-900 rounded-2xl p-8 mb-8 shadow-xl dark:shadow-2xl border border-slate-200 dark:border-slate-800">
-                <h2 class="text-2xl font-bold text-slate-900 dark:text-white mb-6 flex items-center gap-2">
-                    <span>🔄</span> ระบบตัดยอดอัตโนมัติ (Auto Transfer)
-                </h2>
-                
-                <div class="flex items-center justify-between p-6 bg-slate-50 dark:bg-slate-800 rounded-lg mb-6">
-                    <div>
-                        <h3 class="font-bold text-slate-900 dark:text-white mb-1">เปิด/ปิด ระบบตัดยอดอัตโนมัติ</h3>
-                        <p class="text-sm text-slate-600 dark:text-slate-400">เมื่อยอด Liability เกินเพดาน จะตัดยอดส่วนเกินออกอัตโนมัติ</p>
-                    </div>
-                    <label class="relative inline-flex items-center cursor-pointer">
-                        <input type="checkbox" name="auto_transfer_enabled" value="1" 
-                               class="sr-only peer" {{ $settings['auto_transfer_enabled'] ? 'checked' : '' }}>
-                        <div class="w-14 h-7 bg-slate-300 dark:bg-slate-700 peer-focus:outline-none rounded-full peer 
-                                    peer-checked:after:translate-x-full peer-checked:after:border-white 
-                                    after:content-[''] after:absolute after:top-0.5 after:left-[4px] 
-                                    after:bg-white after:rounded-full after:h-6 after:w-6 after:transition-all 
-                                    peer-checked:bg-emerald-600"></div>
-                    </label>
-                </div>
-
-                <div>
-                    <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
-                        เริ่มตัดยอดที่ (%)
-                    </label>
-                    <input type="number" name="auto_transfer_threshold" value="{{ old('auto_transfer_threshold', $settings['auto_transfer_threshold']) }}"
-                           class="w-full md:w-1/2 px-4 py-3 bg-slate-50 dark:bg-slate-800 border-2 border-slate-300 dark:border-slate-700 rounded-lg focus:border-emerald-500 focus:outline-none text-slate-900 dark:text-white"
-                           min="0" max="200" required>
-                    <p class="text-sm text-slate-600 dark:text-slate-400 mt-2">
-                        💡 100 = ตัดเมื่อถึง 100% ของ Max Payout, 150 = ตัดเมื่อถึง 150%
-                    </p>
-                    @error('auto_transfer_threshold')
-                        <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
-                    @enderror
-                </div>
-            </div>
-
             {{-- Commission --}}
             <div class="transition-all duration-300 premium-card bg-white dark:bg-slate-900 rounded-2xl p-8 mb-8 shadow-xl dark:shadow-2xl border border-slate-200 dark:border-slate-800">
                 <h2 class="text-2xl font-bold text-slate-900 dark:text-white mb-6 flex items-center gap-2">
@@ -233,6 +195,27 @@
                            class="w-full md:w-1/2 px-4 py-3 bg-slate-50 dark:bg-slate-800 border-2 border-slate-300 dark:border-slate-700 rounded-lg focus:border-emerald-500 focus:outline-none text-slate-900 dark:text-white"
                            min="0" max="100" step="0.01" required>
                     @error('commission_rate')
+                        <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+                    @enderror
+                </div>
+            </div>
+
+            {{-- Delete Code --}}
+            <div class="transition-all duration-300 premium-card bg-white dark:bg-slate-900 rounded-2xl p-8 mb-8 shadow-xl dark:shadow-2xl border border-slate-200 dark:border-slate-800">
+                <h2 class="text-2xl font-bold text-slate-900 dark:text-white mb-6 flex items-center gap-2">
+                    <span>🔐</span> รหัสลบรายการแทงหวย
+                </h2>
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
+                        รหัสลบ 6 หลัก
+                    </label>
+                    <input type="text" name="delete_code" value="{{ old('delete_code', $settings['delete_code']) }}"
+                           class="w-full md:w-1/2 px-4 py-3 bg-slate-50 dark:bg-slate-800 border-2 border-slate-300 dark:border-slate-700 rounded-lg focus:border-emerald-500 focus:outline-none text-slate-900 dark:text-white"
+                           maxlength="6" pattern="[0-9]{6}" placeholder="ตัวอย่าง: 123456">
+                    <p class="text-sm text-slate-600 dark:text-slate-400 mt-2">
+                        💡 ใช้สำหรับยืนยันการลบรายการแทงหวยที่ยังไม่ได้ประกาศผล (ต้องกรอกรหัสนี้ทุกครั้งที่ลบ)
+                    </p>
+                    @error('delete_code')
                         <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
                     @enderror
                 </div>

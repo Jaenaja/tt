@@ -33,8 +33,6 @@ class ReportController extends Controller
         $settings = [
             'max_payout_2_digit' => Setting::get('max_payout_2_digit', 50000),
             'max_payout_3_digit' => Setting::get('max_payout_3_digit', 100000),
-            'auto_transfer_enabled' => Setting::get('auto_transfer_enabled', false),
-            'auto_transfer_threshold' => Setting::get('auto_transfer_threshold', 100),
             'rate_2_top' => Setting::get('rate_2_top', 90),
             'rate_2_bottom' => Setting::get('rate_2_bottom', 90),
             'rate_3_top' => Setting::get('rate_3_top', 900),
@@ -205,6 +203,30 @@ class ReportController extends Controller
      */
     public function deleteBet(Request $request, $betId)
     {
+        // ตรวจสอบรหัสลบ
+        $deleteCode = Setting::get('delete_code', '');
+        
+        if (empty($deleteCode)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'กรุณาตั้งรหัสลบในหน้าตั้งค่าความเสี่ยงก่อนใช้งาน'
+            ], 400);
+        }
+
+        $request->validate([
+            'delete_code' => 'required|digits:6'
+        ], [
+            'delete_code.required' => 'กรุณากรอกรหัสลบ',
+            'delete_code.digits' => 'รหัสลบต้องเป็นตัวเลข 6 หลัก'
+        ]);
+
+        if ($request->delete_code !== $deleteCode) {
+            return response()->json([
+                'success' => false,
+                'message' => 'รหัสลบไม่ถูกต้อง กรุณาลองใหม่อีกครั้ง'
+            ], 403);
+        }
+
         $bet = LotteryBet::findOrFail($betId);
 
         // ตรวจสอบว่างวดยังไม่ประกาศผล
@@ -217,8 +239,9 @@ class ReportController extends Controller
             ], 403);
         }
 
-        // Soft delete
+        // Soft delete พร้อมบันทึกผู้ลบและเวลา
         $bet->deleted_at = now();
+        $bet->deleted_by = Auth::id();
         $bet->save();
 
         return response()->json([

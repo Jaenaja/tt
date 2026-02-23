@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\LotteryDraw;
 use App\Models\LotteryBet;
-use App\Models\Config;
+use App\Models\Setting;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -79,10 +79,10 @@ class LotteryDrawController extends Controller
             ->get();
 
         $rates = [
-            '2_top' => Config::get('rate_2_top', 90),
-            '2_bottom' => Config::get('rate_2_bottom', 90),
-            '3_top' => Config::get('rate_3_top', 900),
-            '3_toad' => Config::get('rate_3_toad', 120),
+            '2_top' => Setting::get('rate_2_top', 90),
+            '2_bottom' => Setting::get('rate_2_bottom', 90),
+            '3_top' => Setting::get('rate_3_top', 900),
+            '3_toad' => Setting::get('rate_3_toad', 120),
         ];
 
         foreach ($bets as $bet) {
@@ -138,14 +138,15 @@ class LotteryDrawController extends Controller
 
     private function isToadWin($betNumber, $resultNumber)
     {
-        // โต๊ด = เลขเรียงไม่ตรงแต่ตัวเลขเหมือนกัน
+        // โต๊ด = เลขที่มีตัวเลขครบทั้ง 3 ตัวเหมือนกัน ไม่ว่าจะเรียงอย่างไร (รวมตัวที่ตรงด้วย)
+        // ตัวอย่าง: ถ้าซื้อ 123 และผลรางวัลออก 123, 132, 213, 231, 312, 321 ถือว่าถูกทั้งหมด
         $betDigits = str_split($betNumber);
         $resultDigits = str_split($resultNumber);
 
         sort($betDigits);
         sort($resultDigits);
 
-        return $betDigits === $resultDigits && $betNumber !== $resultNumber;
+        return $betDigits === $resultDigits;
     }
 
     public function results($id)

@@ -18,8 +18,6 @@ class RiskSettingsController extends Controller
             // Risk Management
             'max_payout_2_digit' => Setting::get('max_payout_2_digit', 50000),
             'max_payout_3_digit' => Setting::get('max_payout_3_digit', 100000),
-            'auto_transfer_enabled' => Setting::get('auto_transfer_enabled', false),
-            'auto_transfer_threshold' => Setting::get('auto_transfer_threshold', 100),
             
             // Payout Rates
             'rate_2_top' => Setting::get('rate_2_top', 90),
@@ -29,6 +27,9 @@ class RiskSettingsController extends Controller
             
             // Commission
             'commission_rate' => Setting::get('commission_rate', 10),
+            
+            // Delete Code (รหัสลบ 6 หลัก)
+            'delete_code' => Setting::get('delete_code', ''),
         ];
 
         return view('admin.risk-settings', compact('settings'));
@@ -42,13 +43,12 @@ class RiskSettingsController extends Controller
         $validator = Validator::make($request->all(), [
             'max_payout_2_digit' => 'required|numeric|min:0',
             'max_payout_3_digit' => 'required|numeric|min:0',
-            'auto_transfer_enabled' => 'boolean',
-            'auto_transfer_threshold' => 'required|integer|min:0|max:200',
             'rate_2_top' => 'required|numeric|min:0',
             'rate_2_bottom' => 'required|numeric|min:0',
             'rate_3_top' => 'required|numeric|min:0',
             'rate_3_toad' => 'required|numeric|min:0',
             'commission_rate' => 'required|numeric|min:0|max:100',
+            'delete_code' => 'nullable|digits:6',
         ]);
 
         if ($validator->fails()) {
@@ -61,8 +61,6 @@ class RiskSettingsController extends Controller
             // บันทึกค่าทั้งหมด
             Setting::set('max_payout_2_digit', $request->max_payout_2_digit, 'decimal', 'ยอดจ่ายสูงสุดต่อเลข 2 ตัว (บาท)', 'risk');
             Setting::set('max_payout_3_digit', $request->max_payout_3_digit, 'decimal', 'ยอดจ่ายสูงสุดต่อเลข 3 ตัว (บาท)', 'risk');
-            Setting::set('auto_transfer_enabled', $request->has('auto_transfer_enabled') ? 'true' : 'false', 'boolean', 'เปิด/ปิด ระบบตัดยอดอัตโนมัติ', 'risk');
-            Setting::set('auto_transfer_threshold', $request->auto_transfer_threshold, 'integer', 'เปอร์เซ็นต์ที่เริ่มตัดยอด', 'risk');
             
             Setting::set('rate_2_top', $request->rate_2_top, 'decimal', 'อัตราจ่าย 2 ตัวบน', 'payout');
             Setting::set('rate_2_bottom', $request->rate_2_bottom, 'decimal', 'อัตราจ่าย 2 ตัวล่าง', 'payout');
@@ -70,6 +68,11 @@ class RiskSettingsController extends Controller
             Setting::set('rate_3_toad', $request->rate_3_toad, 'decimal', 'อัตราจ่าย 3 ตัวโต๊ด', 'payout');
             
             Setting::set('commission_rate', $request->commission_rate, 'decimal', 'อัตราค่าคอมมิชชั่น (%)', 'general');
+
+            // บันทึกรหัสลบ (ถ้ามี)
+            if ($request->filled('delete_code')) {
+                Setting::set('delete_code', $request->delete_code, 'string', 'รหัสลบรายการแทงหวย (6 หลัก)', 'security');
+            }
 
             // Clear cache
             Setting::clearCache();
