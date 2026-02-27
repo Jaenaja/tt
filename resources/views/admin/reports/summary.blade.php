@@ -353,47 +353,67 @@
 
         {{-- ผลรางวัลที่ออก --}}
         @if($draw->is_announced)
-            <div class="transition-all duration-300 rounded-2xl shadow-xl p-8 mb-8 border
-                                bg-white border-emerald-200
-                                dark:bg-gradient-to-br dark:from-slate-800 dark:to-slate-900 dark:border-emerald-500/30">
-                <h2 class="text-3xl font-bold mb-6 flex items-center gap-3
-                                    text-emerald-600 dark:text-emerald-400">
+            <div
+                class="transition-all duration-300 rounded-2xl shadow-xl p-8 mb-8 border
+                                                                                                    bg-white border-emerald-200
+                                                                                                    dark:bg-gradient-to-br dark:from-slate-800 dark:to-slate-900 dark:border-emerald-500/30">
+                <h2
+                    class="text-3xl font-bold mb-6 flex items-center gap-3
+                                                                                                        text-emerald-600 dark:text-emerald-400">
                     <span>🎉</span> รางวัลที่ออก
                 </h2>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
 
-                    {{-- 3 ตัวบน --}}
-                    <div class="rounded-xl p-6 text-center border
-                                        bg-emerald-50 border-emerald-200
-                                        dark:bg-white/5 dark:border-emerald-500/20">
-                        <div class="text-sm font-semibold tracking-wider uppercase mb-2
-                                            text-emerald-600 dark:text-emerald-300/70">3 ตัวบน</div>
-                        <div class="text-6xl font-bold tracking-widest
-                                            text-emerald-600 dark:text-emerald-400">
+                    {{-- 3 ตัวบน → สีม่วง (violet) ตรงกับ card ด้านล่าง --}}
+                    <div
+                        class="rounded-xl p-6 text-center border
+                                                                                                            bg-violet-50 border-violet-200
+                                                                                                            dark:bg-white/5 dark:border-violet-500/20">
+                        <div
+                            class="text-sm font-semibold tracking-wider uppercase mb-2
+                                                                                                                text-violet-600 dark:text-violet-300/70">
+                            3
+                            ตัวบน
+                        </div>
+                        <div
+                            class="text-6xl font-bold tracking-widest
+                                                                                                                text-violet-600 dark:text-violet-400">
                             {{ $draw->result_3_top ?? 'XXX' }}
                         </div>
                     </div>
 
-                    {{-- 2 ตัวบน --}}
-                    <div class="rounded-xl p-6 text-center border
-                                        bg-sky-50 border-sky-200
-                                        dark:bg-white/5 dark:border-sky-500/20">
-                        <div class="text-sm font-semibold tracking-wider uppercase mb-2
-                                            text-sky-600 dark:text-sky-300/70">2 ตัวบน</div>
-                        <div class="text-6xl font-bold tracking-widest
-                                            text-sky-600 dark:text-sky-400">
+                    {{-- 2 ตัวบน → สีเขียว (emerald) ตรงกับ card ด้านล่าง --}}
+                    <div
+                        class="rounded-xl p-6 text-center border
+                                                                                                            bg-emerald-50 border-emerald-200
+                                                                                                            dark:bg-white/5 dark:border-emerald-500/20">
+                        <div
+                            class="text-sm font-semibold tracking-wider uppercase mb-2
+                                                                                                                text-emerald-600 dark:text-emerald-300/70">
+                            2
+                            ตัวบน
+                        </div>
+                        <div
+                            class="text-6xl font-bold tracking-widest
+                                                                                                                text-emerald-600 dark:text-emerald-400">
                             {{ $draw->result_2_top ?? 'XX' }}
                         </div>
                     </div>
 
-                    {{-- 2 ตัวล่าง --}}
-                    <div class="rounded-xl p-6 text-center border
-                                        bg-violet-50 border-violet-200
-                                        dark:bg-white/5 dark:border-violet-500/20">
-                        <div class="text-sm font-semibold tracking-wider uppercase mb-2
-                                            text-violet-600 dark:text-violet-300/70">2 ตัวล่าง</div>
-                        <div class="text-6xl font-bold tracking-widest
-                                            text-violet-600 dark:text-violet-400">
+                    {{-- 2 ตัวล่าง → สีฟ้า (sky) ตรงกับ card ด้านล่าง --}}
+                    <div
+                        class="rounded-xl p-6 text-center border
+                                                                                                            bg-sky-50 border-sky-200
+                                                                                                            dark:bg-white/5 dark:border-sky-500/20">
+                        <div
+                            class="text-sm font-semibold tracking-wider uppercase mb-2
+                                                                                                                text-sky-600 dark:text-sky-300/70">
+                            2
+                            ตัวล่าง
+                        </div>
+                        <div
+                            class="text-6xl font-bold tracking-widest
+                                                                                                                text-sky-600 dark:text-sky-400">
                             {{ $draw->result_2_bottom ?? 'XX' }}
                         </div>
                     </div>
@@ -404,43 +424,9 @@
 
         {{-- Sales Summary Blocks --}}
         <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-            {{-- 2 ตัวบน --}}
-            <div
-                class="transition-all duration-300 premium-card bg-white dark:bg-slate-900 rounded-2xl shadow-lg p-5 border border-emerald-200 dark:border-emerald-800 animate-fade-in-up">
-                <div class="flex items-center justify-between mb-3">
-                    <span class="text-3xl">🟢</span>
-                    <span
-                        class="text-xs font-bold px-2 py-1 bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 rounded-full">2
-                        ตัวบน</span>
-                </div>
-                <div class="text-3xl font-bold text-emerald-600 dark:text-emerald-400 mb-1">
-                    {{ number_format($sales['two_top']['total'], 0) }}
-                </div>
-                <div class="text-xs text-slate-500 dark:text-slate-400">฿ |
-                    {{ number_format($sales['two_top']['count']) }} รายการ
-                </div>
-            </div>
-
-            {{-- 2 ตัวล่าง --}}
-            <div class="transition-all duration-300 premium-card bg-white dark:bg-slate-900 rounded-2xl shadow-lg p-5 border border-sky-200 dark:border-sky-800 animate-fade-in-up"
-                style="animation-delay:0.1s">
-                <div class="flex items-center justify-between mb-3">
-                    <span class="text-3xl">🔵</span>
-                    <span
-                        class="text-xs font-bold px-2 py-1 bg-sky-100 dark:bg-sky-900/40 text-sky-700 dark:text-sky-300 rounded-full">2
-                        ตัวล่าง</span>
-                </div>
-                <div class="text-3xl font-bold text-sky-600 dark:text-sky-400 mb-1">
-                    {{ number_format($sales['two_bottom']['total'], 0) }}
-                </div>
-                <div class="text-xs text-slate-500 dark:text-slate-400">฿ |
-                    {{ number_format($sales['two_bottom']['count']) }} รายการ
-                </div>
-            </div>
-
             {{-- 3 ตัวบน --}}
-            <div class="transition-all duration-300 premium-card bg-white dark:bg-slate-900 rounded-2xl shadow-lg p-5 border border-violet-200 dark:border-violet-800 animate-fade-in-up"
-                style="animation-delay:0.2s">
+            <div
+                class="transition-all duration-300 premium-card bg-white dark:bg-slate-900 rounded-2xl shadow-lg p-5 border border-violet-200 dark:border-violet-800 animate-fade-in-up">
                 <div class="flex items-center justify-between mb-3">
                     <span class="text-3xl">🟣</span>
                     <span
@@ -449,15 +435,17 @@
                 </div>
                 <div class="text-3xl font-bold text-violet-600 dark:text-violet-400 mb-1">
                     {{ number_format($sales['three_top']['total'], 0) }}
+                    <span class="text-xs font-semibold text-slate-500 dark:text-slate-400">บาท (ยอดแทง)</span>
+
                 </div>
-                <div class="text-xs text-slate-500 dark:text-slate-400">฿ |
+                <div class="text-xs text-slate-500 dark:text-slate-400">จำนวน
                     {{ number_format($sales['three_top']['count']) }} รายการ
                 </div>
             </div>
 
             {{-- 3 ตัวโต๊ด --}}
             <div class="transition-all duration-300 premium-card bg-white dark:bg-slate-900 rounded-2xl shadow-lg p-5 border border-amber-200 dark:border-amber-800 animate-fade-in-up"
-                style="animation-delay:0.3s">
+                style="animation-delay:0.1s">
                 <div class="flex items-center justify-between mb-3">
                     <span class="text-3xl">🟡</span>
                     <span
@@ -466,9 +454,48 @@
                 </div>
                 <div class="text-3xl font-bold text-amber-600 dark:text-amber-400 mb-1">
                     {{ number_format($sales['three_toad']['total'], 0) }}
+                    <span class="text-xs font-semibold text-slate-500 dark:text-slate-400">บาท (ยอดแทง)</span>
+
                 </div>
-                <div class="text-xs text-slate-500 dark:text-slate-400">฿ |
+                <div class="text-xs text-slate-500 dark:text-slate-400">จำนวน
                     {{ number_format($sales['three_toad']['count']) }} รายการ
+                </div>
+            </div>
+
+            {{-- 2 ตัวบน --}}
+            <div class="transition-all duration-300 premium-card bg-white dark:bg-slate-900 rounded-2xl shadow-lg p-5 border border-emerald-200 dark:border-emerald-800 animate-fade-in-up"
+                style="animation-delay:0.2s">
+                <div class="flex items-center justify-between mb-3">
+                    <span class="text-3xl">🟢</span>
+                    <span
+                        class="text-xs font-bold px-2 py-1 bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 rounded-full">2
+                        ตัวบน</span>
+                </div>
+                <div class="text-3xl font-bold text-emerald-600 dark:text-emerald-400 mb-1">
+                    {{ number_format($sales['two_top']['total'], 0) }}
+                    <span class="text-xs font-semibold text-slate-500 dark:text-slate-400">บาท (ยอดแทง)</span>
+                </div>
+                <div class="text-xs text-slate-500 dark:text-slate-400">จำนวน
+                    {{ number_format($sales['two_top']['count']) }} รายการ
+                </div>
+            </div>
+
+            {{-- 2 ตัวล่าง --}}
+            <div class="transition-all duration-300 premium-card bg-white dark:bg-slate-900 rounded-2xl shadow-lg p-5 border border-sky-200 dark:border-sky-800 animate-fade-in-up"
+                style="animation-delay:0.3s">
+                <div class="flex items-center justify-between mb-3">
+                    <span class="text-3xl">🔵</span>
+                    <span
+                        class="text-xs font-bold px-2 py-1 bg-sky-100 dark:bg-sky-900/40 text-sky-700 dark:text-sky-300 rounded-full">2
+                        ตัวล่าง</span>
+                </div>
+                <div class="text-3xl font-bold text-sky-600 dark:text-sky-400 mb-1">
+                    {{ number_format($sales['two_bottom']['total'], 0) }}
+                    <span class="text-xs font-semibold text-slate-500 dark:text-slate-400">บาท (ยอดแทง)</span>
+
+                </div>
+                <div class="text-xs text-slate-500 dark:text-slate-400">จำนวน
+                    {{ number_format($sales['two_bottom']['count']) }} รายการ
                 </div>
             </div>
         </div>
@@ -543,66 +570,10 @@
 
         {{-- Top Exposure Tables (4 ประเภท Compact) --}}
         <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-            {{-- Top 2 ตัวบน --}}
-            <div
-                class="transition-all duration-300 premium-card bg-white dark:bg-slate-900 rounded-xl p-4 shadow-lg dark:shadow-2xl border border-sky-200 dark:border-sky-800">
-                <h2 class="text-sm font-bold text-sky-700 dark:text-sky-300 mb-3 flex items-center gap-1">
-                    🟢 Top 10 (2 ตัวบน)
-                </h2>
-                <div class="space-y-1">
-                    @foreach($topTwoTopExposure as $index => $item)
-                        <div
-                            class="flex items-center justify-between px-2 py-1 rounded bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700">
-                            <div class="flex items-center gap-1.5">
-                                <span
-                                    class="text-xs w-4 h-4 flex items-center justify-center rounded-full font-bold {{ $index < 3 ? 'bg-red-100 dark:bg-red-900 text-red-600 dark:text-red-300' : 'bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400' }}">{{ $index + 1 }}</span>
-                                <span class="font-bold text-slate-900 dark:text-white text-sm">{{ $item['number'] }}</span>
-                                <span class="text-xs text-slate-400">({{ $item['bet_count'] }})</span>
-                            </div>
-                            <div class="text-right">
-                                <div
-                                    class="text-xs font-bold {{ $item['status'] === 'critical' ? 'text-red-500' : ($item['status'] === 'warning' ? 'text-amber-500' : 'text-emerald-500') }}">
-                                    {{ number_format($item['liability'], 0) }}฿
-                                </div>
-                                <div class="text-xs text-slate-400">{{ number_format($item['percentage'], 0) }}%</div>
-                            </div>
-                        </div>
-                    @endforeach
-                </div>
-            </div>
-
-            {{-- Top 2 ตัวล่าง --}}
+            {{-- Top 3 ตัวบน --}}
             <div
                 class="transition-all duration-300 premium-card bg-white dark:bg-slate-900 rounded-xl p-4 shadow-lg dark:shadow-2xl border border-violet-200 dark:border-violet-800">
                 <h2 class="text-sm font-bold text-violet-700 dark:text-violet-300 mb-3 flex items-center gap-1">
-                    🔵 Top 10 (2 ตัวล่าง)
-                </h2>
-                <div class="space-y-1">
-                    @foreach($topTwoBottomExposure as $index => $item)
-                        <div
-                            class="flex items-center justify-between px-2 py-1 rounded bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700">
-                            <div class="flex items-center gap-1.5">
-                                <span
-                                    class="text-xs w-4 h-4 flex items-center justify-center rounded-full font-bold {{ $index < 3 ? 'bg-red-100 dark:bg-red-900 text-red-600 dark:text-red-300' : 'bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400' }}">{{ $index + 1 }}</span>
-                                <span class="font-bold text-slate-900 dark:text-white text-sm">{{ $item['number'] }}</span>
-                                <span class="text-xs text-slate-400">({{ $item['bet_count'] }})</span>
-                            </div>
-                            <div class="text-right">
-                                <div
-                                    class="text-xs font-bold {{ $item['status'] === 'critical' ? 'text-red-500' : ($item['status'] === 'warning' ? 'text-amber-500' : 'text-emerald-500') }}">
-                                    {{ number_format($item['liability'], 0) }}฿
-                                </div>
-                                <div class="text-xs text-slate-400">{{ number_format($item['percentage'], 0) }}%</div>
-                            </div>
-                        </div>
-                    @endforeach
-                </div>
-            </div>
-
-            {{-- Top 3 ตัวบน --}}
-            <div
-                class="transition-all duration-300 premium-card bg-white dark:bg-slate-900 rounded-xl p-4 shadow-lg dark:shadow-2xl border border-emerald-200 dark:border-emerald-800">
-                <h2 class="text-sm font-bold text-emerald-700 dark:text-emerald-300 mb-3 flex items-center gap-1">
                     🟣 Top 10 (3 ตัวบน)
                 </h2>
                 <div class="space-y-1">
@@ -635,6 +606,62 @@
                 </h2>
                 <div class="space-y-1">
                     @foreach($topThreeToadExposure as $index => $item)
+                        <div
+                            class="flex items-center justify-between px-2 py-1 rounded bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700">
+                            <div class="flex items-center gap-1.5">
+                                <span
+                                    class="text-xs w-4 h-4 flex items-center justify-center rounded-full font-bold {{ $index < 3 ? 'bg-red-100 dark:bg-red-900 text-red-600 dark:text-red-300' : 'bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400' }}">{{ $index + 1 }}</span>
+                                <span class="font-bold text-slate-900 dark:text-white text-sm">{{ $item['number'] }}</span>
+                                <span class="text-xs text-slate-400">({{ $item['bet_count'] }})</span>
+                            </div>
+                            <div class="text-right">
+                                <div
+                                    class="text-xs font-bold {{ $item['status'] === 'critical' ? 'text-red-500' : ($item['status'] === 'warning' ? 'text-amber-500' : 'text-emerald-500') }}">
+                                    {{ number_format($item['liability'], 0) }}฿
+                                </div>
+                                <div class="text-xs text-slate-400">{{ number_format($item['percentage'], 0) }}%</div>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+
+            {{-- Top 2 ตัวบน --}}
+            <div
+                class="transition-all duration-300 premium-card bg-white dark:bg-slate-900 rounded-xl p-4 shadow-lg dark:shadow-2xl border border-emerald-200 dark:border-emerald-800">
+                <h2 class="text-sm font-bold text-emerald-700 dark:text-emerald-300 mb-3 flex items-center gap-1">
+                    🟢 Top 10 (2 ตัวบน)
+                </h2>
+                <div class="space-y-1">
+                    @foreach($topTwoTopExposure as $index => $item)
+                        <div
+                            class="flex items-center justify-between px-2 py-1 rounded bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700">
+                            <div class="flex items-center gap-1.5">
+                                <span
+                                    class="text-xs w-4 h-4 flex items-center justify-center rounded-full font-bold {{ $index < 3 ? 'bg-red-100 dark:bg-red-900 text-red-600 dark:text-red-300' : 'bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400' }}">{{ $index + 1 }}</span>
+                                <span class="font-bold text-slate-900 dark:text-white text-sm">{{ $item['number'] }}</span>
+                                <span class="text-xs text-slate-400">({{ $item['bet_count'] }})</span>
+                            </div>
+                            <div class="text-right">
+                                <div
+                                    class="text-xs font-bold {{ $item['status'] === 'critical' ? 'text-red-500' : ($item['status'] === 'warning' ? 'text-amber-500' : 'text-emerald-500') }}">
+                                    {{ number_format($item['liability'], 0) }}฿
+                                </div>
+                                <div class="text-xs text-slate-400">{{ number_format($item['percentage'], 0) }}%</div>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+
+            {{-- Top 2 ตัวล่าง --}}
+            <div
+                class="transition-all duration-300 premium-card bg-white dark:bg-slate-900 rounded-xl p-4 shadow-lg dark:shadow-2xl border border-sky-200 dark:border-sky-800">
+                <h2 class="text-sm font-bold text-sky-700 dark:text-sky-300 mb-3 flex items-center gap-1">
+                    🔵 Top 10 (2 ตัวล่าง)
+                </h2>
+                <div class="space-y-1">
+                    @foreach($topTwoBottomExposure as $index => $item)
                         <div
                             class="flex items-center justify-between px-2 py-1 rounded bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700">
                             <div class="flex items-center gap-1.5">
@@ -693,67 +720,12 @@
 
             @if($totalOver > 0)
                 <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
-                    {{-- 2 ตัวบน --}}
-                    <div>
-                        <div class="text-xs font-bold text-sky-600 dark:text-sky-400 mb-1.5 flex items-center gap-1">
-                            🟢 2 ตัวบน
-                            <span
-                                class="bg-sky-100 dark:bg-sky-900/40 text-sky-700 dark:text-sky-300 px-1.5 py-0.5 rounded-full">{{ count($overLimit2Top) }}</span>
-                        </div>
-                        @if(count($overLimit2Top) > 0)
-                            <div class="space-y-1">
-                                @foreach($overLimit2Top as $item)
-                                    <div
-                                        class="flex items-center justify-between px-2 py-1 bg-red-50 dark:bg-red-900/20 rounded border border-red-200 dark:border-red-800 text-xs">
-                                        <span class="font-bold text-slate-900 dark:text-white">{{ $item['number'] }}</span>
-                                        <div class="text-right">
-                                            <div class="font-bold text-red-600 dark:text-red-400">
-                                                {{ number_format($item['liability'], 0) }}฿</div>
-                                            <div class="text-red-500 dark:text-red-400">{{ number_format($item['percentage'], 1) }}%
-                                            </div>
-                                        </div>
-                                    </div>
-                                @endforeach
-                            </div>
-                        @else
-                            <p class="text-xs text-slate-400 italic">ไม่มี</p>
-                        @endif
-                    </div>
-
-                    {{-- 2 ตัวล่าง --}}
-                    <div>
-                        <div class="text-xs font-bold text-violet-600 dark:text-violet-400 mb-1.5 flex items-center gap-1">
-                            🔵 2 ตัวล่าง
-                            <span
-                                class="bg-violet-100 dark:bg-violet-900/40 text-violet-700 dark:text-violet-300 px-1.5 py-0.5 rounded-full">{{ count($overLimit2Bottom) }}</span>
-                        </div>
-                        @if(count($overLimit2Bottom) > 0)
-                            <div class="space-y-1">
-                                @foreach($overLimit2Bottom as $item)
-                                    <div
-                                        class="flex items-center justify-between px-2 py-1 bg-red-50 dark:bg-red-900/20 rounded border border-red-200 dark:border-red-800 text-xs">
-                                        <span class="font-bold text-slate-900 dark:text-white">{{ $item['number'] }}</span>
-                                        <div class="text-right">
-                                            <div class="font-bold text-red-600 dark:text-red-400">
-                                                {{ number_format($item['liability'], 0) }}฿</div>
-                                            <div class="text-red-500 dark:text-red-400">{{ number_format($item['percentage'], 1) }}%
-                                            </div>
-                                        </div>
-                                    </div>
-                                @endforeach
-                            </div>
-                        @else
-                            <p class="text-xs text-slate-400 italic">ไม่มี</p>
-                        @endif
-                    </div>
-
                     {{-- 3 ตัวบน --}}
                     <div>
-                        <div
-                            class="text-xs font-bold text-emerald-600 dark:text-emerald-400 mb-1.5 flex items-center gap-1">
+                        <div class="text-xs font-bold text-violet-600 dark:text-violet-400 mb-1.5 flex items-center gap-1">
                             🟣 3 ตัวบน
                             <span
-                                class="bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 px-1.5 py-0.5 rounded-full">{{ count($overLimit3Top) }}</span>
+                                class="bg-violet-100 dark:bg-violet-900/40 text-violet-700 dark:text-violet-300 px-1.5 py-0.5 rounded-full">{{ count($overLimit3Top) }}</span>
                         </div>
                         @if(count($overLimit3Top) > 0)
                             <div class="space-y-1 max-h-48 overflow-y-auto">
@@ -763,7 +735,8 @@
                                         <span class="font-bold text-slate-900 dark:text-white">{{ $item['number'] }}</span>
                                         <div class="text-right">
                                             <div class="font-bold text-red-600 dark:text-red-400">
-                                                {{ number_format($item['liability'], 0) }}฿</div>
+                                                {{ number_format($item['liability'], 0) }}฿
+                                            </div>
                                             <div class="text-red-500 dark:text-red-400">{{ number_format($item['percentage'], 1) }}%
                                             </div>
                                         </div>
@@ -790,7 +763,65 @@
                                         <span class="font-bold text-slate-900 dark:text-white">{{ $item['number'] }}</span>
                                         <div class="text-right">
                                             <div class="font-bold text-red-600 dark:text-red-400">
-                                                {{ number_format($item['liability'], 0) }}฿</div>
+                                                {{ number_format($item['liability'], 0) }}฿
+                                            </div>
+                                            <div class="text-red-500 dark:text-red-400">{{ number_format($item['percentage'], 1) }}%
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                        @else
+                            <p class="text-xs text-slate-400 italic">ไม่มี</p>
+                        @endif
+                    </div>
+
+                    {{-- 2 ตัวบน --}}
+                    <div>
+                        <div
+                            class="text-xs font-bold text-emerald-600 dark:text-emerald-400 mb-1.5 flex items-center gap-1">
+                            🟢 2 ตัวบน
+                            <span
+                                class="bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 px-1.5 py-0.5 rounded-full">{{ count($overLimit2Top) }}</span>
+                        </div>
+                        @if(count($overLimit2Top) > 0)
+                            <div class="space-y-1">
+                                @foreach($overLimit2Top as $item)
+                                    <div
+                                        class="flex items-center justify-between px-2 py-1 bg-red-50 dark:bg-red-900/20 rounded border border-red-200 dark:border-red-800 text-xs">
+                                        <span class="font-bold text-slate-900 dark:text-white">{{ $item['number'] }}</span>
+                                        <div class="text-right">
+                                            <div class="font-bold text-red-600 dark:text-red-400">
+                                                {{ number_format($item['liability'], 0) }}฿
+                                            </div>
+                                            <div class="text-red-500 dark:text-red-400">{{ number_format($item['percentage'], 1) }}%
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                        @else
+                            <p class="text-xs text-slate-400 italic">ไม่มี</p>
+                        @endif
+                    </div>
+
+                    {{-- 2 ตัวล่าง --}}
+                    <div>
+                        <div class="text-xs font-bold text-sky-600 dark:text-sky-400 mb-1.5 flex items-center gap-1">
+                            🔵 2 ตัวล่าง
+                            <span
+                                class="bg-sky-100 dark:bg-sky-900/40 text-sky-700 dark:text-sky-300 px-1.5 py-0.5 rounded-full">{{ count($overLimit2Bottom) }}</span>
+                        </div>
+                        @if(count($overLimit2Bottom) > 0)
+                            <div class="space-y-1">
+                                @foreach($overLimit2Bottom as $item)
+                                    <div
+                                        class="flex items-center justify-between px-2 py-1 bg-red-50 dark:bg-red-900/20 rounded border border-red-200 dark:border-red-800 text-xs">
+                                        <span class="font-bold text-slate-900 dark:text-white">{{ $item['number'] }}</span>
+                                        <div class="text-right">
+                                            <div class="font-bold text-red-600 dark:text-red-400">
+                                                {{ number_format($item['liability'], 0) }}฿
+                                            </div>
                                             <div class="text-red-500 dark:text-red-400">{{ number_format($item['percentage'], 1) }}%
                                             </div>
                                         </div>
