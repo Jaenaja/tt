@@ -40,20 +40,44 @@ class ReportController extends Controller
             'commission_rate' => Setting::get('commission_rate', 10),
         ];
 
-        // คำนวณ Liability พร้อมนับจำนวนใบ (แก้ไขให้นับถูก)
-        $twoDigitLiability = $this->calculateTwoDigitLiability($draw->bets, $settings);
-        $threeDigitLiability = $this->calculateThreeDigitLiability($draw->bets, $settings);
+        // คำนวณ Liability แยกตามประเภท
+        $twoTopLiability = $this->calculateTwoTopLiability($draw->bets, $settings);
+        $twoBottomLiability = $this->calculateTwoBottomLiability($draw->bets, $settings);
+        $threeTopLiability = $this->calculateThreeTopLiability($draw->bets, $settings);
+        $threeToadLiability = $this->calculateThreeToadLiability($draw->bets, $settings);
+
+        // รวมเพื่อใช้ใน heatmap เดิม (backward compat)
+        $twoDigitLiability = $this->mergeTwoLiability($twoTopLiability, $twoBottomLiability);
+        $threeDigitLiability = $this->mergeThreeLiability($threeTopLiability, $threeToadLiability);
 
         $maxTwoDigit = max(array_column($twoDigitLiability, 'liability'));
         $maxThreeDigit = max(array_column($threeDigitLiability, 'liability'));
 
-        // เตรียมข้อมูล Heatmap
-        $twoDigitHeatmapData = $this->prepareHeatmapData($twoDigitLiability, 2);
-        $threeDigitHeatmapData = $this->prepareHeatmapData($threeDigitLiability, 3);
+        // เตรียมข้อมูล Heatmap แยกตามประเภท
+        $twoTopHeatmapData = $this->prepareHeatmapData($twoTopLiability, 2);
+        $twoBottomHeatmapData = $this->prepareHeatmapData($twoBottomLiability, 2);
+        $threeTopHeatmapData = $this->prepareHeatmapData($threeTopLiability, 3);
+        $threeToadHeatmapData = $this->prepareHeatmapData($threeToadLiability, 3);
 
-        // Top 10 Exposure
-        $topTwoDigitExposure = $this->getTopExposure($twoDigitLiability, 10, $settings['max_payout_2_digit']);
-        $topThreeDigitExposure = $this->getTopExposure($threeDigitLiability, 10, $settings['max_payout_3_digit']);
+        // ค่า max แยกตามประเภท (สำหรับ visualMap)
+        $maxTwoTop = max(array_column($twoTopLiability, 'liability'));
+        $maxTwoBottom = max(array_column($twoBottomLiability, 'liability'));
+        $maxThreeTop = max(array_column($threeTopLiability, 'liability'));
+        $maxThreeToad = max(array_column($threeToadLiability, 'liability'));
+
+        // (ยังคงไว้เพื่อ backward compat)
+        $twoDigitHeatmapData = $twoTopHeatmapData;
+        $threeDigitHeatmapData = $threeTopHeatmapData;
+
+        // Top 10 Exposure แยกตามประเภท
+        $topTwoTopExposure = $this->getTopExposure($twoTopLiability, 10, $settings['max_payout_2_digit']);
+        $topTwoBottomExposure = $this->getTopExposure($twoBottomLiability, 10, $settings['max_payout_2_digit']);
+        $topThreeTopExposure = $this->getTopExposure($threeTopLiability, 10, $settings['max_payout_3_digit']);
+        $topThreeToadExposure = $this->getTopExposure($threeToadLiability, 10, $settings['max_payout_3_digit']);
+
+        // backward compat
+        $topTwoDigitExposure = $topTwoTopExposure;
+        $topThreeDigitExposure = $topThreeTopExposure;
 
         // สถิติพื้นฐาน
         $totalTransactions = $draw->bets->count();
@@ -160,7 +184,15 @@ class ReportController extends Controller
 
         // Filter ประเภทเลข
         if ($request->filled('number_type')) {
-            if ($request->number_type === '2_digit') {
+            if ($request->number_type === '2_top') {
+                $betsQuery->whereRaw('LENGTH(number) = 2')->where('amount_top', '>', 0);
+            } elseif ($request->number_type === '2_bottom') {
+                $betsQuery->whereRaw('LENGTH(number) = 2')->where('amount_bottom', '>', 0);
+            } elseif ($request->number_type === '3_top') {
+                $betsQuery->whereRaw('LENGTH(number) = 3')->where('amount_top', '>', 0);
+            } elseif ($request->number_type === '3_toad') {
+                $betsQuery->whereRaw('LENGTH(number) = 3')->where('amount_toad', '>', 0);
+            } elseif ($request->number_type === '2_digit') {
                 $betsQuery->whereRaw('LENGTH(number) = 2');
             } elseif ($request->number_type === '3_digit') {
                 $betsQuery->whereRaw('LENGTH(number) = 3');
@@ -185,10 +217,22 @@ class ReportController extends Controller
             'totalSales',
             'commission',
             'result',
+            'twoTopHeatmapData',
+            'twoBottomHeatmapData',
+            'threeTopHeatmapData',
+            'threeToadHeatmapData',
+            'maxTwoTop',
+            'maxTwoBottom',
+            'maxThreeTop',
+            'maxThreeToad',
             'twoDigitHeatmapData',
             'threeDigitHeatmapData',
             'maxTwoDigit',
             'maxThreeDigit',
+            'topTwoTopExposure',
+            'topTwoBottomExposure',
+            'topThreeTopExposure',
+            'topThreeToadExposure',
             'topTwoDigitExposure',
             'topThreeDigitExposure',
             'betsHistory',
@@ -196,6 +240,102 @@ class ReportController extends Controller
             'customerNames',
             'settings'
         ));
+    }
+
+    private function calculateTwoTopLiability($bets, $settings)
+    {
+        $liability = [];
+        for ($i = 0; $i <= 99; $i++) {
+            $number = str_pad($i, 2, '0', STR_PAD_LEFT);
+            $liability[$number] = ['liability' => 0, 'bet_count' => 0, 'total_amount' => 0];
+        }
+        foreach ($bets as $bet) {
+            if (strlen($bet->number) === 2 && $bet->amount_top > 0) {
+                $num = $bet->number;
+                $liability[$num]['liability'] += $bet->amount_top * $settings['rate_2_top'];
+                $liability[$num]['total_amount'] += $bet->amount_top;
+                $liability[$num]['bet_count']++;
+            }
+        }
+        return $liability;
+    }
+
+    private function calculateTwoBottomLiability($bets, $settings)
+    {
+        $liability = [];
+        for ($i = 0; $i <= 99; $i++) {
+            $number = str_pad($i, 2, '0', STR_PAD_LEFT);
+            $liability[$number] = ['liability' => 0, 'bet_count' => 0, 'total_amount' => 0];
+        }
+        foreach ($bets as $bet) {
+            if (strlen($bet->number) === 2 && $bet->amount_bottom > 0) {
+                $num = $bet->number;
+                $liability[$num]['liability'] += $bet->amount_bottom * $settings['rate_2_bottom'];
+                $liability[$num]['total_amount'] += $bet->amount_bottom;
+                $liability[$num]['bet_count']++;
+            }
+        }
+        return $liability;
+    }
+
+    private function calculateThreeTopLiability($bets, $settings)
+    {
+        $liability = [];
+        for ($i = 0; $i <= 999; $i++) {
+            $number = str_pad($i, 3, '0', STR_PAD_LEFT);
+            $liability[$number] = ['liability' => 0, 'bet_count' => 0, 'total_amount' => 0];
+        }
+        foreach ($bets as $bet) {
+            if (strlen($bet->number) === 3 && $bet->amount_top > 0) {
+                $num = $bet->number;
+                $liability[$num]['liability'] += $bet->amount_top * $settings['rate_3_top'];
+                $liability[$num]['total_amount'] += $bet->amount_top;
+                $liability[$num]['bet_count']++;
+            }
+        }
+        return $liability;
+    }
+
+    private function calculateThreeToadLiability($bets, $settings)
+    {
+        $liability = [];
+        for ($i = 0; $i <= 999; $i++) {
+            $number = str_pad($i, 3, '0', STR_PAD_LEFT);
+            $liability[$number] = ['liability' => 0, 'bet_count' => 0, 'total_amount' => 0];
+        }
+        foreach ($bets as $bet) {
+            if (strlen($bet->number) === 3 && $bet->amount_toad > 0) {
+                $toadNumbers = $this->getToadNumbers($bet->number);
+                foreach ($toadNumbers as $toadNum) {
+                    $liability[$toadNum]['liability'] += $bet->amount_toad * $settings['rate_3_toad'];
+                    $liability[$toadNum]['total_amount'] += $bet->amount_toad;
+                    $liability[$toadNum]['bet_count']++;
+                }
+            }
+        }
+        return $liability;
+    }
+
+    private function mergeTwoLiability($top, $bottom)
+    {
+        $merged = $top;
+        foreach ($bottom as $num => $data) {
+            $merged[$num]['liability'] += $data['liability'];
+            $merged[$num]['total_amount'] += $data['total_amount'];
+            $merged[$num]['bet_count'] += $data['bet_count'];
+        }
+        return $merged;
+    }
+
+    private function mergeThreeLiability($top, $toad)
+    {
+        $merged = $top;
+        foreach ($toad as $num => $data) {
+            $merged[$num]['liability'] += $data['liability'];
+            $merged[$num]['total_amount'] += $data['total_amount'];
+            $merged[$num]['bet_count'] += $data['bet_count'];
+        }
+        return $merged;
     }
 
     /**
@@ -278,11 +418,27 @@ class ReportController extends Controller
             $summary[$customer]['total_payout'] += $payout;
 
             if ($bet->is_win_top || $bet->is_win_bottom || $bet->is_win_toad) {
+                // คำนวณยอดแทงและยอดจ่ายเฉพาะประเภทที่ถูกรางวัลจริง
+                $winBetAmount = 0;
+                $winPayout = 0;
+                if ($bet->is_win_top) {
+                    $winBetAmount += $bet->amount_top;
+                    $winPayout += $bet->payout_top;
+                }
+                if ($bet->is_win_bottom) {
+                    $winBetAmount += $bet->amount_bottom;
+                    $winPayout += $bet->payout_bottom;
+                }
+                if ($bet->is_win_toad) {
+                    $winBetAmount += $bet->amount_toad;
+                    $winPayout += $bet->payout_toad;
+                }
+
                 $summary[$customer]['winning_numbers'][] = [
                     'number' => $bet->number,
                     'win_type' => $this->getWinType($bet),
-                    'bet_amount' => $betAmount,
-                    'payout' => $payout,
+                    'bet_amount' => $winBetAmount,
+                    'payout' => $winPayout,
                 ];
             }
         }
@@ -466,7 +622,8 @@ class ReportController extends Controller
                         $x,
                         $y,
                         round($liability[$number]['liability'], 2),
-                        $liability[$number]['bet_count']
+                        $liability[$number]['bet_count'],
+                        $liability[$number]['total_amount'],  // index 4: ยอดแทงจริง
                     ];
                 }
             }
@@ -480,7 +637,8 @@ class ReportController extends Controller
                             $x,
                             $y,
                             round($liability[$number]['liability'], 2),
-                            $liability[$number]['bet_count']
+                            $liability[$number]['bet_count'],
+                            $liability[$number]['total_amount'],
                         ];
                     }
                 }

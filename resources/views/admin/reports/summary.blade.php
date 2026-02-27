@@ -354,46 +354,46 @@
         {{-- ผลรางวัลที่ออก --}}
         @if($draw->is_announced)
             <div class="transition-all duration-300 rounded-2xl shadow-xl p-8 mb-8 border
-                            bg-white border-emerald-200
-                            dark:bg-gradient-to-br dark:from-slate-800 dark:to-slate-900 dark:border-emerald-500/30">
+                                bg-white border-emerald-200
+                                dark:bg-gradient-to-br dark:from-slate-800 dark:to-slate-900 dark:border-emerald-500/30">
                 <h2 class="text-3xl font-bold mb-6 flex items-center gap-3
-                                text-emerald-600 dark:text-emerald-400">
+                                    text-emerald-600 dark:text-emerald-400">
                     <span>🎉</span> รางวัลที่ออก
                 </h2>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
 
                     {{-- 3 ตัวบน --}}
                     <div class="rounded-xl p-6 text-center border
-                                    bg-emerald-50 border-emerald-200
-                                    dark:bg-white/5 dark:border-emerald-500/20">
+                                        bg-emerald-50 border-emerald-200
+                                        dark:bg-white/5 dark:border-emerald-500/20">
                         <div class="text-sm font-semibold tracking-wider uppercase mb-2
-                                        text-emerald-600 dark:text-emerald-300/70">3 ตัวบน</div>
+                                            text-emerald-600 dark:text-emerald-300/70">3 ตัวบน</div>
                         <div class="text-6xl font-bold tracking-widest
-                                        text-emerald-600 dark:text-emerald-400">
+                                            text-emerald-600 dark:text-emerald-400">
                             {{ $draw->result_3_top ?? 'XXX' }}
                         </div>
                     </div>
 
                     {{-- 2 ตัวบน --}}
                     <div class="rounded-xl p-6 text-center border
-                                    bg-sky-50 border-sky-200
-                                    dark:bg-white/5 dark:border-sky-500/20">
+                                        bg-sky-50 border-sky-200
+                                        dark:bg-white/5 dark:border-sky-500/20">
                         <div class="text-sm font-semibold tracking-wider uppercase mb-2
-                                        text-sky-600 dark:text-sky-300/70">2 ตัวบน</div>
+                                            text-sky-600 dark:text-sky-300/70">2 ตัวบน</div>
                         <div class="text-6xl font-bold tracking-widest
-                                        text-sky-600 dark:text-sky-400">
+                                            text-sky-600 dark:text-sky-400">
                             {{ $draw->result_2_top ?? 'XX' }}
                         </div>
                     </div>
 
                     {{-- 2 ตัวล่าง --}}
                     <div class="rounded-xl p-6 text-center border
-                                    bg-violet-50 border-violet-200
-                                    dark:bg-white/5 dark:border-violet-500/20">
+                                        bg-violet-50 border-violet-200
+                                        dark:bg-white/5 dark:border-violet-500/20">
                         <div class="text-sm font-semibold tracking-wider uppercase mb-2
-                                        text-violet-600 dark:text-violet-300/70">2 ตัวล่าง</div>
+                                            text-violet-600 dark:text-violet-300/70">2 ตัวล่าง</div>
                         <div class="text-6xl font-bold tracking-widest
-                                        text-violet-600 dark:text-violet-400">
+                                            text-violet-600 dark:text-violet-400">
                             {{ $draw->result_2_bottom ?? 'XX' }}
                         </div>
                     </div>
@@ -417,7 +417,8 @@
                     {{ number_format($sales['two_top']['total'], 0) }}
                 </div>
                 <div class="text-xs text-slate-500 dark:text-slate-400">฿ |
-                    {{ number_format($sales['two_top']['count']) }} รายการ</div>
+                    {{ number_format($sales['two_top']['count']) }} รายการ
+                </div>
             </div>
 
             {{-- 2 ตัวล่าง --}}
@@ -433,7 +434,8 @@
                     {{ number_format($sales['two_bottom']['total'], 0) }}
                 </div>
                 <div class="text-xs text-slate-500 dark:text-slate-400">฿ |
-                    {{ number_format($sales['two_bottom']['count']) }} รายการ</div>
+                    {{ number_format($sales['two_bottom']['count']) }} รายการ
+                </div>
             </div>
 
             {{-- 3 ตัวบน --}}
@@ -449,7 +451,8 @@
                     {{ number_format($sales['three_top']['total'], 0) }}
                 </div>
                 <div class="text-xs text-slate-500 dark:text-slate-400">฿ |
-                    {{ number_format($sales['three_top']['count']) }} รายการ</div>
+                    {{ number_format($sales['three_top']['count']) }} รายการ
+                </div>
             </div>
 
             {{-- 3 ตัวโต๊ด --}}
@@ -465,141 +468,187 @@
                     {{ number_format($sales['three_toad']['total'], 0) }}
                 </div>
                 <div class="text-xs text-slate-500 dark:text-slate-400">฿ |
-                    {{ number_format($sales['three_toad']['count']) }} รายการ</div>
+                    {{ number_format($sales['three_toad']['count']) }} รายการ
+                </div>
             </div>
         </div>
 
         {{-- Heatmap Section --}}
         <div
-            class="transition-all duration-300 premium-card bg-white dark:bg-slate-900 rounded-2xl p-8 mb-8 shadow-xl dark:shadow-2xl border border-slate-200 dark:border-slate-800">
-            <h2 class="text-3xl font-bold text-slate-900 dark:text-white mb-2 flex items-center gap-2">
+            class="transition-all duration-300 premium-card bg-white dark:bg-slate-900 rounded-2xl p-6 mb-8 shadow-xl dark:shadow-2xl border border-slate-200 dark:border-slate-800">
+            <h2 class="text-2xl font-bold text-slate-900 dark:text-white mb-1 flex items-center gap-2">
                 <span>🔥</span> Heatmap วิเคราะห์ความเสี่ยง
             </h2>
-            <p class="text-sm text-slate-600 dark:text-slate-400 mb-6">
-                เพดานยอดจ่าย: 2 ตัว = {{ number_format($settings['max_payout_2_digit'], 0) }} ฿ |
+            <p class="text-xs text-slate-500 dark:text-slate-400 mb-5">
+                เพดาน: 2 ตัว = {{ number_format($settings['max_payout_2_digit'], 0) }} ฿ |
                 3 ตัว = {{ number_format($settings['max_payout_3_digit'], 0) }} ฿
             </p>
 
-            {{-- 2-Digit Heatmap --}}
-            <div class="mb-12">
-                <h3 class="text-xl font-bold text-slate-800 dark:text-slate-200 mb-4">
-                    📊 2 ตัว (00-99) - ยอดจ่ายสูงสุด (Liability)
-                </h3>
-                <div class="bg-slate-50 dark:bg-slate-800 rounded-xl p-4">
-                    <div id="twoDigitHeatmap" style="width: 100%; height: 600px;"></div>
+            {{-- 2 ตัว Row --}}
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                {{-- 2 ตัวบน --}}
+                <div>
+                    <h3 class="text-sm font-bold text-sky-700 dark:text-sky-300 mb-2 flex items-center gap-1">
+                        🟢 2 ตัวบน (00-99)
+                    </h3>
+                    <div class="bg-slate-50 dark:bg-slate-800 rounded-xl p-2">
+                        <div id="heatmap2Top" style="width:100%;height:320px;"></div>
+                    </div>
                 </div>
-                <div class="flex items-center gap-4 mt-4 text-sm flex-wrap">
-                    <span class="flex items-center gap-2">
-                        <span class="w-4 h-4 bg-slate-300 dark:bg-slate-600 rounded"></span>
-                        <span class="text-slate-700 dark:text-slate-300">⬜ ไม่มีคนซื้อ</span>
-                    </span>
-                    <span class="flex items-center gap-2">
-                        <span class="w-4 h-4 bg-emerald-500 rounded"></span>
-                        <span class="text-slate-700 dark:text-slate-300">✅ ปกติ (&lt; 50%)</span>
-                    </span>
-                    <span class="flex items-center gap-2">
-                        <span class="w-4 h-4 bg-orange-500 rounded"></span>
-                        <span class="text-slate-700 dark:text-slate-300">⚠️ เฝ้าระวัง (50-99%)</span>
-                    </span>
-                    <span class="flex items-center gap-2">
-                        <span class="w-4 h-4 bg-red-500 rounded"></span>
-                        <span class="text-slate-700 dark:text-slate-300">🛑 อั้น/ตัดยอด (≥ 100%)</span>
-                    </span>
+                {{-- 2 ตัวล่าง --}}
+                <div>
+                    <h3 class="text-sm font-bold text-violet-700 dark:text-violet-300 mb-2 flex items-center gap-1">
+                        🔵 2 ตัวล่าง (00-99)
+                    </h3>
+                    <div class="bg-slate-50 dark:bg-slate-800 rounded-xl p-2">
+                        <div id="heatmap2Bottom" style="width:100%;height:320px;"></div>
+                    </div>
                 </div>
             </div>
 
-            {{-- 3-Digit Heatmap --}}
-            <div>
-                <h3 class="text-xl font-bold text-slate-800 dark:text-slate-200 mb-4">
-                    📊 3 ตัว (000-999) - ยอดจ่ายสูงสุด (Liability รวมโต๊ด)
-                </h3>
-                <div class="bg-slate-50 dark:bg-slate-800 rounded-xl p-4">
-                    <div id="threeDigitHeatmap" style="width: 100%; height: 900px;"></div>
+            {{-- 3 ตัว Row --}}
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {{-- 3 ตัวบน --}}
+                <div>
+                    <h3 class="text-sm font-bold text-emerald-700 dark:text-emerald-300 mb-2 flex items-center gap-1">
+                        🟣 3 ตัวบน (000-999)
+                    </h3>
+                    <div class="bg-slate-50 dark:bg-slate-800 rounded-xl p-2">
+                        <div id="heatmap3Top" style="width:100%;height:480px;"></div>
+                    </div>
                 </div>
-                <p class="text-sm text-slate-600 dark:text-slate-400 mt-4">
-                    💡 รวมยอดจ่ายจากทั้ง 3 ตัวตรง และ 3 ตัวโต๊ดที่สัมพันธ์กันทั้งหมด
-                </p>
+                {{-- 3 ตัวโต๊ด --}}
+                <div>
+                    <h3 class="text-sm font-bold text-amber-700 dark:text-amber-300 mb-2 flex items-center gap-1">
+                        🟡 3 ตัวโต๊ด (000-999)
+                    </h3>
+                    <div class="bg-slate-50 dark:bg-slate-800 rounded-xl p-2">
+                        <div id="heatmap3Toad" style="width:100%;height:480px;"></div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Legend --}}
+            <div class="flex items-center gap-4 mt-4 text-xs flex-wrap">
+                <span class="flex items-center gap-1"><span
+                        class="w-3 h-3 bg-slate-300 dark:bg-slate-600 rounded inline-block"></span>ไม่มีคนซื้อ</span>
+                <span class="flex items-center gap-1"><span
+                        class="w-3 h-3 bg-emerald-400 rounded inline-block"></span>ปกติ (&lt;50%)</span>
+                <span class="flex items-center gap-1"><span
+                        class="w-3 h-3 bg-orange-400 rounded inline-block"></span>เฝ้าระวัง (50-99%)</span>
+                <span class="flex items-center gap-1"><span
+                        class="w-3 h-3 bg-red-500 rounded inline-block"></span>อั้น/ตัดยอด (≥100%)</span>
             </div>
         </div>
 
-        {{-- Top Exposure Tables (Compact) --}}
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-            {{-- Top 2-Digit Exposure --}}
+        {{-- Top Exposure Tables (4 ประเภท Compact) --}}
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+            {{-- Top 2 ตัวบน --}}
             <div
-                class="transition-all duration-300 premium-card bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-xl dark:shadow-2xl border border-slate-200 dark:border-slate-800">
-                <h2 class="text-2xl font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
-                    <span>⚠️</span> Top 10 เลขเสี่ยง (2 ตัว)
+                class="transition-all duration-300 premium-card bg-white dark:bg-slate-900 rounded-xl p-4 shadow-lg dark:shadow-2xl border border-sky-200 dark:border-sky-800">
+                <h2 class="text-sm font-bold text-sky-700 dark:text-sky-300 mb-3 flex items-center gap-1">
+                    🟢 Top 10 (2 ตัวบน)
                 </h2>
-                <div class="space-y-2">
-                    @foreach($topTwoDigitExposure as $index => $item)
+                <div class="space-y-1">
+                    @foreach($topTwoTopExposure as $index => $item)
                         <div
-                            class="p-3 bg-slate-50 dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700">
-                            <div class="flex items-center justify-between mb-1">
-                                <div class="flex items-center gap-2">
-                                    <span
-                                        class="inline-flex items-center justify-center w-6 h-6 rounded-full text-xs {{ $index < 3 ? 'bg-red-100 dark:bg-red-900 text-red-600 dark:text-red-300' : 'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-400' }} font-bold">
-                                        {{ $index + 1 }}
-                                    </span>
-                                    <span
-                                        class="text-2xl font-bold text-slate-900 dark:text-white">{{ $item['number'] }}</span>
-                                    <span class="text-xs text-slate-600 dark:text-slate-400">({{ $item['bet_count'] }}
-                                        ใบ)</span>
-                                </div>
-                                <div class="text-right">
-                                    <div
-                                        class="text-sm font-bold {{ $item['status'] === 'critical' ? 'text-red-600 dark:text-red-400' : ($item['status'] === 'warning' ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400') }}">
-                                        {{ number_format($item['liability'], 0) }} ฿
-                                    </div>
-                                    <div class="text-xs text-slate-600 dark:text-slate-400">
-                                        {{ number_format($item['percentage'], 1) }}%
-                                    </div>
-                                </div>
+                            class="flex items-center justify-between px-2 py-1 rounded bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700">
+                            <div class="flex items-center gap-1.5">
+                                <span
+                                    class="text-xs w-4 h-4 flex items-center justify-center rounded-full font-bold {{ $index < 3 ? 'bg-red-100 dark:bg-red-900 text-red-600 dark:text-red-300' : 'bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400' }}">{{ $index + 1 }}</span>
+                                <span class="font-bold text-slate-900 dark:text-white text-sm">{{ $item['number'] }}</span>
+                                <span class="text-xs text-slate-400">({{ $item['bet_count'] }})</span>
                             </div>
-
-                            <div class="relative w-full h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
-                                <div class="progress-bar absolute top-0 left-0 h-full rounded-full {{ $item['status'] === 'critical' ? 'bg-red-500' : ($item['status'] === 'warning' ? 'bg-amber-500' : 'bg-emerald-500') }}"
-                                    style="width: {{ min($item['percentage'], 100) }}%"></div>
+                            <div class="text-right">
+                                <div
+                                    class="text-xs font-bold {{ $item['status'] === 'critical' ? 'text-red-500' : ($item['status'] === 'warning' ? 'text-amber-500' : 'text-emerald-500') }}">
+                                    {{ number_format($item['liability'], 0) }}฿
+                                </div>
+                                <div class="text-xs text-slate-400">{{ number_format($item['percentage'], 0) }}%</div>
                             </div>
                         </div>
                     @endforeach
                 </div>
             </div>
 
-            {{-- Top 3-Digit Exposure --}}
+            {{-- Top 2 ตัวล่าง --}}
             <div
-                class="transition-all duration-300 premium-card bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-xl dark:shadow-2xl border border-slate-200 dark:border-slate-800">
-                <h2 class="text-2xl font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
-                    <span>⚠️</span> Top 10 เลขเสี่ยง (3 ตัว)
+                class="transition-all duration-300 premium-card bg-white dark:bg-slate-900 rounded-xl p-4 shadow-lg dark:shadow-2xl border border-violet-200 dark:border-violet-800">
+                <h2 class="text-sm font-bold text-violet-700 dark:text-violet-300 mb-3 flex items-center gap-1">
+                    🔵 Top 10 (2 ตัวล่าง)
                 </h2>
-                <div class="space-y-2">
-                    @foreach($topThreeDigitExposure as $index => $item)
+                <div class="space-y-1">
+                    @foreach($topTwoBottomExposure as $index => $item)
                         <div
-                            class="p-3 bg-slate-50 dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700">
-                            <div class="flex items-center justify-between mb-1">
-                                <div class="flex items-center gap-2">
-                                    <span
-                                        class="inline-flex items-center justify-center w-6 h-6 rounded-full text-xs {{ $index < 3 ? 'bg-red-100 dark:bg-red-900 text-red-600 dark:text-red-300' : 'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-400' }} font-bold">
-                                        {{ $index + 1 }}
-                                    </span>
-                                    <span
-                                        class="text-2xl font-bold text-slate-900 dark:text-white">{{ $item['number'] }}</span>
-                                    <span class="text-xs text-slate-600 dark:text-slate-400">({{ $item['bet_count'] }}
-                                        ใบ)</span>
-                                </div>
-                                <div class="text-right">
-                                    <div
-                                        class="text-sm font-bold {{ $item['status'] === 'critical' ? 'text-red-600 dark:text-red-400' : ($item['status'] === 'warning' ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400') }}">
-                                        {{ number_format($item['liability'], 0) }} ฿
-                                    </div>
-                                    <div class="text-xs text-slate-600 dark:text-slate-400">
-                                        {{ number_format($item['percentage'], 1) }}%
-                                    </div>
-                                </div>
+                            class="flex items-center justify-between px-2 py-1 rounded bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700">
+                            <div class="flex items-center gap-1.5">
+                                <span
+                                    class="text-xs w-4 h-4 flex items-center justify-center rounded-full font-bold {{ $index < 3 ? 'bg-red-100 dark:bg-red-900 text-red-600 dark:text-red-300' : 'bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400' }}">{{ $index + 1 }}</span>
+                                <span class="font-bold text-slate-900 dark:text-white text-sm">{{ $item['number'] }}</span>
+                                <span class="text-xs text-slate-400">({{ $item['bet_count'] }})</span>
                             </div>
+                            <div class="text-right">
+                                <div
+                                    class="text-xs font-bold {{ $item['status'] === 'critical' ? 'text-red-500' : ($item['status'] === 'warning' ? 'text-amber-500' : 'text-emerald-500') }}">
+                                    {{ number_format($item['liability'], 0) }}฿
+                                </div>
+                                <div class="text-xs text-slate-400">{{ number_format($item['percentage'], 0) }}%</div>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
 
-                            <div class="relative w-full h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
-                                <div class="progress-bar absolute top-0 left-0 h-full rounded-full {{ $item['status'] === 'critical' ? 'bg-red-500' : ($item['status'] === 'warning' ? 'bg-amber-500' : 'bg-emerald-500') }}"
-                                    style="width: {{ min($item['percentage'], 100) }}%"></div>
+            {{-- Top 3 ตัวบน --}}
+            <div
+                class="transition-all duration-300 premium-card bg-white dark:bg-slate-900 rounded-xl p-4 shadow-lg dark:shadow-2xl border border-emerald-200 dark:border-emerald-800">
+                <h2 class="text-sm font-bold text-emerald-700 dark:text-emerald-300 mb-3 flex items-center gap-1">
+                    🟣 Top 10 (3 ตัวบน)
+                </h2>
+                <div class="space-y-1">
+                    @foreach($topThreeTopExposure as $index => $item)
+                        <div
+                            class="flex items-center justify-between px-2 py-1 rounded bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700">
+                            <div class="flex items-center gap-1.5">
+                                <span
+                                    class="text-xs w-4 h-4 flex items-center justify-center rounded-full font-bold {{ $index < 3 ? 'bg-red-100 dark:bg-red-900 text-red-600 dark:text-red-300' : 'bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400' }}">{{ $index + 1 }}</span>
+                                <span class="font-bold text-slate-900 dark:text-white text-sm">{{ $item['number'] }}</span>
+                                <span class="text-xs text-slate-400">({{ $item['bet_count'] }})</span>
+                            </div>
+                            <div class="text-right">
+                                <div
+                                    class="text-xs font-bold {{ $item['status'] === 'critical' ? 'text-red-500' : ($item['status'] === 'warning' ? 'text-amber-500' : 'text-emerald-500') }}">
+                                    {{ number_format($item['liability'], 0) }}฿
+                                </div>
+                                <div class="text-xs text-slate-400">{{ number_format($item['percentage'], 0) }}%</div>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+
+            {{-- Top 3 ตัวโต๊ด --}}
+            <div
+                class="transition-all duration-300 premium-card bg-white dark:bg-slate-900 rounded-xl p-4 shadow-lg dark:shadow-2xl border border-amber-200 dark:border-amber-800">
+                <h2 class="text-sm font-bold text-amber-700 dark:text-amber-300 mb-3 flex items-center gap-1">
+                    🟡 Top 10 (3 ตัวโต๊ด)
+                </h2>
+                <div class="space-y-1">
+                    @foreach($topThreeToadExposure as $index => $item)
+                        <div
+                            class="flex items-center justify-between px-2 py-1 rounded bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700">
+                            <div class="flex items-center gap-1.5">
+                                <span
+                                    class="text-xs w-4 h-4 flex items-center justify-center rounded-full font-bold {{ $index < 3 ? 'bg-red-100 dark:bg-red-900 text-red-600 dark:text-red-300' : 'bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400' }}">{{ $index + 1 }}</span>
+                                <span class="font-bold text-slate-900 dark:text-white text-sm">{{ $item['number'] }}</span>
+                                <span class="text-xs text-slate-400">({{ $item['bet_count'] }})</span>
+                            </div>
+                            <div class="text-right">
+                                <div
+                                    class="text-xs font-bold {{ $item['status'] === 'critical' ? 'text-red-500' : ($item['status'] === 'warning' ? 'text-amber-500' : 'text-emerald-500') }}">
+                                    {{ number_format($item['liability'], 0) }}฿
+                                </div>
+                                <div class="text-xs text-slate-400">{{ number_format($item['percentage'], 0) }}%</div>
                             </div>
                         </div>
                     @endforeach
@@ -816,9 +865,13 @@
                         <select name="number_type"
                             class="w-full px-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:border-emerald-500 focus:outline-none text-slate-900 dark:text-white">
                             <option value="">ทั้งหมด</option>
-                            <option value="2_digit" {{ request('number_type') === '2_digit' ? 'selected' : '' }}>เลข 2 ตัว
+                            <option value="2_top" {{ request('number_type') === '2_top' ? 'selected' : '' }}>2 ตัวบน
                             </option>
-                            <option value="3_digit" {{ request('number_type') === '3_digit' ? 'selected' : '' }}>เลข 3 ตัว
+                            <option value="2_bottom" {{ request('number_type') === '2_bottom' ? 'selected' : '' }}>2
+                                ตัวล่าง</option>
+                            <option value="3_top" {{ request('number_type') === '3_top' ? 'selected' : '' }}>3 ตัวบน
+                            </option>
+                            <option value="3_toad" {{ request('number_type') === '3_toad' ? 'selected' : '' }}>3 ตัวโต๊ด
                             </option>
                         </select>
                     </div>
@@ -1075,237 +1128,144 @@
         }
 
         // ข้อมูลจาก Controller
-        const twoDigitData = {!! json_encode($twoDigitHeatmapData) !!};
-        console.log(twoDigitData);
-        const threeDigitData = {!! json_encode($threeDigitHeatmapData) !!};
-        const maxTwoDigit = {{ $maxTwoDigit > 0 ? $maxTwoDigit : 1 }};
-        const maxThreeDigit = {{ $maxThreeDigit > 0 ? $maxThreeDigit : 1 }};
+        const data2Top = {!! json_encode($twoTopHeatmapData) !!};
+        const data2Bottom = {!! json_encode($twoBottomHeatmapData) !!};
+        const data3Top = {!! json_encode($threeTopHeatmapData) !!};
+        const data3Toad = {!! json_encode($threeToadHeatmapData) !!};
+        const max2Top = {{ $maxTwoTop > 0 ? $maxTwoTop : 1 }};
+        const max2Bottom = {{ $maxTwoBottom > 0 ? $maxTwoBottom : 1 }};
+        const max3Top = {{ $maxThreeTop > 0 ? $maxThreeTop : 1 }};
+        const max3Toad = {{ $maxThreeToad > 0 ? $maxThreeToad : 1 }};
         const maxPayout2D = {{ $settings['max_payout_2_digit'] }};
         const maxPayout3D = {{ $settings['max_payout_3_digit'] }};
 
+        const HEAT_COLORS = ['#f1f5f9', '#86efac', '#fde047', '#fb923c', '#ef4444'];
+
+        function make2DOption(data, maxVal, maxPayout, textColor) {
+            return {
+                tooltip: {
+                    position: 'top',
+                    formatter: function (params) {
+                        const x = params.data[0], y = params.data[1];
+                        const num = String(y * 10 + x).padStart(2, '0');
+                        const val = params.data[2], cnt = params.data[3], amt = params.data[4] || 0;
+                        if (val === 0 && cnt === 0) return `เลข <strong>${num}</strong><br/>ยังไม่มีคนซื้อ`;
+                        const pct = ((val / maxPayout) * 100).toFixed(1);
+                        return `เลข <strong>${num}</strong><br/>` +
+                            `ยอดแทง: <strong>${amt.toLocaleString('th-TH')}</strong> บาท<br/>` +
+                            `ยอดจ่าย: <strong>${val.toLocaleString('th-TH')}</strong> บาท<br/>` +
+                            `จำนวนใบ: <strong>${cnt}</strong> ใบ<br/>` +
+                            `เปอร์เซ็นต์: <strong>${pct}%</strong>`;
+                    }
+                },
+                grid: { height: '80%', top: '5%', left: '4%', right: '13%', containLabel: true },
+                xAxis: { type: 'category', data: ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'], splitArea: { show: true }, axisLabel: { color: textColor, fontSize: 11, fontWeight: 'bold' } },
+                yAxis: {
+                    type: 'category',
+                    data: ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'],
+                    splitArea: { show: true },
+                    axisLabel: { color: textColor, fontSize: 11, fontWeight: 'bold' },
+                    inverse: true   // ← 00 เริ่มซ้ายบน
+                },
+                visualMap: { type: 'continuous', min: 0, max: Math.max(maxVal, maxPayout), dimension: 2, calculable: true, orient: 'vertical', right: '0%', top: 'center', inRange: { color: HEAT_COLORS }, text: ['🛑', '⬜'], textStyle: { color: textColor, fontSize: 10 } },
+                series: [{
+                    name: 'Liability',
+                    type: 'heatmap',
+                    data: data,
+                    label: {
+                        show: true,
+                        rich: {
+                            num: { fontSize: 11, fontWeight: 'bold', color: '#000', lineHeight: 14 },
+                            amt: { fontSize: 8, fontWeight: 'normal', color: '#374151', lineHeight: 11 }
+                        },
+                        formatter: function (params) {
+                            const x = params.data[0], y = params.data[1];
+                            const num = String(y * 10 + x).padStart(2, '0');
+                            const amt = params.data[4] || 0;
+                            if (amt === 0) return `{num|${num}}`;
+                            const amtStr = amt >= 1000 ? (amt / 1000).toFixed(1) + 'k' : String(amt);
+                            return `{num|${num}}\n{amt|${amtStr}}`;
+                        }
+                    },
+                    emphasis: { itemStyle: { shadowBlur: 10, shadowColor: 'rgba(0,0,0,0.5)' } }
+                }]
+            };
+        }
+
+        function make3DOption(data, maxVal, maxPayout, textColor) {
+            const xL = Array.from({ length: 40 }, (_, i) => i);
+            const yL = Array.from({ length: 25 }, (_, i) => i);
+            return {
+                tooltip: {
+                    position: 'top',
+                    formatter: function (params) {
+                        const x = params.data[0], y = params.data[1];
+                        const idx = y * 40 + x;
+                        if (idx > 999) return '';
+                        const num = String(idx).padStart(3, '0');
+                        const val = params.data[2], cnt = params.data[3], amt = params.data[4] || 0;
+                        if (val === 0 && cnt === 0) return `เลข <strong>${num}</strong><br/>ยังไม่มีคนซื้อ`;
+                        const pct = ((val / maxPayout) * 100).toFixed(1);
+                        return `เลข <strong>${num}</strong><br/>` +
+                            `ยอดแทง: <strong>${amt.toLocaleString('th-TH')}</strong> บาท<br/>` +
+                            `ยอดจ่าย: <strong>${val.toLocaleString('th-TH')}</strong> บาท<br/>` +
+                            `จำนวนใบ: <strong>${cnt}</strong> ใบ<br/>` +
+                            `เปอร์เซ็นต์: <strong>${pct}%</strong>`;
+                    }
+                },
+                grid: { height: '85%', top: '5%', left: '2%', right: '12%', containLabel: true },
+                xAxis: { type: 'category', data: xL, splitArea: { show: true }, axisLabel: { show: false } },
+                yAxis: {
+                    type: 'category',
+                    data: yL,
+                    splitArea: { show: true },
+                    axisLabel: { show: false },
+                    inverse: true   // ← 000 เริ่มซ้ายบน
+                },
+                visualMap: { min: 0, max: Math.max(maxVal, maxPayout), dimension: 2, calculable: true, orient: 'vertical', right: '0%', top: 'center', inRange: { color: HEAT_COLORS }, text: ['🛑', '⬜'], textStyle: { color: textColor, fontSize: 10 } },
+                series: [{
+                    name: 'Liability',
+                    type: 'heatmap',
+                    data: data,
+                    label: {
+                        show: true,
+                        formatter: function (params) {
+                            const i = params.data[1] * 40 + params.data[0];
+                            return i <= 999 ? String(i).padStart(3, '0') : '';
+                        },
+                        fontSize: 7,
+                        fontWeight: 'normal',
+                        color: '#1e293b'
+                    },
+                    emphasis: { itemStyle: { shadowBlur: 10, shadowColor: 'rgba(0,0,0,0.5)' } }
+                }]
+            };
+        }
+
+        let charts = [];
         function renderCharts() {
             const isDark = document.documentElement.classList.contains('dark');
             const textColor = isDark ? '#e2e8f0' : '#1e293b';
-            const threshold50_2D = maxPayout2D * 0.5;
-            const threshold100_2D = maxPayout2D;
-            const threshold50_3D = maxPayout3D * 0.5;
-            const threshold100_3D = maxPayout3D;
 
-            // 2-Digit Heatmap - แก้ไข Tooltip ให้แสดงจำนวนใบถูก
-            const chart2D = echarts.init(document.getElementById('twoDigitHeatmap'));
-            chart2D.setOption({
-                tooltip: {
-                    position: 'top',
-                    formatter: function (params) {
-                        const x = params.data[0];
-                        const y = params.data[1];
-                        const number = String(y * 10 + x).padStart(2, '0');
-                        const value = params.data[2];
-                        const count = params.data[3];
+            charts.forEach(c => c.dispose());
+            charts = [];
 
-                        // แก้ไข: ถ้า value = 0 หรือ count = 0 แสดงว่าไม่มีคนซื้อ
-                        if (value === 0 && count === 0) {
-                            return `เลข <strong>${number}</strong><br/>ยังไม่มีคนซื้อ`;
-                        }
+            const c2Top = echarts.init(document.getElementById('heatmap2Top'));
+            const c2Bottom = echarts.init(document.getElementById('heatmap2Bottom'));
+            const c3Top = echarts.init(document.getElementById('heatmap3Top'));
+            const c3Toad = echarts.init(document.getElementById('heatmap3Toad'));
 
-                        const percentage = ((value / maxPayout2D) * 100).toFixed(1);
-                        return `เลข <strong>${number}</strong><br/>` +
-                            `ยอดจ่าย: <strong>${value.toLocaleString('th-TH')}</strong> บาท<br/>` +
-                            `จำนวนใบ: <strong>${count}</strong> ใบ<br/>` +
-                            `เปอร์เซ็นต์: <strong>${percentage}%</strong> ของเพดาน`;
-                    }
-                },
-                grid: {
-                    height: '85%',
-                    top: '5%',
-                    left: '3%',
-                    right: '15%',
-                    containLabel: true
-                },
-                xAxis: {
-                    type: 'category',
-                    data: ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'],
-                    splitArea: { show: true },
-                    axisLabel: {
-                        color: textColor,
-                        fontSize: 14,
-                        fontWeight: 'bold'
-                    }
-                },
-                yAxis: {
-                    type: 'category',
-                    data: ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'],
-                    splitArea: { show: true },
-                    axisLabel: {
-                        color: textColor,
-                        fontSize: 14,
-                        fontWeight: 'bold'
-                    }
-                },
-                visualMap: {
-                    type: 'continuous',
-                    min: 0,
-                    max: Math.max(maxTwoDigit, maxPayout2D),
-                    dimension: 2,
-                    calculable: true,
-                    orient: 'vertical',
-                    right: '0%',
-                    top: 'center',
-                    // pieces: [
-                    //     { value: 0, color: '#e2e8f0', label: '⬜ ไม่มีคนซื้อ' }, // เทาอ่อน
-                    //     { min: 0.01, max: threshold50_2D - 0.01, color: '#10b981', label: '✅ ปกติ' }, // เขียว
-                    //     { min: threshold50_2D, max: threshold100_2D - 0.01, color: '#f97316', label: '⚠️ ระวัง' }, // ส้ม
-                    //     { min: threshold100_2D, color: '#dc2626', label: '🛑 อั้น' } // แดง
-                    // ],
-                    // การกำหนดสีเอง (ล่างขึ้นบน: น้อยไปมาก)
-                    inRange: {
-                        color: [
-                            '#f1f5f9', // 0: เทาอ่อนมากๆ (ไม่มีคนซื้อ)
-                            '#86efac', // น้อย: เขียวพาสเทล (ปกติ)
-                            '#fde047', // กลาง: เหลืองแดด (เริ่มขยับ)
-                            '#fb923c', // มาก: ส้ม (เฝ้าระวัง)
-                            '#ef4444'  // สูงสุด: แดง (อั้น/ตัดยอด)
-                        ]
-                    },
-                    text: ['🛑 เสี่ยงสูง', '⬜ เสี่ยงต่ำ'], // ข้อความหัว-ท้ายแถบสี
-                    textStyle: {
-                        color: textColor,
-                        fontSize: 12
-                    }
-                },
-                series: [{
-                    name: 'Liability',
-                    type: 'heatmap',
-                    data: twoDigitData.map(item => item),
-                    label: {
-                        show: true,
-                        formatter: function (params) {
-                            const x = params.data[0];
-                            const y = params.data[1];
-                            return String(y * 10 + x).padStart(2, '0');
-                        },
-                        color: '#000',
-                        fontSize: 11,
-                        fontWeight: 'bold'
-                    },
-                    emphasis: {
-                        itemStyle: {
-                            shadowBlur: 10,
-                            shadowColor: 'rgba(0, 0, 0, 0.5)'
-                        }
-                    }
-                }]
-            });
+            c2Top.setOption(make2DOption(data2Top, max2Top, maxPayout2D, textColor));
+            c2Bottom.setOption(make2DOption(data2Bottom, max2Bottom, maxPayout2D, textColor));
+            c3Top.setOption(make3DOption(data3Top, max3Top, maxPayout3D, textColor));
+            c3Toad.setOption(make3DOption(data3Toad, max3Toad, maxPayout3D, textColor));
 
-            // 3-Digit Heatmap - แก้ไข Tooltip เหมือนกัน
-            const chart3D = echarts.init(document.getElementById('threeDigitHeatmap'));
-            const xLabels = Array.from({ length: 40 }, (_, i) => i);
-            const yLabels = Array.from({ length: 25 }, (_, i) => i);
-
-            chart3D.setOption({
-                tooltip: {
-                    position: 'top',
-                    formatter: function (params) {
-                        const x = params.data[0];
-                        const y = params.data[1];
-                        const index = y * 40 + x;
-                        if (index <= 999) {
-                            const number = String(index).padStart(3, '0');
-                            const value = params.data[2];
-                            const count = params.data[3];
-
-                            if (value === 0 && count === 0) {
-                                return `เลข <strong>${number}</strong><br/>ยังไม่มีคนซื้อ`;
-                            }
-
-                            const percentage = ((value / maxPayout3D) * 100).toFixed(1);
-                            return `เลข <strong>${number}</strong><br/>` +
-                                `ยอดจ่าย: <strong>${value.toLocaleString('th-TH')}</strong> บาท<br/>` +
-                                `จำนวนใบ: <strong>${count}</strong> ใบ<br/>` +
-                                `เปอร์เซ็นต์: <strong>${percentage}%</strong> ของเพดาน`;
-                        }
-                        return '';
-                    }
-                },
-                grid: {
-                    height: '85%',
-                    top: '5%',
-                    left: '3%',
-                    right: '15%',
-                    containLabel: true
-                },
-                xAxis: {
-                    type: 'category',
-                    data: xLabels,
-                    splitArea: { show: true },
-                    axisLabel: { show: false }
-                },
-                yAxis: {
-                    type: 'category',
-                    data: yLabels,
-                    splitArea: { show: true },
-                    axisLabel: { show: false }
-                },
-                visualMap: {
-                    min: 0,
-                    max: Math.max(maxThreeDigit, maxPayout3D),
-                    dimension: 2,
-                    calculable: true,
-                    orient: 'vertical',
-                    right: '0%',
-                    top: 'center',
-                    // pieces: [
-                    //     { value: 0, color: isDark ? '#475569' : '#cbd5e1', label: 'ไม่มีคนซื้อ' },
-                    //     { min: threshold100_3D, color: '#dc2626', label: '≥ 100% (อั้น)' },
-                    //     { min: threshold50_3D, max: threshold100_3D, color: '#f97316', label: '50-99% (ระวัง)' },
-                    //     { min: 0.01, max: threshold50_3D, color: '#10b981', label: '< 50% (ปกติ)' }
-                    // ],
-                    inRange: {
-                        color: [
-                            '#f1f5f9', // 0: เทาอ่อนมากๆ (ไม่มีคนซื้อ)
-                            '#86efac', // น้อย: เขียวพาสเทล (ปกติ)
-                            '#fde047', // กลาง: เหลืองแดด (เริ่มขยับ)
-                            '#fb923c', // มาก: ส้ม (เฝ้าระวัง)
-                            '#ef4444'  // สูงสุด: แดง (อั้น/ตัดยอด)
-                        ]
-                    },
-                    text: ['🛑 เสี่ยงสูง', '⬜ เสี่ยงต่ำ'], // ข้อความหัว-ท้ายแถบสี
-                    textStyle: {
-                        color: textColor,
-                        fontSize: 12
-                    }
-                },
-                series: [{
-                    name: 'Liability',
-                    type: 'heatmap',
-                    data: threeDigitData.map(item => item),
-                    label: {
-                        show: true,
-                        formatter: function (params) {
-                            const x = params.data[0];
-                            const y = params.data[1];
-                            const index = y * 40 + x;
-                            return index <= 999 ? String(index).padStart(3, '0') : '';
-                        },
-                        fontSize: 9,
-                        fontWeight: 'bold',
-                        color: '#1e293b',
-                    },
-                    emphasis: {
-                        itemStyle: {
-                            shadowBlur: 10,
-                            shadowColor: 'rgba(0, 0, 0, 0.5)'
-                        }
-                    }
-                }]
-            });
+            charts = [c2Top, c2Bottom, c3Top, c3Toad];
 
             window.addEventListener('resize', function () {
-                chart2D.resize();
-                chart3D.resize();
+                charts.forEach(c => c.resize());
             });
         }
-
 
         function exportSummaryExcel() {
             const params = new URLSearchParams(window.location.search);

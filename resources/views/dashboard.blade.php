@@ -243,18 +243,19 @@
             </a>
 
             @if($user->isAdmin())
-                <a href="{{ route('admin.draws') }}"
-                    class="transition-all duration-300 action-btn bg-gradient-to-br from-emerald-50 to-teal-100 dark:from-teal-950/40 dark:to-teal-900/20 hover:from-emerald-100 hover:to-teal-200 dark:hover:from-teal-900/60 dark:hover:to-teal-800/40 rounded-2xl shadow-md dark:shadow-xl p-6 text-center block border border-teal-200 dark:border-teal-800 hover:shadow-xl dark:hover:shadow-teal-500/20 hover:-translate-y-2">
-                    <div class="text-5xl mb-3 filter drop-shadow-lg">✍️</div>
-                    <p class="font-bold text-base mb-1 text-slate-900 dark:text-white">กรอกผลหวย</p>
-                    <p class="text-xs text-slate-700 dark:text-slate-400">ประกาศผลรางวัล</p>
-                </a>
                 <a href="{{ route('admin.reports.index') }}"
                     class="transition-all duration-300 action-btn bg-gradient-to-br from-violet-50 to-violet-100 dark:from-violet-950/40 dark:to-violet-900/20 hover:from-violet-100 hover:to-violet-200 dark:hover:from-violet-900/60 dark:hover:to-violet-800/40 rounded-2xl shadow-md dark:shadow-xl p-6 text-center block border border-violet-200 dark:border-violet-800 hover:shadow-xl dark:hover:shadow-violet-500/20 hover:-translate-y-2">
                     <div class="text-5xl mb-3 filter drop-shadow-lg">📊</div>
                     <p class="font-bold text-base mb-1 text-slate-900 dark:text-white">สถิติและกราฟ</p>
                     <p class="text-xs text-slate-700 dark:text-slate-400">วิเคราะห์ข้อมูล</p>
                 </a>
+                <a href="{{ route('admin.draws') }}"
+                    class="transition-all duration-300 action-btn bg-gradient-to-br from-emerald-50 to-teal-100 dark:from-teal-950/40 dark:to-teal-900/20 hover:from-emerald-100 hover:to-teal-200 dark:hover:from-teal-900/60 dark:hover:to-teal-800/40 rounded-2xl shadow-md dark:shadow-xl p-6 text-center block border border-teal-200 dark:border-teal-800 hover:shadow-xl dark:hover:shadow-teal-500/20 hover:-translate-y-2">
+                    <div class="text-5xl mb-3 filter drop-shadow-lg">✍️</div>
+                    <p class="font-bold text-base mb-1 text-slate-900 dark:text-white">กรอกผลหวย</p>
+                    <p class="text-xs text-slate-700 dark:text-slate-400">ประกาศผลรางวัล</p>
+                </a>
+
                 <a href="{{ route('admin.users') }}"
                     class="transition-all duration-300 action-btn bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-950/40 dark:to-orange-900/20 hover:from-orange-100 hover:to-orange-200 dark:hover:from-orange-900/60 dark:hover:to-orange-800/40 rounded-2xl shadow-md dark:shadow-xl p-6 text-center block border border-orange-200 dark:border-orange-800 hover:shadow-xl dark:hover:shadow-orange-500/20 hover:-translate-y-2">
                     <div class="text-5xl mb-3 filter drop-shadow-lg">👥</div>
