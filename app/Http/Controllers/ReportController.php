@@ -777,10 +777,12 @@ class ReportController extends Controller
             ];
         }
 
-        $filename = 'บัญชีแทงหวย_' . \Carbon\Carbon::parse($draw->draw_date)->format('Y-m-d') . '.csv';
+        $dateStr = \Carbon\Carbon::parse($draw->draw_date)->format('Y-m-d');
+        $filename = 'bets_' . $dateStr . '.csv';
+        $filenameUtf8 = rawurlencode('บัญชีแทงหวย_' . $dateStr . '.csv');
 
         $handle = fopen('php://temp', 'r+');
-        fwrite($handle, "ï»¿");
+        fwrite($handle, "\xEF\xBB\xBF"); // UTF-8 BOM สำหรับ Excel
         foreach ($rows as $row) {
             fputcsv($handle, $row);
         }
@@ -790,7 +792,7 @@ class ReportController extends Controller
 
         return response($csv, 200, [
             'Content-Type' => 'text/csv; charset=UTF-8',
-            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+            'Content-Disposition' => "attachment; filename=\"{$filename}\"; filename*=UTF-8''{$filenameUtf8}",
         ]);
     }
     public function exportCustomerSummary(Request $request, $drawId)
@@ -838,10 +840,12 @@ class ReportController extends Controller
             ];
         }
 
-        $filename = 'สรุปรายบุคคล_' . \Carbon\Carbon::parse($draw->draw_date)->format('Y-m-d') . '.csv';
+        $dateStr = \Carbon\Carbon::parse($draw->draw_date)->format('Y-m-d');
+        $filename = 'customer_summary_' . $dateStr . '.csv';
+        $filenameUtf8 = rawurlencode('สรุปรายบุคคล_' . $dateStr . '.csv');
 
         $handle = fopen('php://temp', 'r+');
-        fwrite($handle, "ï»¿");
+        fwrite($handle, "\xEF\xBB\xBF"); // UTF-8 BOM สำหรับ Excel
         foreach ($rows as $row) {
             fputcsv($handle, $row);
         }
@@ -851,7 +855,7 @@ class ReportController extends Controller
 
         return response($csv, 200, [
             'Content-Type' => 'text/csv; charset=UTF-8',
-            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+            'Content-Disposition' => "attachment; filename=\"{$filename}\"; filename*=UTF-8''{$filenameUtf8}",
         ]);
     }
 
@@ -939,7 +943,9 @@ class ReportController extends Controller
         $addSection('3 ตัวบน (เกิน 100%)', $over3Top, $maxPay3);
         $addSection('3 ตัวโต๊ด (เกิน 100%)', $over3Toad, $maxPay3);
 
-        $filename = 'เลขเกินเพดาน_' . \Carbon\Carbon::parse($draw->draw_date)->format('Y-m-d') . '.csv';
+        $dateStr = \Carbon\Carbon::parse($draw->draw_date)->format('Y-m-d');
+        $filename = 'over_limit_' . $dateStr . '.csv';
+        $filenameUtf8 = rawurlencode('เลขเกินเพดาน_' . $dateStr . '.csv');
 
         $handle = fopen('php://temp', 'r+');
         fwrite($handle, "\xEF\xBB\xBF"); // UTF-8 BOM
@@ -952,7 +958,7 @@ class ReportController extends Controller
 
         return response($csv, 200, [
             'Content-Type' => 'text/csv; charset=UTF-8',
-            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+            'Content-Disposition' => "attachment; filename=\"{$filename}\"; filename*=UTF-8''{$filenameUtf8}",
         ]);
     }
 }

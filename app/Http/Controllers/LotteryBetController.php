@@ -264,7 +264,7 @@ class LotteryBetController extends Controller
 
         $handle = fopen('php://temp', 'r+');
         // BOM สำหรับ Excel ภาษาไทย
-        fwrite($handle, "ï»¿");
+        fwrite($handle, "\xEF\xBB\xBF"); // UTF-8 BOM สำหรับ Excel
         foreach ($rows as $row) {
             fputcsv($handle, $row);
         }
