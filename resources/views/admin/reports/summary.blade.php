@@ -656,6 +656,155 @@
             </div>
         </div>
 
+        {{-- เลขเกิน 100% (อั้น) --}}
+        @php
+            $totalOver = count($overLimit2Top) + count($overLimit2Bottom) + count($overLimit3Top) + count($overLimit3Toad);
+        @endphp
+        <div
+            class="transition-all duration-300 premium-card bg-white dark:bg-slate-900 rounded-2xl p-5 mb-8 shadow-xl dark:shadow-2xl border {{ $totalOver > 0 ? 'border-red-300 dark:border-red-700' : 'border-slate-200 dark:border-slate-800' }}">
+            <div class="flex items-center justify-between mb-4 flex-wrap gap-3">
+                <div class="flex items-center gap-3">
+                    <h2
+                        class="text-lg font-bold {{ $totalOver > 0 ? 'text-red-600 dark:text-red-400' : 'text-slate-700 dark:text-slate-300' }} flex items-center gap-2">
+                        🛑 เลขเกิน 100% (อั้น/ตัดยอด)
+                    </h2>
+                    @if($totalOver > 0)
+                        <span
+                            class="px-2 py-0.5 bg-red-100 dark:bg-red-900/40 text-red-600 dark:text-red-300 rounded-full text-xs font-bold">
+                            {{ $totalOver }} เลข
+                        </span>
+                    @else
+                        <span
+                            class="px-2 py-0.5 bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-300 rounded-full text-xs font-bold">
+                            ✅ ไม่มีเลขเกินเพดาน
+                        </span>
+                    @endif
+                </div>
+                <a href="{{ route('admin.reports.export-over-limit', $draw->id) }}"
+                    class="no-print inline-flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-semibold text-sm transition-colors shadow">
+                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                        <rect x="3" y="3" width="18" height="18" rx="2" fill="white" fill-opacity="0.25" />
+                        <text x="12" y="16" text-anchor="middle" fill="white" font-size="11" font-weight="bold"
+                            font-family="Arial">X</text>
+                    </svg>
+                    ดาวน์โหลด Excel เลขเกิน 100%
+                </a>
+            </div>
+
+            @if($totalOver > 0)
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                    {{-- 2 ตัวบน --}}
+                    <div>
+                        <div class="text-xs font-bold text-sky-600 dark:text-sky-400 mb-1.5 flex items-center gap-1">
+                            🟢 2 ตัวบน
+                            <span
+                                class="bg-sky-100 dark:bg-sky-900/40 text-sky-700 dark:text-sky-300 px-1.5 py-0.5 rounded-full">{{ count($overLimit2Top) }}</span>
+                        </div>
+                        @if(count($overLimit2Top) > 0)
+                            <div class="space-y-1">
+                                @foreach($overLimit2Top as $item)
+                                    <div
+                                        class="flex items-center justify-between px-2 py-1 bg-red-50 dark:bg-red-900/20 rounded border border-red-200 dark:border-red-800 text-xs">
+                                        <span class="font-bold text-slate-900 dark:text-white">{{ $item['number'] }}</span>
+                                        <div class="text-right">
+                                            <div class="font-bold text-red-600 dark:text-red-400">
+                                                {{ number_format($item['liability'], 0) }}฿</div>
+                                            <div class="text-red-500 dark:text-red-400">{{ number_format($item['percentage'], 1) }}%
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                        @else
+                            <p class="text-xs text-slate-400 italic">ไม่มี</p>
+                        @endif
+                    </div>
+
+                    {{-- 2 ตัวล่าง --}}
+                    <div>
+                        <div class="text-xs font-bold text-violet-600 dark:text-violet-400 mb-1.5 flex items-center gap-1">
+                            🔵 2 ตัวล่าง
+                            <span
+                                class="bg-violet-100 dark:bg-violet-900/40 text-violet-700 dark:text-violet-300 px-1.5 py-0.5 rounded-full">{{ count($overLimit2Bottom) }}</span>
+                        </div>
+                        @if(count($overLimit2Bottom) > 0)
+                            <div class="space-y-1">
+                                @foreach($overLimit2Bottom as $item)
+                                    <div
+                                        class="flex items-center justify-between px-2 py-1 bg-red-50 dark:bg-red-900/20 rounded border border-red-200 dark:border-red-800 text-xs">
+                                        <span class="font-bold text-slate-900 dark:text-white">{{ $item['number'] }}</span>
+                                        <div class="text-right">
+                                            <div class="font-bold text-red-600 dark:text-red-400">
+                                                {{ number_format($item['liability'], 0) }}฿</div>
+                                            <div class="text-red-500 dark:text-red-400">{{ number_format($item['percentage'], 1) }}%
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                        @else
+                            <p class="text-xs text-slate-400 italic">ไม่มี</p>
+                        @endif
+                    </div>
+
+                    {{-- 3 ตัวบน --}}
+                    <div>
+                        <div
+                            class="text-xs font-bold text-emerald-600 dark:text-emerald-400 mb-1.5 flex items-center gap-1">
+                            🟣 3 ตัวบน
+                            <span
+                                class="bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 px-1.5 py-0.5 rounded-full">{{ count($overLimit3Top) }}</span>
+                        </div>
+                        @if(count($overLimit3Top) > 0)
+                            <div class="space-y-1 max-h-48 overflow-y-auto">
+                                @foreach($overLimit3Top as $item)
+                                    <div
+                                        class="flex items-center justify-between px-2 py-1 bg-red-50 dark:bg-red-900/20 rounded border border-red-200 dark:border-red-800 text-xs">
+                                        <span class="font-bold text-slate-900 dark:text-white">{{ $item['number'] }}</span>
+                                        <div class="text-right">
+                                            <div class="font-bold text-red-600 dark:text-red-400">
+                                                {{ number_format($item['liability'], 0) }}฿</div>
+                                            <div class="text-red-500 dark:text-red-400">{{ number_format($item['percentage'], 1) }}%
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                        @else
+                            <p class="text-xs text-slate-400 italic">ไม่มี</p>
+                        @endif
+                    </div>
+
+                    {{-- 3 ตัวโต๊ด --}}
+                    <div>
+                        <div class="text-xs font-bold text-amber-600 dark:text-amber-400 mb-1.5 flex items-center gap-1">
+                            🟡 3 ตัวโต๊ด
+                            <span
+                                class="bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 px-1.5 py-0.5 rounded-full">{{ count($overLimit3Toad) }}</span>
+                        </div>
+                        @if(count($overLimit3Toad) > 0)
+                            <div class="space-y-1 max-h-48 overflow-y-auto">
+                                @foreach($overLimit3Toad as $item)
+                                    <div
+                                        class="flex items-center justify-between px-2 py-1 bg-red-50 dark:bg-red-900/20 rounded border border-red-200 dark:border-red-800 text-xs">
+                                        <span class="font-bold text-slate-900 dark:text-white">{{ $item['number'] }}</span>
+                                        <div class="text-right">
+                                            <div class="font-bold text-red-600 dark:text-red-400">
+                                                {{ number_format($item['liability'], 0) }}฿</div>
+                                            <div class="text-red-500 dark:text-red-400">{{ number_format($item['percentage'], 1) }}%
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                        @else
+                            <p class="text-xs text-slate-400 italic">ไม่มี</p>
+                        @endif
+                    </div>
+                </div>
+            @endif
+        </div>
+
         {{-- สรุปผลงานรายบุคคล (Accordion) - กระชับลง --}}
         @if($draw->is_announced && count($customerSummary) > 0)
             <div class="transition-all duration-300 premium-card bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-xl dark:shadow-2xl border border-slate-200 dark:border-slate-800 mb-8"

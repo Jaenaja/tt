@@ -65,6 +65,7 @@ Route::middleware(['auth'])->group(function () {
             Route::delete('/bets/{betId}', [ReportController::class, 'deleteBet'])->name('bets.delete');
             Route::get('/export-excel/{drawId}', [ReportController::class, 'exportExcel'])->name('export-excel');
             Route::get('/export-customer-summary/{drawId}', [ReportController::class, 'exportCustomerSummary'])->name('export-customer-summary');
+            Route::get('/export-over-limit/{drawId}', [ReportController::class, 'exportOverLimit'])->name('export-over-limit');
             Route::delete('/admin/reports/bets/{betId}', [ReportController::class, 'deleteBet'])
                 ->name('admin.reports.bets.delete');
         });

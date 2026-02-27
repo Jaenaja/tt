@@ -79,6 +79,32 @@ class ReportController extends Controller
         $topTwoDigitExposure = $topTwoTopExposure;
         $topThreeDigitExposure = $topThreeTopExposure;
 
+        // สรุปเลขเกิน 100% สำหรับแสดงผลในหน้า (preview)
+        $filterOverLimit = function ($liabilityArr, $maxPayout) {
+            $result = [];
+            foreach ($liabilityArr as $number => $data) {
+                if ($data['liability'] <= 0)
+                    continue;
+                $pct = ($data['liability'] / $maxPayout) * 100;
+                if ($pct >= 100) {
+                    $result[] = [
+                        'number' => $number,
+                        'bet_count' => $data['bet_count'],
+                        'total_amount' => $data['total_amount'],
+                        'liability' => round($data['liability']),
+                        'percentage' => round($pct, 1),
+                    ];
+                }
+            }
+            usort($result, fn($a, $b) => $b['liability'] - $a['liability']);
+            return $result;
+        };
+
+        $overLimit2Top = $filterOverLimit($twoTopLiability, $settings['max_payout_2_digit']);
+        $overLimit2Bottom = $filterOverLimit($twoBottomLiability, $settings['max_payout_2_digit']);
+        $overLimit3Top = $filterOverLimit($threeTopLiability, $settings['max_payout_3_digit']);
+        $overLimit3Toad = $filterOverLimit($threeToadLiability, $settings['max_payout_3_digit']);
+
         // สถิติพื้นฐาน
         $totalTransactions = $draw->bets->count();
 
@@ -235,6 +261,10 @@ class ReportController extends Controller
             'topThreeToadExposure',
             'topTwoDigitExposure',
             'topThreeDigitExposure',
+            'overLimit2Top',
+            'overLimit2Bottom',
+            'overLimit3Top',
+            'overLimit3Toad',
             'betsHistory',
             'customerSummary',
             'customerNames',
@@ -812,6 +842,107 @@ class ReportController extends Controller
 
         $handle = fopen('php://temp', 'r+');
         fwrite($handle, "ï»¿");
+        foreach ($rows as $row) {
+            fputcsv($handle, $row);
+        }
+        rewind($handle);
+        $csv = stream_get_contents($handle);
+        fclose($handle);
+
+        return response($csv, 200, [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ]);
+    }
+
+    /**
+     * Export เลขที่เกิน 100% ทั้ง 4 ประเภท เป็น CSV
+     */
+    public function exportOverLimit(Request $request, $drawId)
+    {
+        $draw = \App\Models\LotteryDraw::findOrFail($drawId);
+
+        $settings = [
+            'max_payout_2_digit' => \App\Models\Setting::get('max_payout_2_digit', 50000),
+            'max_payout_3_digit' => \App\Models\Setting::get('max_payout_3_digit', 100000),
+            'rate_2_top' => \App\Models\Setting::get('rate_2_top', 90),
+            'rate_2_bottom' => \App\Models\Setting::get('rate_2_bottom', 90),
+            'rate_3_top' => \App\Models\Setting::get('rate_3_top', 900),
+            'rate_3_toad' => \App\Models\Setting::get('rate_3_toad', 120),
+            'commission_rate' => \App\Models\Setting::get('commission_rate', 10),
+        ];
+
+        $bets = \App\Models\LotteryBet::whereNull('deleted_at')
+            ->where('draw_date', $draw->draw_date)
+            ->get();
+
+        // คำนวณ liability แยก 4 ประเภท
+        $twoTopLiab = $this->calculateTwoTopLiability($bets, $settings);
+        $twoBottomLiab = $this->calculateTwoBottomLiability($bets, $settings);
+        $threeTopLiab = $this->calculateThreeTopLiability($bets, $settings);
+        $threeToadLiab = $this->calculateThreeToadLiability($bets, $settings);
+
+        $maxPay2 = $settings['max_payout_2_digit'];
+        $maxPay3 = $settings['max_payout_3_digit'];
+
+        // กรองเฉพาะที่เกิน 100%
+        $filterOver = function ($liabilityArr, $maxPayout) {
+            $result = [];
+            foreach ($liabilityArr as $number => $data) {
+                if ($data['liability'] <= 0)
+                    continue;
+                $pct = ($data['liability'] / $maxPayout) * 100;
+                if ($pct >= 100) {
+                    $result[] = [
+                        'number' => $number,
+                        'bet_count' => $data['bet_count'],
+                        'total_amount' => $data['total_amount'],
+                        'liability' => round($data['liability']),
+                        'percentage' => round($pct, 2),
+                    ];
+                }
+            }
+            usort($result, fn($a, $b) => $b['liability'] - $a['liability']);
+            return $result;
+        };
+
+        $over2Top = $filterOver($twoTopLiab, $maxPay2);
+        $over2Bottom = $filterOver($twoBottomLiab, $maxPay2);
+        $over3Top = $filterOver($threeTopLiab, $maxPay3);
+        $over3Toad = $filterOver($threeToadLiab, $maxPay3);
+
+        $drawDateLabel = \Carbon\Carbon::parse($draw->draw_date)->format('d/m/Y');
+        $rows = [];
+
+        // Section headers + data helper
+        $addSection = function ($title, $data, $maxPayout) use (&$rows, $drawDateLabel) {
+            $rows[] = [];
+            $rows[] = ["=== $title ===", "งวด $drawDateLabel", "เพดาน: " . number_format($maxPayout, 0) . " บาท"];
+            $rows[] = ['เลข', 'จำนวนใบ', 'ยอดซื้อ (฿)', 'ยอดจ่าย (฿)', '% ของเพดาน'];
+            if (empty($data)) {
+                $rows[] = ['-', '-', '-', '-', 'ไม่มีเลขเกินเพดาน'];
+            } else {
+                foreach ($data as $item) {
+                    $rows[] = [
+                        $item['number'],
+                        $item['bet_count'],
+                        number_format($item['total_amount'], 0),
+                        number_format($item['liability'], 0),
+                        number_format($item['percentage'], 2) . '%',
+                    ];
+                }
+            }
+        };
+
+        $addSection('2 ตัวบน (เกิน 100%)', $over2Top, $maxPay2);
+        $addSection('2 ตัวล่าง (เกิน 100%)', $over2Bottom, $maxPay2);
+        $addSection('3 ตัวบน (เกิน 100%)', $over3Top, $maxPay3);
+        $addSection('3 ตัวโต๊ด (เกิน 100%)', $over3Toad, $maxPay3);
+
+        $filename = 'เลขเกินเพดาน_' . \Carbon\Carbon::parse($draw->draw_date)->format('Y-m-d') . '.csv';
+
+        $handle = fopen('php://temp', 'r+');
+        fwrite($handle, "\xEF\xBB\xBF"); // UTF-8 BOM
         foreach ($rows as $row) {
             fputcsv($handle, $row);
         }
