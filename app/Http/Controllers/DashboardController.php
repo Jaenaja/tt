@@ -73,15 +73,15 @@ class DashboardController extends Controller
     }
     
     /**
-     * API สำหรับดึงรายการงวดที่เปิดรับแทง (อนาคต 5 งวด)
+     * API สำหรับดึงรายการงวดที่เปิดรับแทง (งวดปัจจุบัน + อนาคต)
      */
     public function getOpenDraws()
     {
-        $today = now();
+        $today = now()->startOfDay(); // เริ่มต้นวัน 00:00:00
         $draws = [];
         
-        // สร้างงวดอนาคต 5 งวด (ถ้ายังไม่มีในฐานข้อมูล)
-        for ($i = 0; $i < 5; $i++) {
+        // สร้างงวดอนาคต 6 งวด (ครอบคลุม 3 เดือน)
+        for ($i = 0; $i < 6; $i++) {
             $month = $today->copy()->addMonths($i);
             
             // งวดวันที่ 1
@@ -111,14 +111,11 @@ class DashboardController extends Controller
             );
         }
         
-        // ดึงงวดที่ยังเปิดรับแทง (close_time ยังไม่ผ่าน)
-        $openDraws = LotteryDraw::where(function ($q) use ($today) {
-                $q->whereNull('close_time')
-                  ->orWhere('close_time', '>', $today);
-            })
+        // ดึงงวดที่ยังไม่ประกาศผล และเป็นวันนี้หรืออนาคต
+        $openDraws = LotteryDraw::where('draw_date', '>=', $today->format('Y-m-d'))
             ->where('is_announced', false)
             ->orderBy('draw_date', 'asc')
-            ->take(5)
+            ->take(6)
             ->get();
         
         return response()->json([
@@ -128,7 +125,7 @@ class DashboardController extends Controller
                     'value' => $draw->draw_date->format('Y-m-d'),
                     'label' => $draw->draw_date->locale('th')->translatedFormat('j F Y'),
                     'close_time' => $draw->close_time ? $draw->close_time->toIso8601String() : null,
-                    'is_closed' => $draw->isClosed(),
+                    'is_announced' => $draw->is_announced,
                 ];
             })
         ]);
