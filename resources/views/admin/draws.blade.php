@@ -227,93 +227,40 @@
             }
         });
 
-        // === ORIGINAL LOGIC - DO NOT MODIFY ===
         const thaiMonths = ['', 'มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน',
             'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
 
-        function generateDrawDates() {
+        function formatDateThai(dateStr) {
+            // dateStr = "YYYY-MM-DD"
+            const [year, month, day] = dateStr.split('-');
+            return `${parseInt(day)} ${thaiMonths[parseInt(month)]} ${parseInt(year) + 543}`;
+        }
+
+        async function loadOpenDraws() {
             const select = document.getElementById('drawDate');
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-            const allDrawDates = getAllDrawDates(today, 3, 4);
-            const nextDrawDate = getNextDrawDate(today);
-            select.innerHTML = allDrawDates.map((dateOption) => {
-                const isSelected = dateOption.value === formatDateForDatabase(nextDrawDate);
-                return `<option value="${dateOption.value}" ${isSelected ? 'selected' : ''}>${dateOption.label}</option>`;
-            }).join('');
-        }
+            try {
+                const response = await fetch('/api/open-draws');
+                const data = await response.json();
 
-        function getAllDrawDates(referenceDate, pastCount, futureCount) {
-            const draws = [];
-            let currentDate = new Date(referenceDate);
-            for (let i = 0; i < pastCount; i++) {
-                currentDate = getPreviousDrawDate(currentDate);
-                draws.unshift(createDateOption(new Date(currentDate)));
-            }
-            currentDate = new Date(referenceDate);
-            for (let i = 0; i < futureCount; i++) {
-                const nextDraw = getNextDrawDate(currentDate);
-                const alreadyExists = draws.some(d => d.value === formatDateForDatabase(nextDraw));
-                if (!alreadyExists) {
-                    draws.push(createDateOption(nextDraw));
+                if (!data.success || !data.draws || data.draws.length === 0) {
+                    select.innerHTML = '<option value="">ไม่มีงวดที่รอประกาศผล</option>';
+                    return;
                 }
-                currentDate = new Date(nextDraw);
-                currentDate.setDate(currentDate.getDate() + 1);
+
+                // เลือก default = งวดแรกสุด (เก่าที่สุดที่ยังไม่ประกาศ)
+                select.innerHTML = data.draws.map((draw, index) => {
+                    const label = formatDateThai(draw.value);
+                    return `<option value="${draw.value}" ${index === 0 ? 'selected' : ''}>${label}</option>`;
+                }).join('');
+
+            } catch (error) {
+                console.error('Error loading open draws:', error);
+                select.innerHTML = '<option value="">เกิดข้อผิดพลาดในการโหลดงวด</option>';
             }
-            return draws;
-        }
-
-        function getNextDrawDate(referenceDate) {
-            const date = new Date(referenceDate);
-            const day = date.getDate();
-            const month = date.getMonth();
-            const year = date.getFullYear();
-            if (day < 1) {
-                return new Date(year, month, 1);
-            } else if (day >= 1 && day < 16) {
-                return new Date(year, month, 16);
-            } else {
-                return new Date(year, month + 1, 1);
-            }
-        }
-
-        function getPreviousDrawDate(referenceDate) {
-            const date = new Date(referenceDate);
-            const day = date.getDate();
-            const month = date.getMonth();
-            const year = date.getFullYear();
-            if (day <= 1) {
-                return new Date(year, month - 1, 16);
-            } else if (day > 1 && day <= 16) {
-                return new Date(year, month, 1);
-            } else {
-                return new Date(year, month, 16);
-            }
-        }
-
-        function createDateOption(date) {
-            return {
-                value: formatDateForDatabase(date),
-                label: formatDateThai(date)
-            };
-        }
-
-        function formatDateForDatabase(date) {
-            const year = date.getFullYear();
-            const month = String(date.getMonth() + 1).padStart(2, '0');
-            const day = String(date.getDate()).padStart(2, '0');
-            return `${year}-${month}-${day}`;
-        }
-
-        function formatDateThai(date) {
-            const day = date.getDate();
-            const month = thaiMonths[date.getMonth() + 1];
-            const year = date.getFullYear() + 543;
-            return `${day} ${month} ${year}`;
         }
 
         window.onload = function () {
-            generateDrawDates();
+            loadOpenDraws();
         };
 
         document.getElementById('drawForm').addEventListener('submit', async function (e) {

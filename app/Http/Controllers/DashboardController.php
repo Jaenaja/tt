@@ -71,60 +71,27 @@ class DashboardController extends Controller
             'totalToad' => $todayBets->sum('amount_toad'),
         ]);
     }
-    
+
     /**
      * API สำหรับดึงรายการงวดที่เปิดรับแทง (งวดปัจจุบัน + อนาคต)
      */
     public function getOpenDraws()
     {
-        $today = now()->startOfDay(); // เริ่มต้นวัน 00:00:00
-        $draws = [];
-        
-        // สร้างงวดอนาคต 6 งวด (ครอบคลุม 3 เดือน)
-        for ($i = 0; $i < 6; $i++) {
-            $month = $today->copy()->addMonths($i);
-            
-            // งวดวันที่ 1
-            $date1 = $month->copy()->day(1);
-            // Close time = 23:59 วันก่อนหน้า
-            $closeTime1 = $date1->copy()->subDay()->setTime(23, 59, 59);
-            
-            // งวดวันที่ 16
-            $date16 = $month->copy()->day(16);
-            $closeTime16 = $date16->copy()->subDay()->setTime(23, 59, 59);
-            
-            // สร้างหรืออัพเดทงวด
-            LotteryDraw::updateOrCreate(
-                ['draw_date' => $date1->format('Y-m-d')],
-                [
-                    'close_time' => $closeTime1,
-                    'is_announced' => false
-                ]
-            );
-            
-            LotteryDraw::updateOrCreate(
-                ['draw_date' => $date16->format('Y-m-d')],
-                [
-                    'close_time' => $closeTime16,
-                    'is_announced' => false
-                ]
-            );
-        }
-        
-        // ดึงงวดที่ยังไม่ประกาศผล และเป็นวันนี้หรืออนาคต
+        $today = now()->startOfDay();
+
+        // ดึงเฉพาะงวดที่มีใน DB จริง, ยังไม่ประกาศผล, วันนี้หรืออนาคต
+        // งวดจะถูกสร้างอัตโนมัติเมื่อมีคนแทงครั้งแรก (Dynamic Draw)
         $openDraws = LotteryDraw::where('draw_date', '>=', $today->format('Y-m-d'))
             ->where('is_announced', false)
             ->orderBy('draw_date', 'asc')
-            ->take(6)
             ->get();
-        
+
         return response()->json([
             'success' => true,
             'draws' => $openDraws->map(function ($draw) {
                 return [
                     'value' => $draw->draw_date->format('Y-m-d'),
                     'label' => $draw->draw_date->locale('th')->translatedFormat('j F Y'),
-                    'close_time' => $draw->close_time ? $draw->close_time->toIso8601String() : null,
                     'is_announced' => $draw->is_announced,
                 ];
             })

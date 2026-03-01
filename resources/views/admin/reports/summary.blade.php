@@ -917,7 +917,7 @@
                     <p class="text-slate-600 dark:text-slate-400 mb-4">
                         ลบรายการ: <strong>${customerName} - ${number}</strong>
                     </p>
-                    <input type="text" id="deleteCode" class="swal2-input" placeholder="รหัส 6 หลัก" maxlength="6" pattern="[0-9]{6}">
+                    <input type="password" id="deleteCode" class="swal2-input" placeholder="รหัส 6 หลัก" maxlength="6" pattern="[0-9]{6}" autocomplete="new-password" inputmode="numeric">
                 `,
                 icon: 'warning',
                 showCancelButton: true,

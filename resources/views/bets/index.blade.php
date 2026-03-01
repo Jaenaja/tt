@@ -295,22 +295,17 @@
         function generateDrawDates() {
             const select = document.getElementById('drawDate');
             const today = new Date();
-            const currentDay = today.getDate();
             const currentMonth = today.getMonth();   // 0-indexed
             const currentYear = today.getFullYear();
 
             // สร้างลิสต์งวด: วันที่ 1 และ 16 ของเดือนปัจจุบัน + ล่วงหน้า 3 เดือน
             const draws = [];
-
             for (let offset = 0; offset <= 3; offset++) {
-                // คำนวณปี/เดือนที่ถูกต้อง (ป้องกัน overflow เดือน)
-                const d1 = new Date(currentYear, currentMonth + offset, 1);
-                const d16 = new Date(currentYear, currentMonth + offset, 16);
-                draws.push(d1);
-                draws.push(d16);
+                draws.push(new Date(currentYear, currentMonth + offset, 1));
+                draws.push(new Date(currentYear, currentMonth + offset, 16));
             }
 
-            // กรองเฉพาะงวดที่เป็นวันนี้หรืออนาคต (ไม่ตรวจเวลา - เช็คแค่วันที่)
+            // กรองเฉพาะงวดที่เป็นวันนี้หรืออนาคต (เทียบ YYYY-MM-DD เท่านั้น ไม่สนเวลา)
             const todayStr = formatDateForDatabase(today);
             const futureDraws = draws.filter(d => formatDateForDatabase(d) >= todayStr);
 
@@ -319,28 +314,13 @@
                 return;
             }
 
-            // กำหนด default: งวดที่ใกล้ที่สุด (index 0 หลัง sort)
-            // วันที่ 1–16 → default = งวด 16 เดือนปัจจุบัน (ถ้ายังไม่ผ่าน)
-            // วันที่ 17+  → default = งวด 1 เดือนถัดไป
-            let defaultValue = '';
-            if (currentDay >= 1 && currentDay <= 16) {
-                const target = new Date(currentYear, currentMonth, 16);
-                defaultValue = formatDateForDatabase(target);
-            } else {
-                const target = new Date(currentYear, currentMonth + 1, 1);
-                defaultValue = formatDateForDatabase(target);
-            }
-
-            // ถ้า default ไม่อยู่ใน list ให้ใช้งวดแรก
-            if (!futureDraws.some(d => formatDateForDatabase(d) === defaultValue)) {
-                defaultValue = formatDateForDatabase(futureDraws[0]);
-            }
+            // default = งวดแรกสุดที่ >= วันนี้ (ใกล้ที่สุด)
+            const defaultValue = formatDateForDatabase(futureDraws[0]);
 
             select.innerHTML = futureDraws.map(d => {
                 const val = formatDateForDatabase(d);
-                const label = formatDateThai(d);
                 const selected = val === defaultValue ? 'selected' : '';
-                return `<option value="${val}" ${selected}>${label}</option>`;
+                return `<option value="${val}" ${selected}>${formatDateThai(d)}</option>`;
             }).join('');
         }
 
