@@ -31,23 +31,26 @@ class LotteryBetController extends Controller
             // draw_date มาในรูปแบบ Y-m-d แล้ว (เช่น 2026-03-16)
             $drawDate = $validated['draw_date'];
 
-            // ✅ ตรวจสอบว่างวดนี้มีอยู่จริงและยังไม่ประกาศผล
+            // 🔍 Dynamic Draw Logic
             $draw = LotteryDraw::where('draw_date', $drawDate)->first();
-            
+
+            // กรณีที่ 1: มีงวดใน DB และประกาศผลแล้ว → ห้ามแทง
+            if ($draw && $draw->is_announced) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'งวดนี้มีการประกาศผลรางวัลไปแล้ว ไม่สามารถรับแทงเพิ่มได้'
+                ], 400);
+            }
+
+            // กรณีที่ 2: ไม่มีงวดใน DB → สร้างงวดใหม่อัตโนมัติ
             if (!$draw) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'ไม่พบงวดหวยที่เลือก'
-                ], 400);
+                $draw = LotteryDraw::create([
+                    'draw_date' => $drawDate,
+                    'is_announced' => 0,
+                ]);
             }
-            
-            // ✅ ตรวจสอบว่าประกาศผลแล้วหรือยัง (แทงได้จนกว่าจะประกาศผล)
-            if ($draw->is_announced) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'งวดนี้ประกาศผลแล้ว ไม่สามารถแทงได้'
-                ], 400);
-            }
+
+            // กรณีที่ 3: มีงวดใน DB และ is_announced = 0 → ผ่านได้ บันทึกปกติ
 
             DB::transaction(function () use ($validated, $drawDate) {
                 foreach ($validated['bets'] as $bet) {
@@ -140,7 +143,7 @@ class LotteryBetController extends Controller
         try {
             // ตรวจสอบรหัสลบจาก Setting
             $deleteCode = \App\Models\Setting::get('delete_code', '');
-            
+
             if (empty($deleteCode)) {
                 return response()->json([
                     'success' => false,

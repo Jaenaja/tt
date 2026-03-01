@@ -292,51 +292,56 @@
             updateManualInputFields();
         };
 
-        async function generateDrawDates() {
+        function generateDrawDates() {
             const select = document.getElementById('drawDate');
-            
-            try {
-                // เรียก API เพื่อดึงงวดที่ยังไม่ประกาศผล
-                const response = await fetch('/api/open-draws');
-                const data = await response.json();
-                
-                if (!data.success || !data.draws || data.draws.length === 0) {
-                    select.innerHTML = '<option value="">ไม่พบงวดที่เปิดรับแทง</option>';
-                    return;
-                }
-                
-                const today = new Date();
-                const currentDay = today.getDate();
-                const currentMonth = today.getMonth();
-                const currentYear = today.getFullYear();
-                
-                // กำหนด default index ตาม Logic:
-                // วันที่ 1-16: เลือกงวด 16 เดือนนี้
-                // วันที่ 17+: เลือกงวด 1 เดือนหน้า
-                let defaultIndex = 0;
-                
-                if (currentDay >= 1 && currentDay <= 16) {
-                    const target = new Date(currentYear, currentMonth, 16);
-                    const targetStr = formatDateForDatabase(target);
-                    defaultIndex = data.draws.findIndex(d => d.value === targetStr);
-                    if (defaultIndex === -1) defaultIndex = 0;
-                } else {
-                    const target = new Date(currentYear, currentMonth + 1, 1);
-                    const targetStr = formatDateForDatabase(target);
-                    defaultIndex = data.draws.findIndex(d => d.value === targetStr);
-                    if (defaultIndex === -1) defaultIndex = 0;
-                }
-                
-                // สร้าง HTML options (แทงได้ทุกงวดจนกว่าจะประกาศผล)
-                select.innerHTML = data.draws.map((draw, index) => {
-                    const selected = index === defaultIndex ? 'selected' : '';
-                    return `<option value="${draw.value}" ${selected}>${draw.label}</option>`;
-                }).join('');
-                
-            } catch (error) {
-                console.error('Error loading draws:', error);
-                select.innerHTML = '<option value="">เกิดข้อผิดพลาดในการโหลดงวด</option>';
+            const today = new Date();
+            const currentDay = today.getDate();
+            const currentMonth = today.getMonth();   // 0-indexed
+            const currentYear = today.getFullYear();
+
+            // สร้างลิสต์งวด: วันที่ 1 และ 16 ของเดือนปัจจุบัน + ล่วงหน้า 3 เดือน
+            const draws = [];
+
+            for (let offset = 0; offset <= 3; offset++) {
+                // คำนวณปี/เดือนที่ถูกต้อง (ป้องกัน overflow เดือน)
+                const d1 = new Date(currentYear, currentMonth + offset, 1);
+                const d16 = new Date(currentYear, currentMonth + offset, 16);
+                draws.push(d1);
+                draws.push(d16);
             }
+
+            // กรองเฉพาะงวดที่เป็นวันนี้หรืออนาคต (ไม่ตรวจเวลา - เช็คแค่วันที่)
+            const todayStr = formatDateForDatabase(today);
+            const futureDraws = draws.filter(d => formatDateForDatabase(d) >= todayStr);
+
+            if (futureDraws.length === 0) {
+                select.innerHTML = '<option value="">ไม่พบงวดที่เปิดรับแทง</option>';
+                return;
+            }
+
+            // กำหนด default: งวดที่ใกล้ที่สุด (index 0 หลัง sort)
+            // วันที่ 1–16 → default = งวด 16 เดือนปัจจุบัน (ถ้ายังไม่ผ่าน)
+            // วันที่ 17+  → default = งวด 1 เดือนถัดไป
+            let defaultValue = '';
+            if (currentDay >= 1 && currentDay <= 16) {
+                const target = new Date(currentYear, currentMonth, 16);
+                defaultValue = formatDateForDatabase(target);
+            } else {
+                const target = new Date(currentYear, currentMonth + 1, 1);
+                defaultValue = formatDateForDatabase(target);
+            }
+
+            // ถ้า default ไม่อยู่ใน list ให้ใช้งวดแรก
+            if (!futureDraws.some(d => formatDateForDatabase(d) === defaultValue)) {
+                defaultValue = formatDateForDatabase(futureDraws[0]);
+            }
+
+            select.innerHTML = futureDraws.map(d => {
+                const val = formatDateForDatabase(d);
+                const label = formatDateThai(d);
+                const selected = val === defaultValue ? 'selected' : '';
+                return `<option value="${val}" ${selected}>${label}</option>`;
+            }).join('');
         }
 
         function formatDateForDatabase(date) {

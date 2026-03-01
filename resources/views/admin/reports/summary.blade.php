@@ -358,27 +358,51 @@
 
         {{-- ผลรางวัลที่ออก --}}
         @if($draw->is_announced)
-            <div class="bg-gradient-to-r from-amber-400 to-orange-500 rounded-2xl shadow-xl p-8 mb-8 text-white">
-                <h2 class="text-3xl font-bold mb-6 flex items-center gap-3">
+            <div class="transition-all duration-300 rounded-2xl shadow-xl p-8 mb-8 border
+                            bg-white border-emerald-200
+                            dark:bg-gradient-to-br dark:from-slate-800 dark:to-slate-900 dark:border-emerald-500/30">
+                <h2 class="text-3xl font-bold mb-6 flex items-center gap-3
+                                text-emerald-600 dark:text-emerald-400">
                     <span>🎉</span> รางวัลที่ออก
                 </h2>
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    <div class="bg-white bg-opacity-20 backdrop-blur-lg rounded-xl p-6 text-center">
-                        <div class="text-sm opacity-90 mb-2">รางวัลที่ 1 (6 หลัก)</div>
-                        <div class="text-5xl font-bold tracking-wider">{{ $draw->result_3_top ?? 'XXX' }}XXX</div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+                    {{-- 3 ตัวบน --}}
+                    <div class="rounded-xl p-6 text-center border
+                                    bg-emerald-50 border-emerald-200
+                                    dark:bg-white/5 dark:border-emerald-500/20">
+                        <div class="text-sm font-semibold tracking-wider uppercase mb-2
+                                        text-emerald-600 dark:text-emerald-300/70">3 ตัวบน</div>
+                        <div class="text-6xl font-bold tracking-widest
+                                        text-emerald-600 dark:text-emerald-400">
+                            {{ $draw->result_3_top ?? 'XXX' }}
+                        </div>
                     </div>
-                    <div class="bg-white bg-opacity-20 backdrop-blur-lg rounded-xl p-6 text-center">
-                        <div class="text-sm opacity-90 mb-2">3 ตัวบน</div>
-                        <div class="text-5xl font-bold tracking-wider">{{ $draw->result_3_top ?? 'XXX' }}</div>
+
+                    {{-- 2 ตัวบน --}}
+                    <div class="rounded-xl p-6 text-center border
+                                    bg-sky-50 border-sky-200
+                                    dark:bg-white/5 dark:border-sky-500/20">
+                        <div class="text-sm font-semibold tracking-wider uppercase mb-2
+                                        text-sky-600 dark:text-sky-300/70">2 ตัวบน</div>
+                        <div class="text-6xl font-bold tracking-widest
+                                        text-sky-600 dark:text-sky-400">
+                            {{ $draw->result_2_top ?? 'XX' }}
+                        </div>
                     </div>
-                    <div class="bg-white bg-opacity-20 backdrop-blur-lg rounded-xl p-6 text-center">
-                        <div class="text-sm opacity-90 mb-2">2 ตัวบน</div>
-                        <div class="text-5xl font-bold tracking-wider">{{ $draw->result_2_top ?? 'XX' }}</div>
+
+                    {{-- 2 ตัวล่าง --}}
+                    <div class="rounded-xl p-6 text-center border
+                                    bg-violet-50 border-violet-200
+                                    dark:bg-white/5 dark:border-violet-500/20">
+                        <div class="text-sm font-semibold tracking-wider uppercase mb-2
+                                        text-violet-600 dark:text-violet-300/70">2 ตัวล่าง</div>
+                        <div class="text-6xl font-bold tracking-widest
+                                        text-violet-600 dark:text-violet-400">
+                            {{ $draw->result_2_bottom ?? 'XX' }}
+                        </div>
                     </div>
-                    <div class="bg-white bg-opacity-20 backdrop-blur-lg rounded-xl p-6 text-center">
-                        <div class="text-sm opacity-90 mb-2">2 ตัวล่าง</div>
-                        <div class="text-5xl font-bold tracking-wider">{{ $draw->result_2_bottom ?? 'XX' }}</div>
-                    </div>
+
                 </div>
             </div>
         @endif
