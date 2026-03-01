@@ -53,25 +53,43 @@ class LotteryBetController extends Controller
             // กรณีที่ 3: มีงวดใน DB และ is_announced = 0 → ผ่านได้ บันทึกปกติ
 
             DB::transaction(function () use ($validated, $drawDate) {
-                foreach ($validated['bets'] as $bet) {
-                    // ตรวจสอบกติกา
-                    $numberLength = strlen($bet['number']);
 
-                    if ($numberLength === 2) {
-                        // 2 ตัว ห้ามมีโต๊ด
-                        if ($bet['toad'] > 0) {
-                            throw new \Exception("ERROR: เลข 2 ตัว ไม่มีโต๊ด");
-                        }
-                    } elseif ($numberLength === 3) {
-                        // 3 ตัว ห้ามมีล่าง
-                        if ($bet['bottom'] > 0) {
-                            throw new \Exception("ERROR: เลข 3 ตัว ไม่มีล่าง");
-                        }
-                    } else {
+                // ── Step 1: ตรวจกติกาทุก bet ก่อน (ไม่แตะ DB) ──────────────────
+                foreach ($validated['bets'] as $bet) {
+                    $len = strlen($bet['number']);
+                    if ($len === 2 && $bet['toad'] > 0) {
+                        throw new \Exception("ERROR: เลข 2 ตัว ไม่มีโต๊ด");
+                    }
+                    if ($len === 3 && $bet['bottom'] > 0) {
+                        throw new \Exception("ERROR: เลข 3 ตัว ไม่มีล่าง");
+                    }
+                    if ($len !== 2 && $len !== 3) {
                         throw new \Exception("ERROR: เลขต้องเป็น 2 หรือ 3 หลักเท่านั้น");
                     }
+                }
 
-                    LotteryBet::create([
+                // ── Step 2: ดึง existing records ทั้งหมดของ customer+draw ครั้งเดียว ──
+                $existing = LotteryBet::whereNull('deleted_at')
+                    ->where('draw_date', $drawDate)
+                    ->where('customer_name', $validated['customer_name'])
+                    ->get(['number', 'amount_top', 'amount_bottom', 'amount_toad']);
+
+                // สร้าง Set ของ key ที่มีอยู่แล้ว
+                $existingKeys = $existing->map(function ($r) {
+                    return "{$r->number}|{$r->amount_top}|{$r->amount_bottom}|{$r->amount_toad}";
+                })->flip()->all();
+
+                // ── Step 3: ตรวจซ้ำ + เตรียม bulk insert (ยังไม่แตะ DB) ──────────
+                $now = now();
+                $rows = [];
+                foreach ($validated['bets'] as $bet) {
+                    $key = "{$bet['number']}|{$bet['top']}|{$bet['bottom']}|{$bet['toad']}";
+                    if (isset($existingKeys[$key])) {
+                        throw new \Exception(
+                            "พบข้อมูลซ้ำ: เลข {$bet['number']} (บน={$bet['top']} ล่าง={$bet['bottom']} โต๊ด={$bet['toad']}) มีอยู่แล้วในงวดนี้"
+                        );
+                    }
+                    $rows[] = [
                         'draw_date' => $drawDate,
                         'customer_name' => $validated['customer_name'],
                         'number' => $bet['number'],
@@ -79,11 +97,13 @@ class LotteryBetController extends Controller
                         'amount_bottom' => $bet['bottom'],
                         'amount_toad' => $bet['toad'],
                         'created_by' => Auth::id(),
-                    ]);
+                        'created_at' => $now,
+                        'updated_at' => $now,
+                    ];
                 }
 
-                // หมายเหตุ: ไม่ต้องสร้างงวดที่นี่อีกแล้ว เพราะเราเช็คว่ามีงวดอยู่แล้วข้างบน
-                // ถ้างวดยังไม่มีจะ error ไปตั้งแต่ก่อน transaction
+                // ── Step 4: INSERT ทีเดียวทั้งหมด (1 query) ──────────────────────
+                DB::table('lottery_bets')->insert($rows);
             });
 
             return response()->json([
@@ -264,7 +284,7 @@ class LotteryBetController extends Controller
 
         $handle = fopen('php://temp', 'r+');
         // BOM สำหรับ Excel ภาษาไทย
-        fwrite($handle, "\xEF\xBB\xBF"); // UTF-8 BOM สำหรับ Excel
+        fwrite($handle, "\xEF\xBB\xBF");
         foreach ($rows as $row) {
             fputcsv($handle, $row);
         }

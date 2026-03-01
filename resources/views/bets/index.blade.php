@@ -306,7 +306,7 @@
                     </div>
                 </div>
 
-                <button onclick="saveBets()"
+                <button id="saveBetsBtn" onclick="saveBets()"
                     class="w-full mt-6 bg-emerald-600 hover:bg-emerald-700 dark:bg-emerald-700 dark:hover:bg-emerald-600 text-white font-bold py-3 rounded-lg transition-all">
                     💾 บันทึกข้อมูล
                 </button>
@@ -597,10 +597,23 @@
             document.getElementById('grandTotal').textContent = (tTop + tBottom + tToad).toFixed(2);
         }
 
+        let isSubmitting = false;  // ป้องกันกดซ้ำ
+
         async function saveBets() {
+            if (isSubmitting) return;  // ถ้ากำลัง submit อยู่ ไม่ทำอะไร
+
             const drawDate = document.getElementById('drawDate').value;
             const customerName = document.getElementById('customerName').value.trim();
             if (parsedBets.length === 0) return;
+
+            // ── Lock ปุ่ม + แสดง loading ──
+            isSubmitting = true;
+            const btn = document.getElementById('saveBetsBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<svg class="animate-spin inline w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>กำลังบันทึก...';
+            btn.classList.replace('bg-emerald-600', 'bg-slate-400');
+            btn.classList.replace('hover:bg-emerald-700', 'hover:bg-slate-400');
+
             try {
                 const response = await fetch('{{ route("bets.store") }}', {
                     method: 'POST',
@@ -626,10 +639,22 @@
                         location.reload();
                     }
                 } else {
-                    Swal.fire({ icon: 'error', title: 'ERROR', text: data.message });
+                    Swal.fire({ icon: 'error', title: 'เกิดข้อผิดพลาด', text: data.message });
+                    // ── Unlock ปุ่มเมื่อ error ให้ user แก้ไขแล้วลองใหม่ได้ ──
+                    isSubmitting = false;
+                    btn.disabled = false;
+                    btn.innerHTML = '💾 บันทึกข้อมูล';
+                    btn.classList.replace('bg-slate-400', 'bg-emerald-600');
+                    btn.classList.replace('hover:bg-slate-400', 'hover:bg-emerald-700');
                 }
             } catch (error) {
                 Swal.fire({ icon: 'error', title: 'ERROR', text: 'เกิดข้อผิดพลาดในการบันทึก' });
+                // ── Unlock เมื่อ network error ──
+                isSubmitting = false;
+                btn.disabled = false;
+                btn.innerHTML = '💾 บันทึกข้อมูล';
+                btn.classList.replace('bg-slate-400', 'bg-emerald-600');
+                btn.classList.replace('hover:bg-slate-400', 'hover:bg-emerald-700');
             }
         }
     </script>

@@ -355,65 +355,46 @@
         @if($draw->is_announced)
             <div
                 class="transition-all duration-300 rounded-2xl shadow-xl p-8 mb-8 border
-                                                                                                    bg-white border-emerald-200
-                                                                                                    dark:bg-gradient-to-br dark:from-slate-800 dark:to-slate-900 dark:border-emerald-500/30">
-                <h2
-                    class="text-3xl font-bold mb-6 flex items-center gap-3
-                                                                                                        text-emerald-600 dark:text-emerald-400">
+                                    bg-white border-emerald-200
+                                    dark:bg-gradient-to-br dark:from-slate-800 dark:to-slate-900 dark:border-emerald-500/30">
+                <h2 class="text-3xl font-bold mb-6 flex items-center gap-3
+                                        text-emerald-600 dark:text-emerald-400">
                     <span>🎉</span> รางวัลที่ออก
                 </h2>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
 
                     {{-- 3 ตัวบน → สีม่วง (violet) ตรงกับ card ด้านล่าง --}}
-                    <div
-                        class="rounded-xl p-6 text-center border
-                                                                                                            bg-violet-50 border-violet-200
-                                                                                                            dark:bg-white/5 dark:border-violet-500/20">
-                        <div
-                            class="text-sm font-semibold tracking-wider uppercase mb-2
-                                                                                                                text-violet-600 dark:text-violet-300/70">
-                            3
-                            ตัวบน
-                        </div>
-                        <div
-                            class="text-6xl font-bold tracking-widest
-                                                                                                                text-violet-600 dark:text-violet-400">
+                    <div class="rounded-xl p-6 text-center border
+                                            bg-violet-50 border-violet-200
+                                            dark:bg-white/5 dark:border-violet-500/20">
+                        <div class="text-sm font-semibold tracking-wider uppercase mb-2
+                                                text-violet-600 dark:text-violet-300/70">3 ตัวบน</div>
+                        <div class="text-6xl font-bold tracking-widest
+                                                text-violet-600 dark:text-violet-400">
                             {{ $draw->result_3_top ?? 'XXX' }}
                         </div>
                     </div>
 
                     {{-- 2 ตัวบน → สีเขียว (emerald) ตรงกับ card ด้านล่าง --}}
-                    <div
-                        class="rounded-xl p-6 text-center border
-                                                                                                            bg-emerald-50 border-emerald-200
-                                                                                                            dark:bg-white/5 dark:border-emerald-500/20">
-                        <div
-                            class="text-sm font-semibold tracking-wider uppercase mb-2
-                                                                                                                text-emerald-600 dark:text-emerald-300/70">
-                            2
-                            ตัวบน
-                        </div>
-                        <div
-                            class="text-6xl font-bold tracking-widest
-                                                                                                                text-emerald-600 dark:text-emerald-400">
+                    <div class="rounded-xl p-6 text-center border
+                                            bg-emerald-50 border-emerald-200
+                                            dark:bg-white/5 dark:border-emerald-500/20">
+                        <div class="text-sm font-semibold tracking-wider uppercase mb-2
+                                                text-emerald-600 dark:text-emerald-300/70">2 ตัวบน</div>
+                        <div class="text-6xl font-bold tracking-widest
+                                                text-emerald-600 dark:text-emerald-400">
                             {{ $draw->result_2_top ?? 'XX' }}
                         </div>
                     </div>
 
                     {{-- 2 ตัวล่าง → สีฟ้า (sky) ตรงกับ card ด้านล่าง --}}
-                    <div
-                        class="rounded-xl p-6 text-center border
-                                                                                                            bg-sky-50 border-sky-200
-                                                                                                            dark:bg-white/5 dark:border-sky-500/20">
-                        <div
-                            class="text-sm font-semibold tracking-wider uppercase mb-2
-                                                                                                                text-sky-600 dark:text-sky-300/70">
-                            2
-                            ตัวล่าง
-                        </div>
-                        <div
-                            class="text-6xl font-bold tracking-widest
-                                                                                                                text-sky-600 dark:text-sky-400">
+                    <div class="rounded-xl p-6 text-center border
+                                            bg-sky-50 border-sky-200
+                                            dark:bg-white/5 dark:border-sky-500/20">
+                        <div class="text-sm font-semibold tracking-wider uppercase mb-2
+                                                text-sky-600 dark:text-sky-300/70">2 ตัวล่าง</div>
+                        <div class="text-6xl font-bold tracking-widest
+                                                text-sky-600 dark:text-sky-400">
                             {{ $draw->result_2_bottom ?? 'XX' }}
                         </div>
                     </div>
@@ -435,10 +416,8 @@
                 </div>
                 <div class="text-3xl font-bold text-violet-600 dark:text-violet-400 mb-1">
                     {{ number_format($sales['three_top']['total'], 0) }}
-                    <span class="text-xs font-semibold text-slate-500 dark:text-slate-400">บาท (ยอดแทง)</span>
-
                 </div>
-                <div class="text-xs text-slate-500 dark:text-slate-400">จำนวน
+                <div class="text-xs text-slate-500 dark:text-slate-400">฿ |
                     {{ number_format($sales['three_top']['count']) }} รายการ
                 </div>
             </div>
@@ -454,10 +433,8 @@
                 </div>
                 <div class="text-3xl font-bold text-amber-600 dark:text-amber-400 mb-1">
                     {{ number_format($sales['three_toad']['total'], 0) }}
-                    <span class="text-xs font-semibold text-slate-500 dark:text-slate-400">บาท (ยอดแทง)</span>
-
                 </div>
-                <div class="text-xs text-slate-500 dark:text-slate-400">จำนวน
+                <div class="text-xs text-slate-500 dark:text-slate-400">฿ |
                     {{ number_format($sales['three_toad']['count']) }} รายการ
                 </div>
             </div>
@@ -473,9 +450,8 @@
                 </div>
                 <div class="text-3xl font-bold text-emerald-600 dark:text-emerald-400 mb-1">
                     {{ number_format($sales['two_top']['total'], 0) }}
-                    <span class="text-xs font-semibold text-slate-500 dark:text-slate-400">บาท (ยอดแทง)</span>
                 </div>
-                <div class="text-xs text-slate-500 dark:text-slate-400">จำนวน
+                <div class="text-xs text-slate-500 dark:text-slate-400">฿ |
                     {{ number_format($sales['two_top']['count']) }} รายการ
                 </div>
             </div>
@@ -491,10 +467,8 @@
                 </div>
                 <div class="text-3xl font-bold text-sky-600 dark:text-sky-400 mb-1">
                     {{ number_format($sales['two_bottom']['total'], 0) }}
-                    <span class="text-xs font-semibold text-slate-500 dark:text-slate-400">บาท (ยอดแทง)</span>
-
                 </div>
-                <div class="text-xs text-slate-500 dark:text-slate-400">จำนวน
+                <div class="text-xs text-slate-500 dark:text-slate-400">฿ |
                     {{ number_format($sales['two_bottom']['count']) }} รายการ
                 </div>
             </div>
@@ -591,6 +565,9 @@
                                     class="text-xs font-bold {{ $item['status'] === 'critical' ? 'text-red-500' : ($item['status'] === 'warning' ? 'text-amber-500' : 'text-emerald-500') }}">
                                     {{ number_format($item['liability'], 0) }}฿
                                 </div>
+                                <div class="text-xs text-blue-500 dark:text-blue-400">แทง
+                                    {{ number_format($item['total_amount'], 0) }}฿
+                                </div>
                                 <div class="text-xs text-slate-400">{{ number_format($item['percentage'], 0) }}%</div>
                             </div>
                         </div>
@@ -618,6 +595,9 @@
                                 <div
                                     class="text-xs font-bold {{ $item['status'] === 'critical' ? 'text-red-500' : ($item['status'] === 'warning' ? 'text-amber-500' : 'text-emerald-500') }}">
                                     {{ number_format($item['liability'], 0) }}฿
+                                </div>
+                                <div class="text-xs text-blue-500 dark:text-blue-400">แทง
+                                    {{ number_format($item['total_amount'], 0) }}฿
                                 </div>
                                 <div class="text-xs text-slate-400">{{ number_format($item['percentage'], 0) }}%</div>
                             </div>
@@ -647,6 +627,9 @@
                                     class="text-xs font-bold {{ $item['status'] === 'critical' ? 'text-red-500' : ($item['status'] === 'warning' ? 'text-amber-500' : 'text-emerald-500') }}">
                                     {{ number_format($item['liability'], 0) }}฿
                                 </div>
+                                <div class="text-xs text-blue-500 dark:text-blue-400">แทง
+                                    {{ number_format($item['total_amount'], 0) }}฿
+                                </div>
                                 <div class="text-xs text-slate-400">{{ number_format($item['percentage'], 0) }}%</div>
                             </div>
                         </div>
@@ -674,6 +657,9 @@
                                 <div
                                     class="text-xs font-bold {{ $item['status'] === 'critical' ? 'text-red-500' : ($item['status'] === 'warning' ? 'text-amber-500' : 'text-emerald-500') }}">
                                     {{ number_format($item['liability'], 0) }}฿
+                                </div>
+                                <div class="text-xs text-blue-500 dark:text-blue-400">แทง
+                                    {{ number_format($item['total_amount'], 0) }}฿
                                 </div>
                                 <div class="text-xs text-slate-400">{{ number_format($item['percentage'], 0) }}%</div>
                             </div>
