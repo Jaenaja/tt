@@ -31,7 +31,7 @@ class LotteryBetController extends Controller
             // draw_date มาในรูปแบบ Y-m-d แล้ว (เช่น 2026-03-16)
             $drawDate = $validated['draw_date'];
 
-            // ✅ ตรวจสอบว่างวดนี้ปิดรับแทงแล้วหรือยัง
+            // ✅ ตรวจสอบว่างวดนี้มีอยู่จริงและยังไม่ประกาศผล
             $draw = LotteryDraw::where('draw_date', $drawDate)->first();
             
             if (!$draw) {
@@ -41,15 +41,7 @@ class LotteryBetController extends Controller
                 ], 400);
             }
             
-            // ตรวจสอบว่างวดปิดรับแทงแล้วหรือยัง
-            if ($draw->isClosed()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'งวดนี้ปิดรับแทงแล้ว ไม่สามารถแทงได้'
-                ], 400);
-            }
-            
-            // ตรวจสอบว่าประกาศผลแล้วหรือยัง
+            // ✅ ตรวจสอบว่าประกาศผลแล้วหรือยัง (แทงได้จนกว่าจะประกาศผล)
             if ($draw->is_announced) {
                 return response()->json([
                     'success' => false,
