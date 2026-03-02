@@ -68,25 +68,29 @@ class LotteryBetController extends Controller
                     }
                 }
 
-                // ── Step 2: ดึง existing records ทั้งหมดของ customer+draw ครั้งเดียว ──
+                // ── Step 2: ดึง existing records ที่บันทึกภายใน 10 วินาทีที่ผ่านมา ──
+                // (ป้องกัน network retry / double-submit โดยไม่บล็อกการแทงซ้ำโดยตั้งใจ)
+                $recentCutoff = now()->subSeconds(10);
+
                 $existing = LotteryBet::whereNull('deleted_at')
                     ->where('draw_date', $drawDate)
                     ->where('customer_name', $validated['customer_name'])
+                    ->where('created_at', '>=', $recentCutoff)
                     ->get(['number', 'amount_top', 'amount_bottom', 'amount_toad']);
 
-                // สร้าง Set ของ key ที่มีอยู่แล้ว
-                $existingKeys = $existing->map(function ($r) {
-                    return "{$r->number}|{$r->amount_top}|{$r->amount_bottom}|{$r->amount_toad}";
+                // สร้าง Set ของ key ที่บันทึกไปล่าสุด
+                $recentKeys = $existing->map(function ($r) use ($validated) {
+                    return "{$validated['customer_name']}|{$r->number}|{$r->amount_top}|{$r->amount_bottom}|{$r->amount_toad}";
                 })->flip()->all();
 
                 // ── Step 3: ตรวจซ้ำ + เตรียม bulk insert (ยังไม่แตะ DB) ──────────
                 $now = now();
                 $rows = [];
                 foreach ($validated['bets'] as $bet) {
-                    $key = "{$bet['number']}|{$bet['top']}|{$bet['bottom']}|{$bet['toad']}";
-                    if (isset($existingKeys[$key])) {
+                    $key = "{$validated['customer_name']}|{$bet['number']}|{$bet['top']}|{$bet['bottom']}|{$bet['toad']}";
+                    if (isset($recentKeys[$key])) {
                         throw new \Exception(
-                            "พบข้อมูลซ้ำ: เลข {$bet['number']} (บน={$bet['top']} ล่าง={$bet['bottom']} โต๊ด={$bet['toad']}) มีอยู่แล้วในงวดนี้"
+                            "พบข้อมูลซ้ำ: เลข {$bet['number']} ถูกบันทึกไปแล้วในช่วงเวลานี้ กรุณารอสักครู่แล้วลองใหม่"
                         );
                     }
                     $rows[] = [
