@@ -917,7 +917,7 @@
                     <p class="text-slate-600 dark:text-slate-400 mb-4">
                         ลบรายการ: <strong>${customerName} - ${number}</strong>
                     </p>
-                    <input type="password" id="deleteCode" class="swal2-input" placeholder="รหัส 6 หลัก" maxlength="6" pattern="[0-9]{6}" autocomplete="new-password" inputmode="numeric">
+                    <input type="password" id="deleteCode" class="swal2-input" placeholder="รหัส 6 หลัก" maxlength="6" inputmode="numeric">
                 `,
                 icon: 'warning',
                 showCancelButton: true,
@@ -925,6 +925,17 @@
                 cancelButtonColor: '#64748b',
                 confirmButtonText: 'ยืนยันการลบ',
                 cancelButtonText: 'ยกเลิก',
+                didOpen: () => {
+                    const input = document.getElementById('deleteCode');
+                    input.setAttribute('autocomplete', 'off');
+                    input.setAttribute('autocorrect', 'off');
+                    input.setAttribute('autocapitalize', 'off');
+                    input.setAttribute('spellcheck', 'false');
+                    input.setAttribute('data-form-type', 'other');
+                    input.setAttribute('data-lpignore', 'true');
+                    input.setAttribute('data-1p-ignore', 'true');
+                    input.focus();
+                },
                 preConfirm: () => {
                     const code = document.getElementById('deleteCode').value;
                     if (!code) {
