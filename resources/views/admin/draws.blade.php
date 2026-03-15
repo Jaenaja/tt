@@ -116,7 +116,7 @@
         <!-- รายการงวดที่ผ่านมา -->
         <div
             class="transition-all duration-300 bg-white dark:bg-slate-900 rounded-2xl shadow-xl dark:shadow-2xl p-6 border border-slate-200 dark:border-slate-800">
-            <h2 class="text-2xl font-bold text-slate-900 dark:text-white mb-6">📋 รายการงวดที่ผ่านมา</h2>
+            <h2 class="text-2xl font-bold text-slate-900 dark:text-white mb-6">📋 รายการงวดที่ผ่านมาหหหห</h2>
 
             <div class="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-700">
                 <table class="w-full text-sm">
@@ -171,8 +171,7 @@
                                 <td class="px-4 py-3 text-center text-sm text-slate-700 dark:text-slate-300">
                                     @if($draw->announcedBy)
                                         {{ $draw->announcedBy->name }}<br>
-                                        <span
-                                            class="text-slate-500 dark:text-slate-500">{{ $draw->announced_at->format('d/m/y H:i') }}</span>
+                                        <span class="text-slate-500 dark:text-slate-500">{{ $draw->announced_at->format('d/m/y H:i') }}</span>
                                     @else
                                         -
                                     @endif
@@ -184,7 +183,10 @@
                                             ดูผล
                                         </a>
                                     @else
-                                        -
+                                        <a href="{{ route('admin.reports.summary', $draw->id) }}"
+                                                      class="text-emerald-600 dark:text-emerald-400 hover:text-emerald-800 dark:hover:text-emerald-300 font-semibold transition-colors">
+                                            รายการ
+                                        </a>
                                     @endif
                                 </td>
                             </tr>
@@ -199,12 +201,13 @@
                                         </svg>
                                         <p class="text-lg font-medium text-slate-600 dark:text-slate-400">
                                             ยังไม่มีข้อมูลงวดหวย</p>
+
                                     </div>
                                 </td>
                             </tr>
                         @endforelse
                     </tbody>
-                </table>
+                                    </table>
             </div>
 
             <div class="mt-6">

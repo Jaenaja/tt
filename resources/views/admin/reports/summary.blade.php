@@ -1330,6 +1330,16 @@
         renderCharts();
     </script>
 
+    @if(!$draw->is_announced)
+        <!-- Floating: แทงหวย -->
+        <a href="{{ route('bets.index') }}" id="floatBet"
+            style="position:fixed;bottom:30px;left:30px;z-index:1000;display:flex;align-items:center;gap:8px;padding:12px 20px;background:#10b981;color:white;font-weight:700;border-radius:9999px;box-shadow:0 8px 24px rgba(16,185,129,0.4);transition:all 0.3s ease;text-decoration:none;font-size:14px;"
+            onmouseover="this.style.transform='translateY(-3px)';this.style.boxShadow='0 12px 32px rgba(16,185,129,0.5)'"
+            onmouseout="this.style.transform='';this.style.boxShadow='0 8px 24px rgba(16,185,129,0.4)'">
+            🎯 แทงหวย
+        </a>
+    @endif
+
     <!-- Back to Top Button -->
     <div id="backToTop">
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
