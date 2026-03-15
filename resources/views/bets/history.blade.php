@@ -111,8 +111,12 @@
             </div>
 
             <div class="flex justify-between items-center">
-                <div>
+                <div class="flex items-center gap-4">
                     <h1 class="text-3xl font-bold text-slate-900 dark:text-white mb-2">📜 ประวัติการแทง</h1>
+                    <a href="{{ route('bets.index') }}"
+                        class="mb-2 inline-flex items-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 dark:bg-emerald-700 dark:hover:bg-emerald-600 text-white font-bold rounded-xl shadow-lg hover:shadow-emerald-500/30 transition-all duration-200 text-sm">
+                        🎯 แทงหวย
+                    </a>
                 </div>
                 <div class="text-right">
                     <div
@@ -131,7 +135,7 @@
         <div
             class="transition-all duration-300 bg-white dark:bg-slate-900 rounded-2xl shadow-xl dark:shadow-2xl p-6 border border-slate-200 dark:border-slate-800">
             <!-- ฟิลเตอร์ -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
                 <div>
                     <label class="block text-slate-700 dark:text-slate-300 font-semibold mb-2">ค้นหาชื่อลูกค้า</label>
                     <input type="text" id="searchCustomer" value="{{ request('customer_name') }}"
@@ -145,11 +149,27 @@
                         <option value="">ทั้งหมด</option>
                     </select>
                 </div>
-                <div class="flex items-end">
+                <div>
+                    <label class="block text-slate-700 dark:text-slate-300 font-semibold mb-2">ค้นหาเลข</label>
+                    <input type="text" id="searchNumber" value="{{ request('search_number') }}"
+                        class="w-full px-4 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white rounded-lg focus:ring-2 focus:ring-emerald-500 dark:focus:ring-emerald-600 transition-all"
+                        placeholder="เช่น 91, 365">
+                </div>
+                <div class="flex items-end gap-2">
                     <button onclick="search()"
-                        class="w-full bg-emerald-600 hover:bg-emerald-700 dark:bg-emerald-700 dark:hover:bg-emerald-600 text-white font-bold py-2 rounded-lg transition-all">
+                        class="flex-1 bg-emerald-600 hover:bg-emerald-700 dark:bg-emerald-700 dark:hover:bg-emerald-600 text-white font-bold py-2 rounded-lg transition-all">
                         🔍 ค้นหา
                     </button>
+                    <button onclick="exportHistoryExcel()"
+                        class="flex-1 bg-green-700 hover:bg-green-800 text-white font-bold py-2 rounded-lg transition-all flex items-center justify-center gap-2">
+                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                            <rect x="3" y="3" width="18" height="18" rx="2" fill="white" fill-opacity="0.25" />
+                            <text x="12" y="16" text-anchor="middle" fill="white" font-size="11" font-weight="bold"
+                                font-family="Arial">X</text>
+                        </svg>
+                        Excel
+                    </button>
+                    <a id="exportHistoryLink" href="#" target="_blank" class="hidden"></a>
                 </div>
             </div>
 
@@ -286,6 +306,14 @@
         </div>
     </div>
 
+    <!-- Floating: แทงหวย -->
+    <a href="{{ route('bets.index') }}" id="floatBet"
+        style="position:fixed;bottom:30px;left:30px;z-index:1000;display:flex;align-items:center;gap:8px;padding:12px 20px;background:#10b981;color:white;font-weight:700;border-radius:9999px;box-shadow:0 8px 24px rgba(16,185,129,0.4);transition:all 0.3s ease;text-decoration:none;font-size:14px;"
+        onmouseover="this.style.transform='translateY(-3px)';this.style.boxShadow='0 12px 32px rgba(16,185,129,0.5)'"
+        onmouseout="this.style.transform='';this.style.boxShadow='0 8px 24px rgba(16,185,129,0.4)'">
+        🎯 แทงหวย
+    </a>
+
     <!-- Back to Top Button -->
     <div id="backToTop">
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -365,10 +393,12 @@
         function search() {
             const customer = document.getElementById('searchCustomer').value;
             const drawDate = document.getElementById('searchDrawDate').value;
+            const number = document.getElementById('searchNumber').value;
 
             const params = new URLSearchParams();
             if (customer) params.append('customer_name', customer);
             if (drawDate) params.append('draw_date', drawDate);
+            if (number) params.append('search_number', number);
 
             const currentSort = "{{ request('sort_by') }}";
             const currentOrder = "{{ request('sort_order') }}";
@@ -468,6 +498,27 @@
             } catch (error) {
                 Swal.fire('ผิดพลาด!', 'เกิดข้อผิดพลาดในการลบข้อมูล', 'error');
             }
+        }
+    </script>
+    <script>
+        function exportHistoryExcel() {
+            // เก็บ filter ปัจจุบันจาก input/select
+            const customer = document.getElementById('searchCustomer').value;
+            const drawDate = document.getElementById('searchDrawDate').value;
+            const number = document.getElementById('searchNumber').value;
+            const sortBy = "{{ request('sort_by', 'draw_date') }}";
+            const sortOrder = "{{ request('sort_order', 'desc') }}";
+
+            const params = new URLSearchParams();
+            if (customer) params.append('customer_name', customer);
+            if (drawDate) params.append('draw_date', drawDate);
+            if (number) params.append('search_number', number);
+            if (sortBy) params.append('sort_by', sortBy);
+            if (sortOrder) params.append('sort_order', sortOrder);
+
+            const url = '{{ route("bets.export-excel") }}?' + params.toString();
+            document.getElementById('exportHistoryLink').href = url;
+            document.getElementById('exportHistoryLink').click();
         }
     </script>
 </body>

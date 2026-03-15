@@ -31,6 +31,57 @@
         * {
             font-family: 'Sarabun', sans-serif;
         }
+
+        #backToTop {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            opacity: 0;
+            visibility: hidden;
+            z-index: 1000;
+        }
+
+        #backToTop.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        #backToTop:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-5px);
+        }
+
+        .dark #backToTop {
+            background: rgba(16, 185, 129, 0.15);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        .dark #backToTop:hover {
+            background: rgba(16, 185, 129, 0.25);
+        }
+
+        #backToTop svg {
+            width: 24px;
+            height: 24px;
+            color: #10b981;
+        }
+
+        .dark #backToTop svg {
+            color: #6ee7b7;
+        }
     </style>
 </head>
 
@@ -66,8 +117,8 @@
                         class="transition-all duration-300 inline-flex items-center gap-3 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-full px-4 py-2 mb-2">
                         <span class="text-sm text-slate-900 dark:text-white font-medium">{{ Auth::user()->name }}</span>
                         <span class="text-slate-400">|</span>
-                        <span
-                            class="text-sm text-slate-600 dark:text-slate-400">{{ Auth::user()->role === 'admin' ? '👑 ผู้ดูแลระบบ' : '👤 พนักงาน' }}</span>
+                        <span class="text-sm text-slate-600 dark:text-slate-400">{{ Auth::user()->role === 'admin' ? '👑
+                            ผู้ดูแลระบบ' : '👤 พนักงาน' }}</span>
                     </div>
                     <form action="{{ route('logout') }}" method="POST" class="inline">
                         @csrf
@@ -95,7 +146,8 @@
                     <label class="block text-slate-700 dark:text-slate-300 font-semibold mb-2">ชื่อลูกค้า *</label>
                     <input type="text" id="customerName"
                         class="w-full px-4 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white rounded-lg focus:ring-2 focus:ring-emerald-500 dark:focus:ring-emerald-600 transition-all"
-                        placeholder="ชื่อลูกค้า">
+                        placeholder="ชื่อลูกค้า" autocomplete="off" autocorrect="off" autocapitalize="off"
+                        data-form-type="other" data-lpignore="true" data-1p-ignore="true">
                 </div>
             </div>
 
@@ -262,7 +314,23 @@
         </div>
     </div>
 
+    <!-- Back to Top Button -->
+    <div id="backToTop">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18" />
+        </svg>
+    </div>
+
     <script>
+        // Back to Top
+        const backToTop = document.getElementById('backToTop');
+        window.addEventListener('scroll', () => {
+            backToTop.classList.toggle('show', window.pageYOffset > 300);
+        });
+        backToTop.addEventListener('click', () => {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+
         // Theme Toggle Functionality
         const themeToggle = document.getElementById('themeToggle');
         const htmlElement = document.documentElement;
@@ -285,10 +353,7 @@
 
         window.onload = function () {
             generateDrawDates();
-            const savedCustomer = localStorage.getItem('lastCustomerName');
-            if (savedCustomer) {
-                document.getElementById('customerName').value = savedCustomer;
-            }
+
             updateManualInputFields();
         };
 
@@ -536,9 +601,22 @@
                 });
                 const data = await response.json();
                 if (data.success) {
-                    localStorage.setItem('lastCustomerName', customerName);
-                    await Swal.fire({ icon: 'success', title: 'สำเร็จ!', text: `บันทึกเรียบร้อย`, timer: 2000 });
-                    location.reload();
+                    const result = await Swal.fire({
+                        icon: 'success',
+                        title: 'บันทึกสำเร็จ!',
+                        text: 'บันทึกรายการเรียบร้อยแล้ว',
+                        showCancelButton: true,
+                        confirmButtonColor: '#10b981',
+                        cancelButtonColor: '#64748b',
+                        confirmButtonText: '📜 ดูประวัติการแทง',
+                        cancelButtonText: '➕ บันทึกรายการต่อ',
+                        reverseButtons: true,
+                    });
+                    if (result.isConfirmed) {
+                        window.location.href = '{{ route("bets.history") }}';
+                    } else {
+                        location.reload();
+                    }
                 } else {
                     Swal.fire({ icon: 'error', title: 'ERROR', text: data.message });
                 }

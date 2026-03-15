@@ -115,6 +115,11 @@ class LotteryBetController extends Controller
             $query->where('draw_date', $request->draw_date);
         }
 
+        // ฟิลเตอร์ตามเลข
+        if ($request->has('search_number') && $request->search_number) {
+            $query->where('number', 'like', '%' . $request->search_number . '%');
+        }
+
         // เรียงลำดับ (default: งวดล่าสุด, วันที่บันทึกล่าสุด)
         $sortBy = $request->get('sort_by', 'draw_date');
         $sortOrder = $request->get('sort_order', 'desc');
@@ -199,5 +204,77 @@ class LotteryBetController extends Controller
                 'message' => 'เกิดข้อผิดพลาด: ' . $e->getMessage()
             ], 500);
         }
+    }
+    public function exportExcel(Request $request)
+    {
+        $query = LotteryBet::with(['creator', 'draw'])
+            ->whereNull('deleted_at');
+
+        if ($request->customer_name) {
+            $query->where('customer_name', 'like', '%' . $request->customer_name . '%');
+        }
+        if ($request->draw_date) {
+            $query->where('draw_date', $request->draw_date);
+        }
+        if ($request->search_number) {
+            $query->where('number', 'like', '%' . $request->search_number . '%');
+        }
+
+        $sortBy = $request->get('sort_by', 'draw_date');
+        $sortOrder = $request->get('sort_order', 'desc');
+        if ($sortBy === 'draw_date') {
+            $query->orderBy('draw_date', $sortOrder)->orderBy('created_at', 'desc');
+        } else {
+            $query->orderBy($sortBy, $sortOrder);
+        }
+
+        $bets = $query->get();
+
+        // สร้าง CSV (UTF-8 BOM สำหรับ Excel)
+        $rows = [];
+        $rows[] = ['งวดวันที่', 'ชื่อลูกค้า', 'เลข', 'บน', 'ล่าง', 'โต๊ด', 'รวม (฿)', 'บันทึกโดย', 'วันที่บันทึก', 'สถานะ'];
+
+        foreach ($bets as $bet) {
+            $total = $bet->amount_top + $bet->amount_bottom + $bet->amount_toad;
+            $drawDate = \Carbon\Carbon::parse($bet->draw_date)->format('d/m/Y');
+            $createdAt = \Carbon\Carbon::parse($bet->created_at)->format('d/m/y H:i');
+            $createdBy = $bet->creator ? $bet->creator->name : '-';
+
+            if ($bet->draw && $bet->draw->is_announced) {
+                $status = ($bet->is_win_top || $bet->is_win_bottom || $bet->is_win_toad) ? 'ถูกรางวัล' : 'ไม่ถูก';
+            } else {
+                $status = 'รอประกาศ';
+            }
+
+            $rows[] = [
+                $drawDate,
+                $bet->customer_name,
+                $bet->number,
+                $bet->amount_top > 0 ? $bet->amount_top : '',
+                $bet->amount_bottom > 0 ? $bet->amount_bottom : '',
+                $bet->amount_toad > 0 ? $bet->amount_toad : '',
+                $total,
+                $createdBy,
+                $createdAt,
+                $status,
+            ];
+        }
+
+        $filename = 'ประวัติการแทง_' . now()->format('Y-m-d') . '.csv';
+
+        $handle = fopen('php://temp', 'r+');
+        // BOM สำหรับ Excel ภาษาไทย
+        fwrite($handle, "ï»¿");
+        foreach ($rows as $row) {
+            fputcsv($handle, $row);
+        }
+        rewind($handle);
+        $csv = stream_get_contents($handle);
+        fclose($handle);
+
+        return response($csv, 200, [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ]);
     }
 }

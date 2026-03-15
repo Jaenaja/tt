@@ -205,7 +205,7 @@ class ReportController extends Controller
     {
         // ตรวจสอบรหัสลบ
         $deleteCode = Setting::get('delete_code', '');
-        
+
         if (empty($deleteCode)) {
             return response()->json([
                 'success' => false,
@@ -525,5 +525,145 @@ class ReportController extends Controller
         } else {
             return 'safe';
         }
+    }
+    public function exportExcel(Request $request, $drawId)
+    {
+        $draw = \App\Models\LotteryDraw::findOrFail($drawId);
+
+        $query = \App\Models\LotteryBet::with(['creator'])
+            ->whereNull('deleted_at')
+            ->where('draw_date', $draw->draw_date);
+
+        // Filter เหมือนกับ summary method
+        if ($request->has('customer_names') && count($request->customer_names)) {
+            $query->whereIn('customer_name', $request->customer_names);
+        }
+        if ($request->search_number) {
+            $query->where('number', 'like', '%' . $request->search_number . '%');
+        }
+        if ($request->win_status === 'won') {
+            $query->where(function ($q) {
+                $q->where('is_win_top', true)->orWhere('is_win_bottom', true)->orWhere('is_win_toad', true);
+            });
+        } elseif ($request->win_status === 'lost') {
+            $query->where('is_win_top', false)->where('is_win_bottom', false)->where('is_win_toad', false);
+        }
+        if ($request->number_type === '2_digit') {
+            $query->whereRaw('LENGTH(number) = 2');
+        } elseif ($request->number_type === '3_digit') {
+            $query->whereRaw('LENGTH(number) = 3');
+        }
+
+        $bets = $query->orderBy('customer_name')->orderBy('created_at')->get();
+
+        $drawDateLabel = \Carbon\Carbon::parse($draw->draw_date)->format('d/m/Y');
+        $rows = [];
+        $rows[] = ['ชื่อลูกค้า', 'เลข', 'บน', 'ล่าง', 'โต๊ด', 'รวม (฿)', 'บันทึกโดย', 'วันที่บันทึก', 'ผล'];
+
+        foreach ($bets as $bet) {
+            $total = $bet->amount_top + $bet->amount_bottom + $bet->amount_toad;
+            $createdAt = \Carbon\Carbon::parse($bet->created_at)->format('d/m/y H:i');
+            $createdBy = $bet->creator ? $bet->creator->name : '-';
+
+            if ($draw->is_announced) {
+                if ($bet->is_win_top || $bet->is_win_bottom || $bet->is_win_toad) {
+                    $payout = $bet->payout_top + $bet->payout_bottom + $bet->payout_toad;
+                    $result = 'ถูก ' . number_format($payout, 0) . ' ฿';
+                } else {
+                    $result = 'ไม่ถูก';
+                }
+            } else {
+                $result = 'รอประกาศ';
+            }
+
+            $rows[] = [
+                $bet->customer_name,
+                $bet->number,
+                $bet->amount_top > 0 ? $bet->amount_top : '',
+                $bet->amount_bottom > 0 ? $bet->amount_bottom : '',
+                $bet->amount_toad > 0 ? $bet->amount_toad : '',
+                $total,
+                $createdBy,
+                $createdAt,
+                $result,
+            ];
+        }
+
+        $filename = 'บัญชีแทงหวย_' . \Carbon\Carbon::parse($draw->draw_date)->format('Y-m-d') . '.csv';
+
+        $handle = fopen('php://temp', 'r+');
+        fwrite($handle, "ï»¿");
+        foreach ($rows as $row) {
+            fputcsv($handle, $row);
+        }
+        rewind($handle);
+        $csv = stream_get_contents($handle);
+        fclose($handle);
+
+        return response($csv, 200, [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ]);
+    }
+    public function exportCustomerSummary(Request $request, $drawId)
+    {
+        $draw = \App\Models\LotteryDraw::findOrFail($drawId);
+        $settings = [
+            'commission_rate' => \App\Models\Setting::get('commission_rate', 10),
+        ];
+
+        $bets = \App\Models\LotteryBet::with(['creator'])
+            ->whereNull('deleted_at')
+            ->where('draw_date', $draw->draw_date)
+            ->get();
+
+        $customerSummary = $this->getCustomerSummary($bets, $settings['commission_rate']);
+        $drawDateLabel = \Carbon\Carbon::parse($draw->draw_date)->format('d/m/Y');
+
+        $rows = [];
+        // Header
+        $rows[] = ['ชื่อลูกค้า', 'บันทึกโดย', 'ยอดซื้อ (฿)', 'ส่วนลด (฿)', 'หลังหัก (฿)', 'รางวัล (฿)', 'สุทธิ', 'เลขที่ถูก'];
+
+        foreach ($customerSummary as $s) {
+            $winningStr = '';
+            if (!empty($s['winning_numbers'])) {
+                $parts = [];
+                foreach ($s['winning_numbers'] as $w) {
+                    $parts[] = $w['number'] . '(' . $w['win_type'] . ')=' . number_format($w['payout'], 0);
+                }
+                $winningStr = implode(', ', $parts);
+            }
+
+            $netLabel = $s['net_amount'] < 0
+                ? 'จ่าย ' . number_format(abs($s['net_amount']), 0)
+                : 'รับ ' . number_format($s['net_amount'], 0);
+
+            $rows[] = [
+                $s['customer_name'],
+                $s['created_by'],
+                number_format($s['total_bet_before_discount'], 0),
+                number_format($s['discount'], 0),
+                number_format($s['total_bet_after_discount'], 0),
+                number_format($s['total_payout'], 0),
+                $netLabel,
+                $winningStr,
+            ];
+        }
+
+        $filename = 'สรุปรายบุคคล_' . \Carbon\Carbon::parse($draw->draw_date)->format('Y-m-d') . '.csv';
+
+        $handle = fopen('php://temp', 'r+');
+        fwrite($handle, "ï»¿");
+        foreach ($rows as $row) {
+            fputcsv($handle, $row);
+        }
+        rewind($handle);
+        $csv = stream_get_contents($handle);
+        fclose($handle);
+
+        return response($csv, 200, [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ]);
     }
 }

@@ -20,7 +20,7 @@ Route::middleware(['auth'])->group(function () {
 
     // Dashboard
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
-    
+
     // API สำหรับดึงงวดที่เปิดรับแทง
     Route::get('/api/open-draws', [DashboardController::class, 'getOpenDraws'])->name('api.open-draws');
 
@@ -30,6 +30,7 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/store', [LotteryBetController::class, 'store'])->name('store');
         Route::get('/history', [LotteryBetController::class, 'history'])->name('history');
         Route::delete('/{id}', [LotteryBetController::class, 'destroy'])->name('destroy');
+        Route::get('/export-excel', [LotteryBetController::class, 'exportExcel'])->name('export-excel');
     });
 
     // Admin Only Routes
@@ -62,6 +63,8 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/statistics', [ReportController::class, 'statistics'])->name('statistics');
             // เพิ่ม Route สำหรับลบ Bet (เฉพาะงวดที่ยังไม่ประกาศผล)
             Route::delete('/bets/{betId}', [ReportController::class, 'deleteBet'])->name('bets.delete');
+            Route::get('/export-excel/{drawId}', [ReportController::class, 'exportExcel'])->name('export-excel');
+            Route::get('/export-customer-summary/{drawId}', [ReportController::class, 'exportCustomerSummary'])->name('export-customer-summary');
             Route::delete('/admin/reports/bets/{betId}', [ReportController::class, 'deleteBet'])
                 ->name('admin.reports.bets.delete');
         });

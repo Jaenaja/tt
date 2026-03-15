@@ -273,11 +273,6 @@
                             class="inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow transition-transform duration-300 translate-x-0.5 dark:translate-x-4.5"></span>
                     </button>
 
-                    <a href="{{ route('admin.risk-settings') }}"
-                        class="no-print px-4 py-2 bg-slate-600 dark:bg-slate-700 text-white rounded-lg font-semibold hover:bg-slate-700 dark:hover:bg-slate-600 transition-colors">
-                        ⚙️ ตั้งค่า
-                    </a>
-
                     <button onclick="window.print()"
                         class="no-print px-4 py-2 bg-slate-600 dark:bg-slate-700 text-white rounded-lg font-semibold hover:bg-slate-700 dark:hover:bg-slate-600 transition-colors">
                         🖨️ พิมพ์
@@ -407,6 +402,73 @@
             </div>
         @endif
 
+        {{-- Sales Summary Blocks --}}
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+            {{-- 2 ตัวบน --}}
+            <div
+                class="transition-all duration-300 premium-card bg-white dark:bg-slate-900 rounded-2xl shadow-lg p-5 border border-emerald-200 dark:border-emerald-800 animate-fade-in-up">
+                <div class="flex items-center justify-between mb-3">
+                    <span class="text-3xl">🟢</span>
+                    <span
+                        class="text-xs font-bold px-2 py-1 bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 rounded-full">2
+                        ตัวบน</span>
+                </div>
+                <div class="text-3xl font-bold text-emerald-600 dark:text-emerald-400 mb-1">
+                    {{ number_format($sales['two_top']['total'], 0) }}
+                </div>
+                <div class="text-xs text-slate-500 dark:text-slate-400">฿ |
+                    {{ number_format($sales['two_top']['count']) }} รายการ</div>
+            </div>
+
+            {{-- 2 ตัวล่าง --}}
+            <div class="transition-all duration-300 premium-card bg-white dark:bg-slate-900 rounded-2xl shadow-lg p-5 border border-sky-200 dark:border-sky-800 animate-fade-in-up"
+                style="animation-delay:0.1s">
+                <div class="flex items-center justify-between mb-3">
+                    <span class="text-3xl">🔵</span>
+                    <span
+                        class="text-xs font-bold px-2 py-1 bg-sky-100 dark:bg-sky-900/40 text-sky-700 dark:text-sky-300 rounded-full">2
+                        ตัวล่าง</span>
+                </div>
+                <div class="text-3xl font-bold text-sky-600 dark:text-sky-400 mb-1">
+                    {{ number_format($sales['two_bottom']['total'], 0) }}
+                </div>
+                <div class="text-xs text-slate-500 dark:text-slate-400">฿ |
+                    {{ number_format($sales['two_bottom']['count']) }} รายการ</div>
+            </div>
+
+            {{-- 3 ตัวบน --}}
+            <div class="transition-all duration-300 premium-card bg-white dark:bg-slate-900 rounded-2xl shadow-lg p-5 border border-violet-200 dark:border-violet-800 animate-fade-in-up"
+                style="animation-delay:0.2s">
+                <div class="flex items-center justify-between mb-3">
+                    <span class="text-3xl">🟣</span>
+                    <span
+                        class="text-xs font-bold px-2 py-1 bg-violet-100 dark:bg-violet-900/40 text-violet-700 dark:text-violet-300 rounded-full">3
+                        ตัวบน</span>
+                </div>
+                <div class="text-3xl font-bold text-violet-600 dark:text-violet-400 mb-1">
+                    {{ number_format($sales['three_top']['total'], 0) }}
+                </div>
+                <div class="text-xs text-slate-500 dark:text-slate-400">฿ |
+                    {{ number_format($sales['three_top']['count']) }} รายการ</div>
+            </div>
+
+            {{-- 3 ตัวโต๊ด --}}
+            <div class="transition-all duration-300 premium-card bg-white dark:bg-slate-900 rounded-2xl shadow-lg p-5 border border-amber-200 dark:border-amber-800 animate-fade-in-up"
+                style="animation-delay:0.3s">
+                <div class="flex items-center justify-between mb-3">
+                    <span class="text-3xl">🟡</span>
+                    <span
+                        class="text-xs font-bold px-2 py-1 bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 rounded-full">3
+                        ตัวโต๊ด</span>
+                </div>
+                <div class="text-3xl font-bold text-amber-600 dark:text-amber-400 mb-1">
+                    {{ number_format($sales['three_toad']['total'], 0) }}
+                </div>
+                <div class="text-xs text-slate-500 dark:text-slate-400">฿ |
+                    {{ number_format($sales['three_toad']['count']) }} รายการ</div>
+            </div>
+        </div>
+
         {{-- Heatmap Section --}}
         <div
             class="transition-all duration-300 premium-card bg-white dark:bg-slate-900 rounded-2xl p-8 mb-8 shadow-xl dark:shadow-2xl border border-slate-200 dark:border-slate-800">
@@ -452,7 +514,7 @@
                     📊 3 ตัว (000-999) - ยอดจ่ายสูงสุด (Liability รวมโต๊ด)
                 </h3>
                 <div class="bg-slate-50 dark:bg-slate-800 rounded-xl p-4">
-                    <div id="threeDigitHeatmap" style="width: 100%; height: 700px;"></div>
+                    <div id="threeDigitHeatmap" style="width: 100%; height: 900px;"></div>
                 </div>
                 <p class="text-sm text-slate-600 dark:text-slate-400 mt-4">
                     💡 รวมยอดจ่ายจากทั้ง 3 ตัวตรง และ 3 ตัวโต๊ดที่สัมพันธ์กันทั้งหมด
@@ -549,9 +611,20 @@
         @if($draw->is_announced && count($customerSummary) > 0)
             <div class="transition-all duration-300 premium-card bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-xl dark:shadow-2xl border border-slate-200 dark:border-slate-800 mb-8"
                 x-data="{ searchCustomer: '' }">
-                <h2 class="text-2xl font-bold text-slate-900 dark:text-white mb-1 flex items-center gap-2">
-                    <span>💰</span> สรุปผลงานรายบุคคล
-                </h2>
+                <div class="flex items-start justify-between mb-1">
+                    <h2 class="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                        <span>💰</span> สรุปผลงานรายบุคคล
+                    </h2>
+                    <button onclick="exportCustomerSummaryExcel()"
+                        class="no-print px-4 py-2 bg-green-700 hover:bg-green-800 text-white rounded-lg font-semibold text-sm transition-colors flex items-center gap-2">
+                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                            <rect x="3" y="3" width="18" height="18" rx="2" fill="white" fill-opacity="0.25" />
+                            <text x="12" y="16" text-anchor="middle" fill="white" font-size="11" font-weight="bold"
+                                font-family="Arial">X</text>
+                        </svg>
+                        Export Excel
+                    </button>
+                </div>
                 <p class="text-xs text-slate-600 dark:text-slate-400 mb-4">
                     รายละเอียดยอดจ่ายแยกตามลูกค้าแต่ละคน (ส่วนลด {{ number_format($settings['commission_rate'], 0) }}%)
                 </p>
@@ -751,7 +824,7 @@
                     </div>
                 </div>
 
-                <div class="flex gap-2">
+                <div class="flex gap-2 flex-wrap">
                     <button type="submit"
                         class="px-6 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-semibold transition-colors">
                         🔍 ค้นหา
@@ -760,6 +833,15 @@
                         class="px-6 py-2 bg-slate-600 hover:bg-slate-700 text-white rounded-lg font-semibold transition-colors">
                         ล้างค่า
                     </a>
+                    <button type="button" onclick="exportSummaryExcel()"
+                        class="no-print px-6 py-2 bg-green-700 hover:bg-green-800 text-white rounded-lg font-semibold transition-colors flex items-center gap-2">
+                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                            <rect x="3" y="3" width="18" height="18" rx="2" fill="white" fill-opacity="0.25" />
+                            <text x="12" y="16" text-anchor="middle" fill="white" font-size="11" font-weight="bold"
+                                font-family="Arial">X</text>
+                        </svg>
+                        Export Excel
+                    </button>
                 </div>
             </form>
 
@@ -1197,21 +1279,18 @@
                     name: 'Liability',
                     type: 'heatmap',
                     data: threeDigitData.map(item => item),
-                    label: { show: false },
-                    // label: {
-                    //     show: true,
-                    //     formatter: function (params) {
-                    //         const x = params.data[0];
-                    //         const y = params.data[1];
-                    //         return String(y * 10 + x).padStart(2, '0');
-                    //     },
-                    //     formatter: function (params) {
-                    //         // params.data[4] คือเลข $number ที่เราส่งมาจาก Controller
-                    //         return params.data[6];
-                    //     },
-                    //     color: '#000',
-                    //     fontSize: 8,
-                    // },
+                    label: {
+                        show: true,
+                        formatter: function (params) {
+                            const x = params.data[0];
+                            const y = params.data[1];
+                            const index = y * 40 + x;
+                            return index <= 999 ? String(index).padStart(3, '0') : '';
+                        },
+                        fontSize: 9,
+                        fontWeight: 'bold',
+                        color: '#1e293b',
+                    },
                     emphasis: {
                         itemStyle: {
                             shadowBlur: 10,
@@ -1227,6 +1306,27 @@
             });
         }
 
+
+        function exportSummaryExcel() {
+            const params = new URLSearchParams(window.location.search);
+            const url = '{{ route("admin.reports.export-excel", $draw->id) }}?' + params.toString();
+            const a = document.createElement('a');
+            a.href = url;
+            a.target = '_blank';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+
+        function exportCustomerSummaryExcel() {
+            const url = '{{ route("admin.reports.export-customer-summary", $draw->id) }}';
+            const a = document.createElement('a');
+            a.href = url;
+            a.target = '_blank';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
         renderCharts();
     </script>
 
