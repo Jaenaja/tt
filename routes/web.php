@@ -20,6 +20,9 @@ Route::middleware(['auth'])->group(function () {
 
     // Dashboard
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
+    
+    // API สำหรับดึงงวดที่เปิดรับแทง
+    Route::get('/api/open-draws', [DashboardController::class, 'getOpenDraws'])->name('api.open-draws');
 
     // Lottery Bets (General + Admin)
     Route::prefix('bets')->name('bets.')->group(function () {

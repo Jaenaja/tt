@@ -75,6 +75,7 @@ class LotteryDraw extends Model
 {
     protected $fillable = [
         'draw_date',
+        'close_time',
         'result_3_top',
         'result_2_top',
         'result_2_bottom',
@@ -85,6 +86,7 @@ class LotteryDraw extends Model
 
     protected $casts = [
         'draw_date' => 'date',
+        'close_time' => 'datetime',
         'is_announced' => 'boolean',
         'announced_at' => 'datetime',
     ];
@@ -97,6 +99,28 @@ class LotteryDraw extends Model
     public function bets()
     {
         return $this->hasMany(LotteryBet::class, 'draw_date', 'draw_date');
+    }
+    
+    /**
+     * ตรวจสอบว่างวดนี้ปิดรับแทงแล้วหรือยัง
+     */
+    public function isClosed()
+    {
+        if (!$this->close_time) {
+            return false;
+        }
+        return now()->isAfter($this->close_time);
+    }
+    
+    /**
+     * Scope สำหรับดึงเฉพาะงวดที่ยังเปิดรับแทง
+     */
+    public function scopeOpen($query)
+    {
+        return $query->where(function ($q) {
+            $q->whereNull('close_time')
+              ->orWhere('close_time', '>', now());
+        });
     }
 }
 

@@ -71,4 +71,66 @@ class DashboardController extends Controller
             'totalToad' => $todayBets->sum('amount_toad'),
         ]);
     }
+    
+    /**
+     * API สำหรับดึงรายการงวดที่เปิดรับแทง (อนาคต 5 งวด)
+     */
+    public function getOpenDraws()
+    {
+        $today = now();
+        $draws = [];
+        
+        // สร้างงวดอนาคต 5 งวด (ถ้ายังไม่มีในฐานข้อมูล)
+        for ($i = 0; $i < 5; $i++) {
+            $month = $today->copy()->addMonths($i);
+            
+            // งวดวันที่ 1
+            $date1 = $month->copy()->day(1);
+            // Close time = 23:59 วันก่อนหน้า
+            $closeTime1 = $date1->copy()->subDay()->setTime(23, 59, 59);
+            
+            // งวดวันที่ 16
+            $date16 = $month->copy()->day(16);
+            $closeTime16 = $date16->copy()->subDay()->setTime(23, 59, 59);
+            
+            // สร้างหรืออัพเดทงวด
+            LotteryDraw::updateOrCreate(
+                ['draw_date' => $date1->format('Y-m-d')],
+                [
+                    'close_time' => $closeTime1,
+                    'is_announced' => false
+                ]
+            );
+            
+            LotteryDraw::updateOrCreate(
+                ['draw_date' => $date16->format('Y-m-d')],
+                [
+                    'close_time' => $closeTime16,
+                    'is_announced' => false
+                ]
+            );
+        }
+        
+        // ดึงงวดที่ยังเปิดรับแทง (close_time ยังไม่ผ่าน)
+        $openDraws = LotteryDraw::where(function ($q) use ($today) {
+                $q->whereNull('close_time')
+                  ->orWhere('close_time', '>', $today);
+            })
+            ->where('is_announced', false)
+            ->orderBy('draw_date', 'asc')
+            ->take(5)
+            ->get();
+        
+        return response()->json([
+            'success' => true,
+            'draws' => $openDraws->map(function ($draw) {
+                return [
+                    'value' => $draw->draw_date->format('Y-m-d'),
+                    'label' => $draw->draw_date->locale('th')->translatedFormat('j F Y'),
+                    'close_time' => $draw->close_time ? $draw->close_time->toIso8601String() : null,
+                    'is_closed' => $draw->isClosed(),
+                ];
+            })
+        ]);
+    }
 }

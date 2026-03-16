@@ -31,6 +31,32 @@ class LotteryBetController extends Controller
             // draw_date มาในรูปแบบ Y-m-d แล้ว (เช่น 2026-03-16)
             $drawDate = $validated['draw_date'];
 
+            // ✅ ตรวจสอบว่างวดนี้ปิดรับแทงแล้วหรือยัง
+            $draw = LotteryDraw::where('draw_date', $drawDate)->first();
+            
+            if (!$draw) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'ไม่พบงวดหวยที่เลือก'
+                ], 400);
+            }
+            
+            // ตรวจสอบว่างวดปิดรับแทงแล้วหรือยัง
+            if ($draw->isClosed()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'งวดนี้ปิดรับแทงแล้ว ไม่สามารถแทงได้'
+                ], 400);
+            }
+            
+            // ตรวจสอบว่าประกาศผลแล้วหรือยัง
+            if ($draw->is_announced) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'งวดนี้ประกาศผลแล้ว ไม่สามารถแทงได้'
+                ], 400);
+            }
+
             DB::transaction(function () use ($validated, $drawDate) {
                 foreach ($validated['bets'] as $bet) {
                     // ตรวจสอบกติกา
@@ -61,11 +87,8 @@ class LotteryBetController extends Controller
                     ]);
                 }
 
-                // สร้างงวดหวยถ้ายังไม่มี
-                LotteryDraw::firstOrCreate(
-                    ['draw_date' => $drawDate],
-                    ['is_announced' => false]
-                );
+                // หมายเหตุ: ไม่ต้องสร้างงวดที่นี่อีกแล้ว เพราะเราเช็คว่ามีงวดอยู่แล้วข้างบน
+                // ถ้างวดยังไม่มีจะ error ไปตั้งแต่ก่อน transaction
             });
 
             return response()->json([
@@ -125,7 +148,7 @@ class LotteryBetController extends Controller
         try {
             // ตรวจสอบรหัสลบจาก Setting
             $deleteCode = \App\Models\Setting::get('delete_code', '');
-
+            
             if (empty($deleteCode)) {
                 return response()->json([
                     'success' => false,
@@ -160,11 +183,10 @@ class LotteryBetController extends Controller
                 ], 400);
             }
 
-            // Soft delete
-            $bet->update([
-                'deleted_at' => now(),
-                'deleted_by' => Auth::id()
-            ]);
+            // Soft delete พร้อมบันทึกผู้ลบ
+            $bet->deleted_by = Auth::id();
+            $bet->save();
+            $bet->delete(); // ใช้ SoftDeletes trait
 
             return response()->json([
                 'success' => true,
