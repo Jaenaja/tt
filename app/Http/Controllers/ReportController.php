@@ -326,25 +326,33 @@ class ReportController extends Controller
         return $liability;
     }
 
-    private function calculateThreeToadLiability($bets, $settings)
-    {
-        $liability = [];
-        for ($i = 0; $i <= 999; $i++) {
-            $number = str_pad($i, 3, '0', STR_PAD_LEFT);
-            $liability[$number] = ['liability' => 0, 'bet_count' => 0, 'total_amount' => 0];
-        }
-        foreach ($bets as $bet) {
-            if (strlen($bet->number) === 3 && $bet->amount_toad > 0) {
-                $toadNumbers = $this->getToadNumbers($bet->number);
-                foreach ($toadNumbers as $toadNum) {
-                    $liability[$toadNum]['liability'] += $bet->amount_toad * $settings['rate_3_toad'];
-                    $liability[$toadNum]['total_amount'] += $bet->amount_toad;
-                    $liability[$toadNum]['bet_count']++;
-                }
-            }
-        }
-        return $liability;
+private function calculateThreeToadLiability($bets, $settings)
+{
+    $liability = [];
+    for ($i = 0; $i <= 999; $i++) {
+        $number = str_pad($i, 3, '0', STR_PAD_LEFT);
+        $liability[$number] = ['liability' => 0, 'bet_count' => 0, 'total_amount' => 0];
     }
+    foreach ($bets as $bet) {
+        if (strlen($bet->number) === 3 && $bet->amount_toad > 0) {
+            $toadNumbers = $this->getToadNumbers($bet->number);
+ 
+            // liability กระจายไปทุก permutation (ถูกต้อง)
+            // เหตุผล: ถ้าผลออกเป็น 258, ผู้ที่แทงโต๊ด 285/528/582/825/852 ก็ถูกรางวัลด้วย
+            // ดังนั้นทุก permutation มีความเสี่ยงเท่ากัน
+            foreach ($toadNumbers as $toadNum) {
+                $liability[$toadNum]['liability'] += $bet->amount_toad * $settings['rate_3_toad'];
+            }
+ 
+            // total_amount และ bet_count นับเฉพาะเลขที่แทงโดยตรง (ไม่กระจาย)
+            // เพื่อให้คอลัมน์ "ยอดซื้อ" ใน export แสดงยอดแทงจริงของแต่ละเลข
+            // ไม่ใช่ยอดรวมของทุก permutation ซ้ำกัน 6 รอบ
+            $liability[$bet->number]['total_amount'] += $bet->amount_toad;
+            $liability[$bet->number]['bet_count']++;
+        }
+    }
+    return $liability;
+}
 
     private function mergeTwoLiability($top, $bottom)
     {
