@@ -33,6 +33,7 @@ class ReportController extends Controller
         $settings = [
             'max_payout_2_digit' => Setting::get('max_payout_2_digit', 50000),
             'max_payout_3_digit' => Setting::get('max_payout_3_digit', 100000),
+            'max_payout_3_toad'  => Setting::get('max_payout_3_toad', 50000),   // ← ใหม่
             'rate_2_top' => Setting::get('rate_2_top', 90),
             'rate_2_bottom' => Setting::get('rate_2_bottom', 90),
             'rate_3_top' => Setting::get('rate_3_top', 900),
@@ -73,7 +74,7 @@ class ReportController extends Controller
         $topTwoTopExposure = $this->getTopExposure($twoTopLiability, 10, $settings['max_payout_2_digit']);
         $topTwoBottomExposure = $this->getTopExposure($twoBottomLiability, 10, $settings['max_payout_2_digit']);
         $topThreeTopExposure = $this->getTopExposure($threeTopLiability, 10, $settings['max_payout_3_digit']);
-        $topThreeToadExposure = $this->getTopExposure($threeToadLiability, 10, $settings['max_payout_3_digit']);
+        $topThreeToadExposure = $this->getTopExposure($threeToadLiability, 10, $settings['max_payout_3_toad']);
 
         // backward compat
         $topTwoDigitExposure = $topTwoTopExposure;
@@ -103,7 +104,7 @@ class ReportController extends Controller
         $overLimit2Top = $filterOverLimit($twoTopLiability, $settings['max_payout_2_digit']);
         $overLimit2Bottom = $filterOverLimit($twoBottomLiability, $settings['max_payout_2_digit']);
         $overLimit3Top = $filterOverLimit($threeTopLiability, $settings['max_payout_3_digit']);
-        $overLimit3Toad = $filterOverLimit($threeToadLiability, $settings['max_payout_3_digit']);
+        $overLimit3Toad = $filterOverLimit($threeToadLiability, $settings['max_payout_3_toad']);
 
         // สถิติพื้นฐาน
         $totalTransactions = $draw->bets->count();
@@ -337,16 +338,15 @@ private function calculateThreeToadLiability($bets, $settings)
         if (strlen($bet->number) === 3 && $bet->amount_toad > 0) {
             $toadNumbers = $this->getToadNumbers($bet->number);
  
-            // liability กระจายไปทุก permutation (ถูกต้อง)
-            // เหตุผล: ถ้าผลออกเป็น 258, ผู้ที่แทงโต๊ด 285/528/582/825/852 ก็ถูกรางวัลด้วย
-            // ดังนั้นทุก permutation มีความเสี่ยงเท่ากัน
+            // liability กระจายทุก permutation (ถูกต้อง)
+            // เช่น ถ้าออก 852 → ผู้แทงโต๊ด 258/285/528/582/825 ถูกหมด
             foreach ($toadNumbers as $toadNum) {
                 $liability[$toadNum]['liability'] += $bet->amount_toad * $settings['rate_3_toad'];
             }
  
-            // total_amount และ bet_count นับเฉพาะเลขที่แทงโดยตรง (ไม่กระจาย)
-            // เพื่อให้คอลัมน์ "ยอดซื้อ" ใน export แสดงยอดแทงจริงของแต่ละเลข
-            // ไม่ใช่ยอดรวมของทุก permutation ซ้ำกัน 6 รอบ
+            // total_amount + bet_count นับเฉพาะเลขที่แทงโดยตรง (ไม่กระจาย)
+            // 258(550) 285(100) 528(60) 582(425) 825(70) ← ยอดซื้อแยกถูกต้อง
+            // 852(0) ← ไม่มีคนแทงตรง แต่ยังมี liability จาก permutation
             $liability[$bet->number]['total_amount'] += $bet->amount_toad;
             $liability[$bet->number]['bet_count']++;
         }
@@ -877,6 +877,7 @@ private function calculateThreeToadLiability($bets, $settings)
         $settings = [
             'max_payout_2_digit' => \App\Models\Setting::get('max_payout_2_digit', 50000),
             'max_payout_3_digit' => \App\Models\Setting::get('max_payout_3_digit', 100000),
+            'max_payout_3_toad'  => \App\Models\Setting::get('max_payout_3_toad', 50000),   // ← ใหม่
             'rate_2_top' => \App\Models\Setting::get('rate_2_top', 90),
             'rate_2_bottom' => \App\Models\Setting::get('rate_2_bottom', 90),
             'rate_3_top' => \App\Models\Setting::get('rate_3_top', 900),
@@ -896,6 +897,7 @@ private function calculateThreeToadLiability($bets, $settings)
 
         $maxPay2 = $settings['max_payout_2_digit'];
         $maxPay3 = $settings['max_payout_3_digit'];
+        $maxPay3Toad = $settings['max_payout_3_toad'];   // ← ใหม่
 
         // กรองเฉพาะที่เกิน 100%
         $filterOver = function ($liabilityArr, $maxPayout) {
@@ -922,6 +924,7 @@ private function calculateThreeToadLiability($bets, $settings)
         $over2Bottom = $filterOver($twoBottomLiab, $maxPay2);
         $over3Top = $filterOver($threeTopLiab, $maxPay3);
         $over3Toad = $filterOver($threeToadLiab, $maxPay3);
+        $over3Toad = $filterOver($threeToadLiab, $maxPay3Toad);
 
         $drawDateLabel = \Carbon\Carbon::parse($draw->draw_date)->format('d/m/Y');
         $rows = [];
@@ -949,7 +952,8 @@ private function calculateThreeToadLiability($bets, $settings)
         $addSection('2 ตัวบน (เกิน 100%)', $over2Top, $maxPay2);
         $addSection('2 ตัวล่าง (เกิน 100%)', $over2Bottom, $maxPay2);
         $addSection('3 ตัวบน (เกิน 100%)', $over3Top, $maxPay3);
-        $addSection('3 ตัวโต๊ด (เกิน 100%)', $over3Toad, $maxPay3);
+        $addSection('3 ตัวโต๊ด (เกิน 100%)', $over3Toad, $maxPay3Toad);
+
 
         $dateStr = \Carbon\Carbon::parse($draw->draw_date)->format('Y-m-d');
         $filename = 'over_limit_' . $dateStr . '.csv';

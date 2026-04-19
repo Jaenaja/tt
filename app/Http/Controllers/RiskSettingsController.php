@@ -18,7 +18,7 @@ class RiskSettingsController extends Controller
             // Risk Management
             'max_payout_2_digit' => Setting::get('max_payout_2_digit', 50000),
             'max_payout_3_digit' => Setting::get('max_payout_3_digit', 100000),
-            
+            'max_payout_3_toad'  => Setting::get('max_payout_3_toad', 50000),   // ← ใหม่
             // Payout Rates
             'rate_2_top' => Setting::get('rate_2_top', 90),
             'rate_2_bottom' => Setting::get('rate_2_bottom', 90),
@@ -43,6 +43,7 @@ class RiskSettingsController extends Controller
         $validator = Validator::make($request->all(), [
             'max_payout_2_digit' => 'required|numeric|min:0',
             'max_payout_3_digit' => 'required|numeric|min:0',
+            'max_payout_3_toad'  => 'required|numeric|min:0',   // ← ใหม่
             'rate_2_top' => 'required|numeric|min:0',
             'rate_2_bottom' => 'required|numeric|min:0',
             'rate_3_top' => 'required|numeric|min:0',
@@ -61,7 +62,7 @@ class RiskSettingsController extends Controller
             // บันทึกค่าทั้งหมด
             Setting::set('max_payout_2_digit', $request->max_payout_2_digit, 'decimal', 'ยอดจ่ายสูงสุดต่อเลข 2 ตัว (บาท)', 'risk');
             Setting::set('max_payout_3_digit', $request->max_payout_3_digit, 'decimal', 'ยอดจ่ายสูงสุดต่อเลข 3 ตัว (บาท)', 'risk');
-            
+            Setting::set('max_payout_3_toad',  $request->max_payout_3_toad,  'decimal', 'ยอดจ่ายสูงสุดต่อเลข 3 ตัวโต๊ด (บาท)', 'risk');   // ← ใหม่
             Setting::set('rate_2_top', $request->rate_2_top, 'decimal', 'อัตราจ่าย 2 ตัวบน', 'payout');
             Setting::set('rate_2_bottom', $request->rate_2_bottom, 'decimal', 'อัตราจ่าย 2 ตัวล่าง', 'payout');
             Setting::set('rate_3_top', $request->rate_3_top, 'decimal', 'อัตราจ่าย 3 ตัวตรง', 'payout');
