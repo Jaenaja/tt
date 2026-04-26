@@ -57,9 +57,23 @@ class LotteryBetController extends Controller
         if ($request->customer_name) $query->where('customer_name','like','%'.$request->customer_name.'%');
         if ($request->draw_date)     $query->where('draw_date',$request->draw_date);
         if ($request->search_number) $query->where('number','like','%'.$request->search_number.'%');
-        $sortBy = $request->get('sort_by','draw_date'); $sortOrd = $request->get('sort_order','desc');
-        if ($sortBy==='draw_date') $query->orderBy('draw_date',$sortOrd)->orderBy('created_at','desc');
-        else $query->orderBy($sortBy,$sortOrd);
+
+        // [FIX] whitelist columns + default = created_at desc (ล่าสุดก่อน)
+        $allowedSort = ['created_at','customer_name','number','amount_top','amount_bottom','amount_toad','amount_bottom_3','draw_date'];
+        $sortBy  = in_array($request->get('sort_by'), $allowedSort) ? $request->get('sort_by') : 'created_at';
+        $sortOrd = in_array($request->get('sort_order'), ['asc','desc']) ? $request->get('sort_order') : 'desc';
+
+        if ($sortBy === 'draw_date') {
+            $query->orderBy('draw_date', $sortOrd)->orderBy('created_at','desc');
+        } else {
+            // total_amount ไม่ใช่ column จริง → คำนวณด้วย DB::raw
+            if ($sortBy === 'total_amount') {
+                $query->orderByRaw("(amount_top + amount_bottom + amount_toad + COALESCE(amount_bottom_3,0)) $sortOrd");
+            } else {
+                $query->orderBy($sortBy, $sortOrd);
+            }
+        }
+
         $bets = $query->paginate(50)->appends($request->all());
         $drawDates = LotteryBet::select('draw_date')->whereNull('deleted_at')->distinct()->orderBy('draw_date','desc')->get();
         return view('bets.history', compact('bets','drawDates'));
@@ -90,8 +104,11 @@ class LotteryBetController extends Controller
         if ($request->customer_name) $query->where('customer_name','like','%'.$request->customer_name.'%');
         if ($request->draw_date)     $query->where('draw_date',$request->draw_date);
         if ($request->search_number) $query->where('number','like','%'.$request->search_number.'%');
-        $sortBy=$request->get('sort_by','draw_date'); $sortOrd=$request->get('sort_order','desc');
+        $allowedSort = ['created_at','customer_name','number','amount_top','amount_bottom','amount_toad','amount_bottom_3','draw_date'];
+        $sortBy  = in_array($request->get('sort_by'), $allowedSort) ? $request->get('sort_by') : 'created_at';
+        $sortOrd = in_array($request->get('sort_order'), ['asc','desc']) ? $request->get('sort_order') : 'desc';
         if ($sortBy==='draw_date') $query->orderBy('draw_date',$sortOrd)->orderBy('created_at','desc');
+        elseif ($sortBy==='total_amount') $query->orderByRaw("(amount_top + amount_bottom + amount_toad + COALESCE(amount_bottom_3,0)) $sortOrd");
         else $query->orderBy($sortBy,$sortOrd);
         $bets = $query->get();
         $rows = []; $rows[] = ['งวดวันที่','ชื่อลูกค้า','เลข','บน','ล่าง','โต๊ด','3ตัวล่าง','รวม (฿)','บันทึกโดย','วันที่บันทึก','สถานะ'];

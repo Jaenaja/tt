@@ -175,9 +175,18 @@ class ReportController extends Controller
         }
 
         $sortBy  = $request->get('sort_by', 'created_at');
-        $sortDir = $request->get('sort_direction', 'desc');
-        $allowed = ['created_at','customer_name','number','amount_top','amount_bottom','amount_toad','amount_bottom_3'];
-        if (in_array($sortBy, $allowed)) $betsQuery->orderBy($sortBy, $sortDir);
+        $sortDir = in_array($request->get('sort_direction'), ['asc','desc']) ? $request->get('sort_direction') : 'desc';
+        $allowed = ['created_at','customer_name','number','amount_top','amount_bottom','amount_toad','amount_bottom_3','total_amount'];
+        if (in_array($sortBy, $allowed)) {
+            if ($sortBy === 'total_amount') {
+                $betsQuery->orderByRaw("(amount_top + amount_bottom + amount_toad + COALESCE(amount_bottom_3,0)) $sortDir");
+            } else {
+                $betsQuery->orderBy($sortBy, $sortDir);
+            }
+        } else {
+            // default: ล่าสุดก่อน
+            $betsQuery->orderBy('created_at', 'desc');
+        }
 
         $betsHistory = $betsQuery->paginate(50);
 
@@ -599,10 +608,34 @@ class ReportController extends Controller
             }
         };
 
+        // section พิเศษสำหรับโต๊ด: ยอดจ่าย (฿) = ยอดซื้อ × rate ต่อ perm (ไม่ใช่ group liability)
+        // แต่ % ของเพดาน ยังใช้ group liability / ceiling
+        $addToadSection = function ($title, $data, $maxPayout, $rate) use (&$rows, $dLabel) {
+            $rows[] = [];
+            $rows[] = ["=== $title ===","งวด $dLabel","เพดาน: ".number_format($maxPayout,0)." บาท"];
+            $rows[] = ['เลข','จำนวนใบ','ยอดซื้อ (฿)','ยอดจ่าย (฿)','% ของเพดาน'];
+            if (empty($data)) {
+                $rows[] = ['-','-','-','-','ไม่มีเลขเกินเพดาน'];
+            } else {
+                foreach ($data as $item) {
+                    // ยอดจ่าย = ยอดซื้อ × rate ของ perm นั้นๆ (แยกทีละตัว)
+                    $individualPayout = round($item['total_amount'] * $rate);
+                    $rows[] = [
+                        $item['number'],
+                        $item['bet_count'],
+                        number_format($item['total_amount'], 0),
+                        number_format($individualPayout, 0),
+                        number_format($item['percentage'], 2).'%',
+                    ];
+                }
+            }
+        };
+
         $addSection('2 ตัวบน (เกิน 100%)',   $over2Top,    $maxPay2);
         $addSection('2 ตัวล่าง (เกิน 100%)',  $over2Bottom, $maxPay2);
         $addSection('3 ตัวบน (เกิน 100%)',   $over3Top,    $maxPay3);
-        $addSection('3 ตัวโต๊ด (เกิน 100%)',  $over3Toad,   $maxPay3Toad);
+        // โต๊ด: แสดงแยกทีละ permutation พร้อมคอลัมน์ "ยอดจ่าย" (ยอดซื้อ × rate) ต่อตัว
+        $addToadSection('3 ตัวโต๊ด (เกิน 100%)', $over3Toad, $maxPay3Toad, $settings['rate_3_toad']);
         $addSection('3 ตัวล่าง (เกิน 100%)',  $over3Bottom, $maxPay3Bot);
 
         $dateStr = \Carbon\Carbon::parse($draw->draw_date)->format('Y-m-d');

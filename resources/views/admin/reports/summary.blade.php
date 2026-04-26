@@ -377,11 +377,11 @@
     @endif
 
     {{-- ประวัติการแทง --}}
-    <div class="transition-all duration-300 premium-card bg-white dark:bg-slate-900 rounded-2xl p-8 shadow-xl dark:shadow-2xl border border-slate-200 dark:border-slate-800 mb-8" id="betsHistorySection">
+    <div class="transition-all duration-300 premium-card bg-white dark:bg-slate-900 rounded-2xl p-8 shadow-xl dark:shadow-2xl border border-slate-200 dark:border-slate-800 mb-8" id="bets-table">
         <h2 class="text-3xl font-bold text-slate-900 dark:text-white mb-6 flex items-center gap-2"><span>📝</span> ประวัติการแทงของงวดนี้</h2>
 
         {{-- Filter Form --}}
-        <form method="GET" action="{{ route('admin.reports.summary', $draw->id) }}" class="no-print mb-6" id="filterForm">
+        <form method="GET" action="{{ route('admin.reports.summary', $draw->id) }}#bets-table" class="no-print mb-6" id="filterForm">
             <div class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-4">
                 <div class="md:col-span-2">
                     <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">ชื่อลูกค้า</label>
@@ -516,6 +516,14 @@ document.getElementById('themeToggle').addEventListener('click',()=>{
 window.addEventListener('scroll',()=>{
     document.getElementById('backToTop').classList.toggle('show',window.scrollY>300);
 });
+
+// auto-scroll ลงตารางถ้า URL มี #bets-table (หลัง search/filter)
+if (window.location.hash === '#bets-table') {
+    document.addEventListener('DOMContentLoaded', () => {
+        const el = document.getElementById('bets-table');
+        if (el) setTimeout(() => el.scrollIntoView({ behavior: 'smooth', block: 'start' }), 150);
+    });
+}
 
 // ── Heatmap Data from PHP ──
 const data2Top    = {!! json_encode($twoTopHeatmapData) !!};

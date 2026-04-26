@@ -70,11 +70,23 @@
                     <p class="text-slate-700 dark:text-slate-400">เลือกงวดที่ต้องการดูรายละเอียด สถิติ
                         และวิเคราะห์ข้อมูล</p>
                 </div>
-                <button id="themeToggle"
-                    class="relative inline-flex h-5 w-9 items-center rounded-full transition-colors duration-300 focus:outline-none bg-slate-300 dark:bg-emerald-600">
-                    <span
-                        class="inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow transition-transform duration-300 translate-x-0.5 dark:translate-x-4.5"></span>
-                </button>
+                <div class="flex items-center gap-3">
+                    <a href="{{ route('bets.history') }}"
+                        class="inline-flex items-center gap-2 px-4 py-2 bg-slate-600 hover:bg-slate-700 text-white rounded-lg font-semibold text-sm transition-colors">
+                        📜 ประวัติการแทง
+                    </a>
+                    @if(Auth::user()->isAdmin())
+                    <a href="{{ route('admin.reports.statistics') }}"
+                        class="inline-flex items-center gap-2 px-4 py-2 bg-violet-600 hover:bg-violet-700 text-white rounded-lg font-semibold text-sm transition-colors">
+                        📈 สถิติ
+                    </a>
+                    @endif
+                    <button id="themeToggle"
+                        class="relative inline-flex h-5 w-9 items-center rounded-full transition-colors duration-300 focus:outline-none bg-slate-300 dark:bg-emerald-600">
+                        <span
+                            class="inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow transition-transform duration-300 translate-x-0.5 dark:translate-x-4.5"></span>
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -92,6 +104,8 @@
                             <th class="px-6 py-4 text-center font-bold text-slate-900 dark:text-white">รางวัล 2 ตัวบน
                             </th>
                             <th class="px-6 py-4 text-center font-bold text-slate-900 dark:text-white">รางวัล 2 ตัวล่าง
+                            </th>
+                            <th class="px-6 py-4 text-center font-bold text-slate-900 dark:text-white">3 ตัวล่าง
                             </th>
                             <th class="px-6 py-4 text-center font-bold text-slate-900 dark:text-white">ดำเนินการ</th>
                         </tr>
@@ -140,6 +154,19 @@
                                     @endif
                                 </td>
                                 <td class="px-6 py-4 text-center">
+                                    @if($draw->is_announced && $draw->result_3_bottom)
+                                        <div class="flex flex-wrap justify-center gap-1">
+                                            @foreach(explode(',', $draw->result_3_bottom) as $n3b)
+                                                <span class="inline-block px-2 py-0.5 bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 rounded font-bold text-sm">
+                                                    {{ trim($n3b) }}
+                                                </span>
+                                            @endforeach
+                                        </div>
+                                    @else
+                                        <span class="text-slate-400 dark:text-slate-600 text-sm">-</span>
+                                    @endif
+                                </td>
+                                <td class="px-6 py-4 text-center">
                                     <a href="{{ route('admin.reports.summary', $draw->id) }}"
                                         class="inline-block px-6 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-semibold transition-colors shadow-md">
                                         ดูรายละเอียด
@@ -148,7 +175,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="6" class="px-6 py-12 text-center text-slate-500 dark:text-slate-400">
+                                <td colspan="7" class="px-6 py-12 text-center text-slate-500 dark:text-slate-400">
                                     <svg class="w-16 h-16 mx-auto mb-4" fill="none" stroke="currentColor"
                                         viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"

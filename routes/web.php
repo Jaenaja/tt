@@ -58,15 +58,15 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/draws', [LotteryDrawController::class, 'store'])->name('draws.store');
         Route::get('/draws/{id}/results', [LotteryDrawController::class, 'results'])->name('draws.results');
 
-        // Reports
+        // Reports — view (เปิดให้พนักงาน general ดูได้ด้วย)
         Route::prefix('reports')->name('reports.')->group(function () {
-            Route::get('/', [ReportController::class, 'index'])->name('index');
-            Route::get('/summary/{drawId}', [ReportController::class, 'summary'])->name('summary');
-            // [FIX #1] เพิ่ม 2 routes ที่มีอยู่ใน web.php เดิม แต่ไม่มี method ใน controller
+            Route::middleware(['staff_or_admin'])->group(function () {
+                Route::get('/', [ReportController::class, 'index'])->name('index');
+                Route::get('/summary/{drawId}', [ReportController::class, 'summary'])->name('summary');
+            });
+            // Reports actions — admin เท่านั้น
             Route::get('/pdf/{drawId}', [ReportController::class, 'exportPDF'])->name('pdf');
             Route::get('/statistics', [ReportController::class, 'statistics'])->name('statistics');
-            // ลบ Bet (เฉพาะงวดที่ยังไม่ประกาศผล)
-            // [FIX #2] ลบ Route ซ้ำ '/admin/reports/bets/{betId}' ที่ทำให้ URL = /admin/admin/reports/bets/{id}
             Route::delete('/bets/{betId}', [ReportController::class, 'deleteBet'])->name('bets.delete');
             Route::get('/export-excel/{drawId}', [ReportController::class, 'exportExcel'])->name('export-excel');
             Route::get('/export-customer-summary/{drawId}', [ReportController::class, 'exportCustomerSummary'])->name('export-customer-summary');

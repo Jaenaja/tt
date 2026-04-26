@@ -13,7 +13,8 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware) {
         // เพิ่มบรรทัดนี้
         $middleware->alias([
-            'admin' => \App\Http\Middleware\AdminMiddleware::class,
+            'admin'         => \App\Http\Middleware\AdminMiddleware::class,
+            'staff_or_admin' => \App\Http\Middleware\StaffOrAdminMiddleware::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

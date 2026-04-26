@@ -117,6 +117,10 @@
                         class="mb-2 inline-flex items-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 dark:bg-emerald-700 dark:hover:bg-emerald-600 text-white font-bold rounded-xl shadow-lg hover:shadow-emerald-500/30 transition-all duration-200 text-sm">
                         🎯 แทงหวย
                     </a>
+                    <a href="{{ route('admin.reports.index') }}"
+                        class="mb-2 inline-flex items-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-700 dark:hover:bg-indigo-600 text-white font-bold rounded-xl shadow-lg transition-all duration-200 text-sm">
+                        📊 รายงาน
+                    </a>
                 </div>
                 <div class="text-right">
                     <div
@@ -183,7 +187,7 @@
                                     class="flex items-center gap-1 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">
                                     งวดวันที่
                                     <span
-                                        class="text-xs">{{ request('sort_by') === 'draw_date' ? (request('sort_order') === 'asc' ? '▲' : '▼') : '⇅' }}</span>
+                                        class="text-xs">{{ request('sort_by','created_at') === 'draw_date' ? (request('sort_order') === 'asc' ? '▲' : '▼') : '⇅' }}</span>
                                 </button>
                             </th>
                             <th class="px-3 py-3 text-left text-slate-900 dark:text-slate-200 font-bold">
@@ -191,19 +195,20 @@
                                     class="flex items-center gap-1 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">
                                     ลูกค้า
                                     <span
-                                        class="text-xs">{{ request('sort_by') === 'customer_name' ? (request('sort_order') === 'asc' ? '▲' : '▼') : '⇅' }}</span>
+                                        class="text-xs">{{ request('sort_by','created_at') === 'customer_name' ? (request('sort_order') === 'asc' ? '▲' : '▼') : '⇅' }}</span>
                                 </button>
                             </th>
                             <th class="px-3 py-3 text-center text-slate-900 dark:text-slate-200 font-bold">เลข</th>
                             <th class="px-3 py-3 text-right text-slate-900 dark:text-slate-200 font-bold">บน</th>
                             <th class="px-3 py-3 text-right text-slate-900 dark:text-slate-200 font-bold">ล่าง</th>
                             <th class="px-3 py-3 text-right text-slate-900 dark:text-slate-200 font-bold">โต๊ด</th>
+                            <th class="px-3 py-3 text-right text-slate-900 dark:text-slate-200 font-bold">3 ตัวล่าง</th>
                             <th class="px-3 py-3 text-right text-slate-900 dark:text-slate-200 font-bold">
                                 <button onclick="sortBy('total_amount')"
                                     class="flex items-center gap-1 hover:text-emerald-600 dark:hover:text-emerald-400 ml-auto transition-colors">
                                     รวม
                                     <span
-                                        class="text-xs">{{ request('sort_by') === 'total_amount' ? (request('sort_order') === 'asc' ? '▲' : '▼') : '⇅' }}</span>
+                                        class="text-xs">{{ request('sort_by','created_at') === 'total_amount' ? (request('sort_order') === 'asc' ? '▲' : '▼') : '⇅' }}</span>
                                 </button>
                             </th>
                             <th class="px-3 py-3 text-left text-slate-900 dark:text-slate-200 font-bold">
@@ -211,7 +216,7 @@
                                     class="flex items-center gap-1 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">
                                     บันทึกเมื่อ
                                     <span
-                                        class="text-xs">{{ request('sort_by') === 'created_at' ? (request('sort_order') === 'asc' ? '▲' : '▼') : '⇅' }}</span>
+                                        class="text-xs">{{ request('sort_by','created_at') === 'created_at' ? (request('sort_order') === 'asc' ? '▲' : '▼') : '⇅' }}</span>
                                 </button>
                             </th>
                             <th class="px-3 py-3 text-center text-slate-900 dark:text-slate-200 font-bold">สถานะ</th>
@@ -243,8 +248,17 @@
                                 <td class="px-3 py-3 text-right text-slate-800 dark:text-slate-200">
                                     {{ $bet->amount_toad > 0 ? number_format($bet->amount_toad, 0) : '-' }}
                                 </td>
+                                <td class="px-3 py-3 text-right text-slate-800 dark:text-slate-200">
+                                    @if(strlen($bet->number) === 3 && ($bet->amount_bottom_3 ?? 0) > 0)
+                                        <span class="text-orange-600 dark:text-orange-400 font-semibold">
+                                            {{ number_format($bet->amount_bottom_3, 0) }}
+                                        </span>
+                                    @else
+                                        -
+                                    @endif
+                                </td>
                                 <td class="px-3 py-3 text-right font-bold text-blue-600 dark:text-blue-400">
-                                    {{ number_format($bet->amount_top + $bet->amount_bottom + $bet->amount_toad, 0) }} ฿
+                                    {{ number_format($bet->amount_top + $bet->amount_bottom + $bet->amount_toad + ($bet->amount_bottom_3 ?? 0), 0) }} ฿
                                 </td>
                                 <td class="px-3 py-3 text-xs text-slate-600 dark:text-slate-400">
                                     <div>{{ $bet->creator ? $bet->creator->name : '-' }}</div>
@@ -252,7 +266,7 @@
                                 </td>
                                 <td class="px-3 py-3 text-center">
                                     @if($bet->draw && $bet->draw->is_announced)
-                                        @if($bet->is_win_top || $bet->is_win_bottom || $bet->is_win_toad)
+                                        @if($bet->is_win_top || $bet->is_win_bottom || $bet->is_win_toad || ($bet->is_win_bottom_3 ?? false))
                                             <span
                                                 class="inline-block px-3 py-1 bg-emerald-100 dark:bg-emerald-900 text-emerald-700 dark:text-emerald-300 rounded-full text-xs font-bold">
                                                 ✅ ถูกรางวัล
@@ -284,7 +298,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="10" class="px-3 py-16 text-center">
+                                <td colspan="11" class="px-3 py-16 text-center">
                                     <div class="text-slate-400 dark:text-slate-500">
                                         <svg class="w-16 h-16 mx-auto mb-4 opacity-50" fill="none" stroke="currentColor"
                                             viewBox="0 0 24 24">
@@ -410,7 +424,7 @@
 
         function sortBy(column) {
             const params = new URLSearchParams(window.location.search);
-            const currentSort = "{{ request('sort_by', 'draw_date') }}";
+            const currentSort = "{{ request('sort_by', 'created_at') }}";
             const currentOrder = "{{ request('sort_order', 'desc') }}";
 
             let newOrder = 'desc';
@@ -506,7 +520,7 @@
             const customer = document.getElementById('searchCustomer').value;
             const drawDate = document.getElementById('searchDrawDate').value;
             const number = document.getElementById('searchNumber').value;
-            const sortBy = "{{ request('sort_by', 'draw_date') }}";
+            const sortBy = "{{ request('sort_by', 'created_at') }}";
             const sortOrder = "{{ request('sort_order', 'desc') }}";
 
             const params = new URLSearchParams();
