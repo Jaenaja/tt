@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Http\Controllers;
 
 use App\Models\LotteryDraw;
@@ -13,279 +12,201 @@ class ReportController extends Controller
 {
     public function index()
     {
-        $draws = LotteryDraw::with('announcedBy')
-            ->orderBy('draw_date', 'desc')
-            ->paginate(20);
-
+        $draws = LotteryDraw::with('announcedBy')->orderBy('draw_date','desc')->paginate(20);
         return view('admin.reports.index', compact('draws'));
     }
 
     public function summary(Request $request, $drawId)
     {
         $draw = LotteryDraw::with([
-            'bets' => function ($query) {
-                $query->whereNull('deleted_at')
-                    ->with('creator');
-            }
+            'bets' => fn($q) => $q->whereNull('deleted_at')->with('creator')
         ])->findOrFail($drawId);
 
-        // Settings
         $settings = [
-            'max_payout_2_digit' => Setting::get('max_payout_2_digit', 50000),
-            'max_payout_3_digit' => Setting::get('max_payout_3_digit', 100000),
-            'max_payout_3_toad'  => Setting::get('max_payout_3_toad', 50000),   // ← ใหม่
-            'rate_2_top' => Setting::get('rate_2_top', 90),
-            'rate_2_bottom' => Setting::get('rate_2_bottom', 90),
-            'rate_3_top' => Setting::get('rate_3_top', 900),
-            'rate_3_toad' => Setting::get('rate_3_toad', 120),
-            'commission_rate' => Setting::get('commission_rate', 10),
+            'max_payout_2_digit'  => Setting::get('max_payout_2_digit', 50000),
+            'max_payout_3_digit'  => Setting::get('max_payout_3_digit', 100000),
+            'max_payout_3_toad'   => Setting::get('max_payout_3_toad', 50000),
+            'max_payout_3_bottom' => Setting::get('max_payout_3_bottom', 50000),
+            'rate_2_top'          => Setting::get('rate_2_top', 90),
+            'rate_2_bottom'       => Setting::get('rate_2_bottom', 90),
+            'rate_3_top'          => Setting::get('rate_3_top', 900),
+            'rate_3_toad'         => Setting::get('rate_3_toad', 120),
+            'rate_3_bottom'       => Setting::get('rate_3_bottom', 500),
+            'commission_rate'     => Setting::get('commission_rate', 10),
         ];
 
-        // คำนวณ Liability แยกตามประเภท
-        $twoTopLiability = $this->calculateTwoTopLiability($draw->bets, $settings);
+        // ── Liability Calculations ──
+        $twoTopLiability    = $this->calculateTwoTopLiability($draw->bets, $settings);
         $twoBottomLiability = $this->calculateTwoBottomLiability($draw->bets, $settings);
-        $threeTopLiability = $this->calculateThreeTopLiability($draw->bets, $settings);
+        $threeTopLiability  = $this->calculateThreeTopLiability($draw->bets, $settings);
         $threeToadLiability = $this->calculateThreeToadLiability($draw->bets, $settings);
+        $threeBottomLiability = $this->calculateThreeBottomLiability($draw->bets, $settings);
 
-        // รวมเพื่อใช้ใน heatmap เดิม (backward compat)
-        $twoDigitLiability = $this->mergeTwoLiability($twoTopLiability, $twoBottomLiability);
+        // backward compat merged
+        $twoDigitLiability   = $this->mergeTwoLiability($twoTopLiability, $twoBottomLiability);
         $threeDigitLiability = $this->mergeThreeLiability($threeTopLiability, $threeToadLiability);
 
-        $maxTwoDigit = max(array_column($twoDigitLiability, 'liability'));
+        $maxTwoDigit   = max(array_column($twoDigitLiability, 'liability'));
         $maxThreeDigit = max(array_column($threeDigitLiability, 'liability'));
 
-        // เตรียมข้อมูล Heatmap แยกตามประเภท
-        $twoTopHeatmapData = $this->prepareHeatmapData($twoTopLiability, 2);
+        // Heatmap data
+        $twoTopHeatmapData    = $this->prepareHeatmapData($twoTopLiability, 2);
         $twoBottomHeatmapData = $this->prepareHeatmapData($twoBottomLiability, 2);
-        $threeTopHeatmapData = $this->prepareHeatmapData($threeTopLiability, 3);
+        $threeTopHeatmapData  = $this->prepareHeatmapData($threeTopLiability, 3);
         $threeToadHeatmapData = $this->prepareHeatmapData($threeToadLiability, 3);
+        $threeBottomHeatmapData = $this->prepareHeatmapData($threeBottomLiability, 3);
 
-        // ค่า max แยกตามประเภท (สำหรับ visualMap)
-        $maxTwoTop = max(array_column($twoTopLiability, 'liability'));
+        $maxTwoTop    = max(array_column($twoTopLiability, 'liability'));
         $maxTwoBottom = max(array_column($twoBottomLiability, 'liability'));
-        $maxThreeTop = max(array_column($threeTopLiability, 'liability'));
+        $maxThreeTop  = max(array_column($threeTopLiability, 'liability'));
         $maxThreeToad = max(array_column($threeToadLiability, 'liability'));
+        $maxThreeBottom = max(array_column($threeBottomLiability, 'liability'));
 
-        // (ยังคงไว้เพื่อ backward compat)
-        $twoDigitHeatmapData = $twoTopHeatmapData;
+        $twoDigitHeatmapData   = $twoTopHeatmapData;
         $threeDigitHeatmapData = $threeTopHeatmapData;
 
-        // Top 10 Exposure แยกตามประเภท
-        $topTwoTopExposure = $this->getTopExposure($twoTopLiability, 10, $settings['max_payout_2_digit']);
+        // Top 10 Exposure
+        $topTwoTopExposure    = $this->getTopExposure($twoTopLiability, 10, $settings['max_payout_2_digit']);
         $topTwoBottomExposure = $this->getTopExposure($twoBottomLiability, 10, $settings['max_payout_2_digit']);
-        $topThreeTopExposure = $this->getTopExposure($threeTopLiability, 10, $settings['max_payout_3_digit']);
-        $topThreeToadExposure = $this->getTopExposure($threeToadLiability, 10, $settings['max_payout_3_toad']);
+        $topThreeTopExposure  = $this->getTopExposure($threeTopLiability, 10, $settings['max_payout_3_digit']);
+        // โต๊ดใช้เพดาน max_payout_3_digit (ยืนยันจาก Correct CSV: เพดาน 50,000 ไม่ใช่ 99,000)
+        $topThreeToadExposure = $this->getTopExposure($threeToadLiability, 10, $settings['max_payout_3_digit']);
+        $topThreeBottomExposure = $this->getTopExposure($threeBottomLiability, 10, $settings['max_payout_3_bottom']);
 
-        // backward compat
-        $topTwoDigitExposure = $topTwoTopExposure;
+        $topTwoDigitExposure   = $topTwoTopExposure;
         $topThreeDigitExposure = $topThreeTopExposure;
 
-        // สรุปเลขเกิน 100% สำหรับแสดงผลในหน้า (preview)
+        // Over limit filter
         $filterOverLimit = function ($liabilityArr, $maxPayout) {
             $result = [];
             foreach ($liabilityArr as $number => $data) {
-                if ($data['liability'] <= 0)
-                    continue;
+                if ($data['liability'] <= 0) continue;
                 $pct = ($data['liability'] / $maxPayout) * 100;
                 if ($pct >= 100) {
                     $result[] = [
-                        'number' => $number,
-                        'bet_count' => $data['bet_count'],
+                        'number'     => $number,
+                        'bet_count'  => $data['bet_count'],
                         'total_amount' => $data['total_amount'],
-                        'liability' => round($data['liability']),
+                        'liability'  => round($data['liability']),
                         'percentage' => round($pct, 1),
                     ];
                 }
             }
-            usort($result, fn($a, $b) => $b['liability'] - $a['liability']);
+            usort($result, fn($a,$b) => $b['liability'] - $a['liability']);
             return $result;
         };
 
-        $overLimit2Top = $filterOverLimit($twoTopLiability, $settings['max_payout_2_digit']);
+        $overLimit2Top    = $filterOverLimit($twoTopLiability,    $settings['max_payout_2_digit']);
         $overLimit2Bottom = $filterOverLimit($twoBottomLiability, $settings['max_payout_2_digit']);
-        $overLimit3Top = $filterOverLimit($threeTopLiability, $settings['max_payout_3_digit']);
-        $overLimit3Toad = $filterOverLimit($threeToadLiability, $settings['max_payout_3_toad']);
+        $overLimit3Top    = $filterOverLimit($threeTopLiability,  $settings['max_payout_3_digit']);
+        // โต๊ดใช้เพดาน max_payout_3_digit (ยืนยันจาก Correct CSV)
+        $overLimit3Toad   = $filterOverLimit($threeToadLiability, $settings['max_payout_3_digit']);
+        $overLimit3Bottom = $filterOverLimit($threeBottomLiability, $settings['max_payout_3_bottom']);
 
-        // สถิติพื้นฐาน
+        // Sales stats
         $totalTransactions = $draw->bets->count();
-
         $sales = [
-            'two_top' => ['total' => 0, 'count' => 0],
-            'two_bottom' => ['total' => 0, 'count' => 0],
-            'three_top' => ['total' => 0, 'count' => 0],
-            'three_toad' => ['total' => 0, 'count' => 0]
+            'two_top'      => ['total'=>0,'count'=>0],
+            'two_bottom'   => ['total'=>0,'count'=>0],
+            'three_top'    => ['total'=>0,'count'=>0],
+            'three_toad'   => ['total'=>0,'count'=>0],
+            'three_bottom' => ['total'=>0,'count'=>0],
         ];
-
         foreach ($draw->bets as $bet) {
-            $numberLength = strlen($bet->number);
-
-            if ($bet->amount_top > 0 && $numberLength === 2) {
-                $sales['two_top']['total'] += $bet->amount_top;
-                $sales['two_top']['count']++;
-            }
-
-            if ($bet->amount_bottom > 0 && $numberLength === 2) {
-                $sales['two_bottom']['total'] += $bet->amount_bottom;
-                $sales['two_bottom']['count']++;
-            }
-
-            if ($bet->amount_top > 0 && $numberLength === 3) {
-                $sales['three_top']['total'] += $bet->amount_top;
-                $sales['three_top']['count']++;
-            }
-
-            if ($bet->amount_toad > 0 && $numberLength === 3) {
-                $sales['three_toad']['total'] += $bet->amount_toad;
-                $sales['three_toad']['count']++;
-            }
+            $l = strlen($bet->number);
+            if ($bet->amount_top    > 0 && $l===2) { $sales['two_top']['total']    += $bet->amount_top;    $sales['two_top']['count']++; }
+            if ($bet->amount_bottom > 0 && $l===2) { $sales['two_bottom']['total'] += $bet->amount_bottom; $sales['two_bottom']['count']++; }
+            if ($bet->amount_top    > 0 && $l===3) { $sales['three_top']['total']  += $bet->amount_top;    $sales['three_top']['count']++; }
+            if ($bet->amount_toad   > 0 && $l===3) { $sales['three_toad']['total'] += $bet->amount_toad;   $sales['three_toad']['count']++; }
+            if (($bet->amount_bottom_3??0)>0&&$l===3){ $sales['three_bottom']['total'] += $bet->amount_bottom_3; $sales['three_bottom']['count']++; }
         }
-
-        $totalSales = $sales['two_top']['total'] + $sales['two_bottom']['total'] +
-            $sales['three_top']['total'] + $sales['three_toad']['total'];
-
-        // Commission
+        $totalSales = array_sum(array_column($sales, 'total'));
         $commission = $totalSales * ($settings['commission_rate'] / 100);
 
-        // ผลรางวัล
+        // Result
         $result = null;
         if ($draw->is_announced) {
-            $totalPayout = $draw->bets->sum(function ($bet) {
-                return $bet->payout_top + $bet->payout_bottom + $bet->payout_toad;
-            });
-
-            $winnersCount = $draw->bets->filter(function ($bet) {
-                return $bet->is_win_top || $bet->is_win_bottom || $bet->is_win_toad;
-            })->count();
-
-            $netProfit = $totalSales - $totalPayout - $commission;
+            $totalPayout = $draw->bets->sum(fn($b) =>
+                $b->payout_top + $b->payout_bottom + $b->payout_toad + ($b->payout_bottom_3??0)
+            );
+            $winnersCount = $draw->bets->filter(fn($b) =>
+                $b->is_win_top||$b->is_win_bottom||$b->is_win_toad||($b->is_win_bottom_3??false)
+            )->count();
+            $netProfit   = $totalSales - $totalPayout - $commission;
             $payoutRatio = $totalSales > 0 ? ($totalPayout / $totalSales) * 100 : 0;
-
             $result = [
-                'total_bet' => $totalSales,
-                'total_payout' => $totalPayout,
-                'commission' => $commission,
-                'net_profit' => $netProfit,
-                'payout_ratio' => $payoutRatio,
+                'total_bet'     => $totalSales,
+                'total_payout'  => $totalPayout,
+                'commission'    => $commission,
+                'net_profit'    => $netProfit,
+                'payout_ratio'  => $payoutRatio,
                 'winners_count' => $winnersCount,
             ];
         }
 
-        // สรุปผลรายบุคคล
         $customerSummary = $this->getCustomerSummary($draw->bets, $settings['commission_rate']);
 
-        // ดึงรายชื่อลูกค้าทั้งหมดในงวดนี้ (สำหรับ Multi-select)
-        $customerNames = $draw->bets()
-            ->whereNull('deleted_at')
-            ->distinct()
-            ->pluck('customer_name')
-            ->sort()
-            ->values();
+        $customerNames = $draw->bets()->whereNull('deleted_at')->distinct()->pluck('customer_name')->sort()->values();
 
-        // ประวัติการแทง
+        // Bet history with filters
         $betsQuery = $draw->bets()->with('creator')->whereNull('deleted_at');
 
-        // Filter ชื่อลูกค้า (รองรับ Multi-select)
-        if ($request->filled('customer_names')) {
-            $betsQuery->whereIn('customer_name', $request->customer_names);
-        }
+        if ($request->filled('customer_names')) $betsQuery->whereIn('customer_name', $request->customer_names);
+        if ($request->filled('search_number'))  $betsQuery->where('number', $request->search_number);
 
-        // Filter เลข
-        if ($request->filled('search_number')) {
-            $betsQuery->where('number', $request->search_number);
-        }
-
-        // Filter สถานะรางวัล
         if ($request->filled('win_status') && $draw->is_announced) {
             if ($request->win_status === 'won') {
-                $betsQuery->where(function ($q) {
-                    $q->where('is_win_top', true)
-                        ->orWhere('is_win_bottom', true)
-                        ->orWhere('is_win_toad', true);
-                });
+                $betsQuery->where(fn($q) => $q->where('is_win_top',true)->orWhere('is_win_bottom',true)->orWhere('is_win_toad',true)->orWhere('is_win_bottom_3',true));
             } elseif ($request->win_status === 'lost') {
-                $betsQuery->where('is_win_top', false)
-                    ->where('is_win_bottom', false)
-                    ->where('is_win_toad', false);
+                $betsQuery->where('is_win_top',false)->where('is_win_bottom',false)->where('is_win_toad',false)->where('is_win_bottom_3',false);
             }
         }
 
-        // Filter ประเภทเลข
         if ($request->filled('number_type')) {
-            if ($request->number_type === '2_top') {
-                $betsQuery->whereRaw('LENGTH(number) = 2')->where('amount_top', '>', 0);
-            } elseif ($request->number_type === '2_bottom') {
-                $betsQuery->whereRaw('LENGTH(number) = 2')->where('amount_bottom', '>', 0);
-            } elseif ($request->number_type === '3_top') {
-                $betsQuery->whereRaw('LENGTH(number) = 3')->where('amount_top', '>', 0);
-            } elseif ($request->number_type === '3_toad') {
-                $betsQuery->whereRaw('LENGTH(number) = 3')->where('amount_toad', '>', 0);
-            } elseif ($request->number_type === '2_digit') {
-                $betsQuery->whereRaw('LENGTH(number) = 2');
-            } elseif ($request->number_type === '3_digit') {
-                $betsQuery->whereRaw('LENGTH(number) = 3');
+            switch ($request->number_type) {
+                case '2_top':    $betsQuery->whereRaw('LENGTH(number)=2')->where('amount_top','>',0); break;
+                case '2_bottom': $betsQuery->whereRaw('LENGTH(number)=2')->where('amount_bottom','>',0); break;
+                case '3_top':    $betsQuery->whereRaw('LENGTH(number)=3')->where('amount_top','>',0); break;
+                case '3_toad':   $betsQuery->whereRaw('LENGTH(number)=3')->where('amount_toad','>',0); break;
+                case '3_bottom': $betsQuery->whereRaw('LENGTH(number)=3')->where('amount_bottom_3','>',0); break;
+                case '2_digit':  $betsQuery->whereRaw('LENGTH(number)=2'); break;
+                case '3_digit':  $betsQuery->whereRaw('LENGTH(number)=3'); break;
             }
         }
 
-        // Sort
-        $sortBy = $request->get('sort_by', 'created_at');
-        $sortDirection = $request->get('sort_direction', 'desc');
-
-        $allowedSorts = ['created_at', 'customer_name', 'number', 'amount_top', 'amount_bottom', 'amount_toad'];
-        if (in_array($sortBy, $allowedSorts)) {
-            $betsQuery->orderBy($sortBy, $sortDirection);
-        }
+        $sortBy  = $request->get('sort_by', 'created_at');
+        $sortDir = $request->get('sort_direction', 'desc');
+        $allowed = ['created_at','customer_name','number','amount_top','amount_bottom','amount_toad','amount_bottom_3'];
+        if (in_array($sortBy, $allowed)) $betsQuery->orderBy($sortBy, $sortDir);
 
         $betsHistory = $betsQuery->paginate(50);
 
         return view('admin.reports.summary', compact(
-            'draw',
-            'totalTransactions',
-            'sales',
-            'totalSales',
-            'commission',
-            'result',
-            'twoTopHeatmapData',
-            'twoBottomHeatmapData',
-            'threeTopHeatmapData',
-            'threeToadHeatmapData',
-            'maxTwoTop',
-            'maxTwoBottom',
-            'maxThreeTop',
-            'maxThreeToad',
-            'twoDigitHeatmapData',
-            'threeDigitHeatmapData',
-            'maxTwoDigit',
-            'maxThreeDigit',
-            'topTwoTopExposure',
-            'topTwoBottomExposure',
-            'topThreeTopExposure',
-            'topThreeToadExposure',
-            'topTwoDigitExposure',
-            'topThreeDigitExposure',
-            'overLimit2Top',
-            'overLimit2Bottom',
-            'overLimit3Top',
-            'overLimit3Toad',
-            'betsHistory',
-            'customerSummary',
-            'customerNames',
-            'settings'
+            'draw','totalTransactions','sales','totalSales','commission','result',
+            'twoTopHeatmapData','twoBottomHeatmapData','threeTopHeatmapData',
+            'threeToadHeatmapData','threeBottomHeatmapData',
+            'maxTwoTop','maxTwoBottom','maxThreeTop','maxThreeToad','maxThreeBottom',
+            'twoDigitHeatmapData','threeDigitHeatmapData','maxTwoDigit','maxThreeDigit',
+            'topTwoTopExposure','topTwoBottomExposure','topThreeTopExposure',
+            'topThreeToadExposure','topThreeBottomExposure',
+            'topTwoDigitExposure','topThreeDigitExposure',
+            'overLimit2Top','overLimit2Bottom','overLimit3Top','overLimit3Toad','overLimit3Bottom',
+            'betsHistory','customerSummary','customerNames','settings'
         ));
     }
+
+    // ── Liability Calculators ──
 
     private function calculateTwoTopLiability($bets, $settings)
     {
         $liability = [];
-        for ($i = 0; $i <= 99; $i++) {
-            $number = str_pad($i, 2, '0', STR_PAD_LEFT);
-            $liability[$number] = ['liability' => 0, 'bet_count' => 0, 'total_amount' => 0];
-        }
+        for ($i=0;$i<=99;$i++) { $n=str_pad($i,2,'0',STR_PAD_LEFT); $liability[$n]=['liability'=>0,'bet_count'=>0,'total_amount'=>0]; }
         foreach ($bets as $bet) {
-            if (strlen($bet->number) === 2 && $bet->amount_top > 0) {
-                $num = $bet->number;
-                $liability[$num]['liability'] += $bet->amount_top * $settings['rate_2_top'];
-                $liability[$num]['total_amount'] += $bet->amount_top;
-                $liability[$num]['bet_count']++;
+            if (strlen($bet->number)===2 && $bet->amount_top>0) {
+                $n=$bet->number;
+                $liability[$n]['liability']    += $bet->amount_top*$settings['rate_2_top'];
+                $liability[$n]['total_amount'] += $bet->amount_top;
+                $liability[$n]['bet_count']++;
             }
         }
         return $liability;
@@ -294,16 +215,13 @@ class ReportController extends Controller
     private function calculateTwoBottomLiability($bets, $settings)
     {
         $liability = [];
-        for ($i = 0; $i <= 99; $i++) {
-            $number = str_pad($i, 2, '0', STR_PAD_LEFT);
-            $liability[$number] = ['liability' => 0, 'bet_count' => 0, 'total_amount' => 0];
-        }
+        for ($i=0;$i<=99;$i++) { $n=str_pad($i,2,'0',STR_PAD_LEFT); $liability[$n]=['liability'=>0,'bet_count'=>0,'total_amount'=>0]; }
         foreach ($bets as $bet) {
-            if (strlen($bet->number) === 2 && $bet->amount_bottom > 0) {
-                $num = $bet->number;
-                $liability[$num]['liability'] += $bet->amount_bottom * $settings['rate_2_bottom'];
-                $liability[$num]['total_amount'] += $bet->amount_bottom;
-                $liability[$num]['bet_count']++;
+            if (strlen($bet->number)===2 && $bet->amount_bottom>0) {
+                $n=$bet->number;
+                $liability[$n]['liability']    += $bet->amount_bottom*$settings['rate_2_bottom'];
+                $liability[$n]['total_amount'] += $bet->amount_bottom;
+                $liability[$n]['bet_count']++;
             }
         }
         return $liability;
@@ -312,55 +230,60 @@ class ReportController extends Controller
     private function calculateThreeTopLiability($bets, $settings)
     {
         $liability = [];
-        for ($i = 0; $i <= 999; $i++) {
-            $number = str_pad($i, 3, '0', STR_PAD_LEFT);
-            $liability[$number] = ['liability' => 0, 'bet_count' => 0, 'total_amount' => 0];
-        }
+        for ($i=0;$i<=999;$i++) { $n=str_pad($i,3,'0',STR_PAD_LEFT); $liability[$n]=['liability'=>0,'bet_count'=>0,'total_amount'=>0]; }
         foreach ($bets as $bet) {
-            if (strlen($bet->number) === 3 && $bet->amount_top > 0) {
-                $num = $bet->number;
-                $liability[$num]['liability'] += $bet->amount_top * $settings['rate_3_top'];
-                $liability[$num]['total_amount'] += $bet->amount_top;
-                $liability[$num]['bet_count']++;
+            if (strlen($bet->number)===3 && $bet->amount_top>0) {
+                $n=$bet->number;
+                $liability[$n]['liability']    += $bet->amount_top*$settings['rate_3_top'];
+                $liability[$n]['total_amount'] += $bet->amount_top;
+                $liability[$n]['bet_count']++;
             }
         }
         return $liability;
     }
 
-private function calculateThreeToadLiability($bets, $settings)
-{
-    $liability = [];
-    for ($i = 0; $i <= 999; $i++) {
-        $number = str_pad($i, 3, '0', STR_PAD_LEFT);
-        $liability[$number] = ['liability' => 0, 'bet_count' => 0, 'total_amount' => 0];
-    }
-    foreach ($bets as $bet) {
-        if (strlen($bet->number) === 3 && $bet->amount_toad > 0) {
-            $toadNumbers = $this->getToadNumbers($bet->number);
- 
-            // liability กระจายทุก permutation (ถูกต้อง)
-            // เช่น ถ้าออก 852 → ผู้แทงโต๊ด 258/285/528/582/825 ถูกหมด
-            foreach ($toadNumbers as $toadNum) {
-                $liability[$toadNum]['liability'] += $bet->amount_toad * $settings['rate_3_toad'];
+    private function calculateThreeToadLiability($bets, $settings)
+    {
+        $liability = [];
+        for ($i=0;$i<=999;$i++) { $n=str_pad($i,3,'0',STR_PAD_LEFT); $liability[$n]=['liability'=>0,'bet_count'=>0,'total_amount'=>0]; }
+        foreach ($bets as $bet) {
+            if (strlen($bet->number)===3 && $bet->amount_toad>0) {
+                $toadNumbers = $this->getToadNumbers($bet->number);
+                // LIABILITY spread ไปทุก permutation (โต๊ดจ่ายถ้าผลตรงกับ perm ใดก็ได้)
+                foreach ($toadNumbers as $tn) {
+                    $liability[$tn]['liability'] += $bet->amount_toad * $settings['rate_3_toad'];
+                }
+                // bet_count และ total_amount นับเฉพาะเลขที่แทงตรง (ไม่ spread)
+                // เพื่อให้แต่ละ perm แสดงว่ามีคนแทงเลขนั้นตรงๆ กี่ใบ/เท่าไหร่
+                $liability[$bet->number]['total_amount'] += $bet->amount_toad;
+                $liability[$bet->number]['bet_count']++;
             }
- 
-            // total_amount + bet_count นับเฉพาะเลขที่แทงโดยตรง (ไม่กระจาย)
-            // 258(550) 285(100) 528(60) 582(425) 825(70) ← ยอดซื้อแยกถูกต้อง
-            // 852(0) ← ไม่มีคนแทงตรง แต่ยังมี liability จาก permutation
-            $liability[$bet->number]['total_amount'] += $bet->amount_toad;
-            $liability[$bet->number]['bet_count']++;
         }
+        return $liability;
     }
-    return $liability;
-}
+
+    private function calculateThreeBottomLiability($bets, $settings)
+    {
+        $liability = [];
+        for ($i=0;$i<=999;$i++) { $n=str_pad($i,3,'0',STR_PAD_LEFT); $liability[$n]=['liability'=>0,'bet_count'=>0,'total_amount'=>0]; }
+        foreach ($bets as $bet) {
+            if (strlen($bet->number)===3 && ($bet->amount_bottom_3??0)>0) {
+                $n=$bet->number;
+                $liability[$n]['liability']    += $bet->amount_bottom_3 * $settings['rate_3_bottom'];
+                $liability[$n]['total_amount'] += $bet->amount_bottom_3;
+                $liability[$n]['bet_count']++;
+            }
+        }
+        return $liability;
+    }
 
     private function mergeTwoLiability($top, $bottom)
     {
         $merged = $top;
-        foreach ($bottom as $num => $data) {
-            $merged[$num]['liability'] += $data['liability'];
-            $merged[$num]['total_amount'] += $data['total_amount'];
-            $merged[$num]['bet_count'] += $data['bet_count'];
+        foreach ($bottom as $n => $d) {
+            $merged[$n]['liability']    += $d['liability'];
+            $merged[$n]['total_amount'] += $d['total_amount'];
+            $merged[$n]['bet_count']    += $d['bet_count'];
         }
         return $merged;
     }
@@ -368,609 +291,454 @@ private function calculateThreeToadLiability($bets, $settings)
     private function mergeThreeLiability($top, $toad)
     {
         $merged = $top;
-        foreach ($toad as $num => $data) {
-            $merged[$num]['liability'] += $data['liability'];
-            $merged[$num]['total_amount'] += $data['total_amount'];
-            $merged[$num]['bet_count'] += $data['bet_count'];
+        foreach ($toad as $n => $d) {
+            $merged[$n]['liability']    += $d['liability'];
+            $merged[$n]['total_amount'] += $d['total_amount'];
+            $merged[$n]['bet_count']    += $d['bet_count'];
         }
         return $merged;
     }
 
-    /**
-     * ลบรายการแทง (เฉพาะงวดที่ยังไม่ประกาศผล)
-     */
+    private function prepareHeatmapData($liability, $digits)
+    {
+        $data = [];
+        if ($digits === 2) {
+            for ($y=0;$y<10;$y++) for ($x=0;$x<10;$x++) {
+                $n = str_pad($y*10+$x,2,'0',STR_PAD_LEFT);
+                $data[] = [$x,$y,round($liability[$n]['liability'],2),$liability[$n]['bet_count'],$liability[$n]['total_amount']];
+            }
+        } else {
+            for ($y=0;$y<25;$y++) for ($x=0;$x<40;$x++) {
+                $idx = $y*40+$x;
+                if ($idx<=999) {
+                    $n = str_pad($idx,3,'0',STR_PAD_LEFT);
+                    $data[] = [$x,$y,round($liability[$n]['liability'],2),$liability[$n]['bet_count'],$liability[$n]['total_amount']];
+                }
+            }
+        }
+        return $data;
+    }
+
+    private function getTopExposure($liability, $limit, $maxPayout)
+    {
+        uasort($liability, fn($a,$b) => $b['liability']-$a['liability']);
+        $top    = array_slice($liability, 0, $limit, true);
+        $result = [];
+        foreach ($top as $number => $data) {
+            $pct      = ($data['liability'] / $maxPayout) * 100;
+            $result[] = [
+                'number'          => $number,
+                'liability'       => $data['liability'],
+                'bet_count'       => $data['bet_count'],
+                'total_amount'    => $data['total_amount'],
+                'percentage'      => $pct,
+                'status'          => $this->getExposureStatus($pct),
+                'should_transfer' => $pct >= 100,
+            ];
+        }
+        return $result;
+    }
+
+    private function getExposureStatus($pct)
+    {
+        if ($pct >= 100) return 'critical';
+        if ($pct >= 50)  return 'warning';
+        return 'safe';
+    }
+
+    // ── Delete Bet ──
     public function deleteBet(Request $request, $betId)
     {
-        // ตรวจสอบรหัสลบ
         $deleteCode = Setting::get('delete_code', '');
+        if (empty($deleteCode)) return response()->json(['success'=>false,'message'=>'กรุณาตั้งรหัสลบก่อนใช้งาน'],400);
 
-        if (empty($deleteCode)) {
-            return response()->json([
-                'success' => false,
-                'message' => 'กรุณาตั้งรหัสลบในหน้าตั้งค่าความเสี่ยงก่อนใช้งาน'
-            ], 400);
-        }
+        $request->validate(['delete_code'=>'required|digits:6'],['delete_code.required'=>'กรุณากรอกรหัสลบ','delete_code.digits'=>'รหัสลบต้องเป็นตัวเลข 6 หลัก']);
+        if ($request->delete_code !== $deleteCode) return response()->json(['success'=>false,'message'=>'รหัสลบไม่ถูกต้อง'],403);
 
-        $request->validate([
-            'delete_code' => 'required|digits:6'
-        ], [
-            'delete_code.required' => 'กรุณากรอกรหัสลบ',
-            'delete_code.digits' => 'รหัสลบต้องเป็นตัวเลข 6 หลัก'
-        ]);
-
-        if ($request->delete_code !== $deleteCode) {
-            return response()->json([
-                'success' => false,
-                'message' => 'รหัสลบไม่ถูกต้อง กรุณาลองใหม่อีกครั้ง'
-            ], 403);
-        }
-
-        $bet = LotteryBet::findOrFail($betId);
-
-        // ตรวจสอบว่างวดยังไม่ประกาศผล
+        $bet  = LotteryBet::findOrFail($betId);
         $draw = LotteryDraw::where('draw_date', $bet->draw_date)->first();
+        if ($draw && $draw->is_announced) return response()->json(['success'=>false,'message'=>'ไม่สามารถลบได้ เนื่องจากงวดนี้ประกาศผลแล้ว'],403);
 
-        if ($draw && $draw->is_announced) {
-            return response()->json([
-                'success' => false,
-                'message' => 'ไม่สามารถลบได้ เนื่องจากงวดนี้ประกาศผลแล้ว'
-            ], 403);
-        }
-
-        // Soft delete พร้อมบันทึกผู้ลบและเวลา
         $bet->deleted_at = now();
         $bet->deleted_by = Auth::id();
         $bet->save();
-
-        return response()->json([
-            'success' => true,
-            'message' => 'ลบรายการเรียบร้อยแล้ว'
-        ]);
+        return response()->json(['success'=>true,'message'=>'ลบรายการเรียบร้อยแล้ว']);
     }
 
+    // ── Customer Summary ──
     private function getCustomerSummary($bets, $commissionRate)
     {
         $summary = [];
-
         foreach ($bets as $bet) {
             $customer = $bet->customer_name;
-
             if (!isset($summary[$customer])) {
                 $summary[$customer] = [
-                    'customer_name' => $customer,
-                    'total_bet_before_discount' => 0,
-                    'discount' => 0,
+                    'customer_name'            => $customer,
+                    'total_bet_before_discount'=> 0,
+                    'discount'                 => 0,
                     'total_bet_after_discount' => 0,
-                    'total_payout' => 0,
-                    'net_amount' => 0,
-                    'winning_numbers' => [],
-                    'created_by' => $bet->creator ? $bet->creator->name : 'ระบบ',
-                    'created_at' => $bet->created_at,
+                    'total_payout'             => 0,
+                    'net_amount'               => 0,
+                    'winning_numbers'          => [],
+                    'created_by'               => $bet->creator ? $bet->creator->name : 'ระบบ',
+                    'created_at'               => $bet->created_at,
                 ];
             }
-
-            $betAmount = $bet->amount_top + $bet->amount_bottom + $bet->amount_toad;
+            $betAmount = $bet->amount_top + $bet->amount_bottom + $bet->amount_toad + ($bet->amount_bottom_3??0);
             $summary[$customer]['total_bet_before_discount'] += $betAmount;
 
-            $payout = $bet->payout_top + $bet->payout_bottom + $bet->payout_toad;
+            $payout = $bet->payout_top + $bet->payout_bottom + $bet->payout_toad + ($bet->payout_bottom_3??0);
             $summary[$customer]['total_payout'] += $payout;
 
-            if ($bet->is_win_top || $bet->is_win_bottom || $bet->is_win_toad) {
-                // คำนวณยอดแทงและยอดจ่ายเฉพาะประเภทที่ถูกรางวัลจริง
-                $winBetAmount = 0;
-                $winPayout = 0;
-                if ($bet->is_win_top) {
-                    $winBetAmount += $bet->amount_top;
-                    $winPayout += $bet->payout_top;
-                }
-                if ($bet->is_win_bottom) {
-                    $winBetAmount += $bet->amount_bottom;
-                    $winPayout += $bet->payout_bottom;
-                }
-                if ($bet->is_win_toad) {
-                    $winBetAmount += $bet->amount_toad;
-                    $winPayout += $bet->payout_toad;
-                }
-
+            if ($bet->is_win_top || $bet->is_win_bottom || $bet->is_win_toad || ($bet->is_win_bottom_3??false)) {
+                $winBetAmount = 0; $winPayout = 0;
+                if ($bet->is_win_top)                      { $winBetAmount += $bet->amount_top;      $winPayout += $bet->payout_top; }
+                if ($bet->is_win_bottom)                   { $winBetAmount += $bet->amount_bottom;   $winPayout += $bet->payout_bottom; }
+                if ($bet->is_win_toad)                     { $winBetAmount += $bet->amount_toad;     $winPayout += $bet->payout_toad; }
+                if ($bet->is_win_bottom_3??false)          { $winBetAmount += $bet->amount_bottom_3; $winPayout += $bet->payout_bottom_3; }
                 $summary[$customer]['winning_numbers'][] = [
-                    'number' => $bet->number,
-                    'win_type' => $this->getWinType($bet),
+                    'number'     => $bet->number,
+                    'win_type'   => $this->getWinType($bet),
                     'bet_amount' => $winBetAmount,
-                    'payout' => $winPayout,
+                    'payout'     => $winPayout,
                 ];
             }
         }
-
         foreach ($summary as $customer => &$data) {
-            $data['discount'] = $data['total_bet_before_discount'] * ($commissionRate / 100);
+            $data['discount']                 = $data['total_bet_before_discount'] * ($commissionRate / 100);
             $data['total_bet_after_discount'] = $data['total_bet_before_discount'] - $data['discount'];
-            $data['net_amount'] = $data['total_bet_after_discount'] - $data['total_payout'];
+            $data['net_amount']               = $data['total_bet_after_discount'] - $data['total_payout'];
         }
-
-        uasort($summary, function ($a, $b) {
-            return $b['total_payout'] - $a['total_payout'];
-        });
-
+        uasort($summary, fn($a,$b) => $b['total_payout'] - $a['total_payout']);
         return $summary;
     }
 
     private function getWinType($bet)
     {
         $types = [];
-        if ($bet->is_win_top) {
-            $types[] = strlen($bet->number) === 2 ? '2 ตัวบน' : '3 ตัวตรง';
-        }
-        if ($bet->is_win_bottom) {
-            $types[] = '2 ตัวล่าง';
-        }
-        if ($bet->is_win_toad) {
-            $types[] = '3 ตัวโต๊ด';
-        }
+        if ($bet->is_win_top)                  $types[] = strlen($bet->number)===2 ? '2 ตัวบน' : '3 ตัวตรง';
+        if ($bet->is_win_bottom)               $types[] = '2 ตัวล่าง';
+        if ($bet->is_win_toad)                 $types[] = '3 ตัวโต๊ด';
+        if ($bet->is_win_bottom_3??false)      $types[] = '3 ตัวล่าง';
         return implode(', ', $types);
     }
 
-    /**
-     * คำนวณ Liability 2 ตัว - แก้ไขให้นับจำนวนใบถูกต้อง
-     */
-    private function calculateTwoDigitLiability($bets, $settings)
-    {
-        $liability = [];
-
-        for ($i = 0; $i <= 99; $i++) {
-            $number = str_pad($i, 2, '0', STR_PAD_LEFT);
-            $liability[$number] = [
-                'liability' => 0,
-                'bet_count' => 0,
-                'total_amount' => 0
-            ];
-        }
-
-        // นับจำนวนใบจริง (แยกนับ top และ bottom)
-        $betCounts = [];
-        foreach ($bets as $bet) {
-            if (strlen($bet->number) === 2) {
-                $num = $bet->number;
-
-                if (!isset($betCounts[$num])) {
-                    $betCounts[$num] = 0;
-                }
-
-                // นับ 1 ใบต่อ 1 bet record (ไม่ว่าจะแทงบน ล่าง หรือทั้งคู่)
-                $betCounts[$num]++;
-
-                if ($bet->amount_top > 0) {
-                    $liability[$num]['liability'] += $bet->amount_top * $settings['rate_2_top'];
-                    $liability[$num]['total_amount'] += $bet->amount_top;
-                }
-
-                if ($bet->amount_bottom > 0) {
-                    $liability[$num]['liability'] += $bet->amount_bottom * $settings['rate_2_bottom'];
-                    $liability[$num]['total_amount'] += $bet->amount_bottom;
-                }
-            }
-        }
-
-        // อัพเดทจำนวนใบ
-        foreach ($betCounts as $num => $count) {
-            $liability[$num]['bet_count'] = $count;
-            // echo $count;
-        }
-
-        return $liability;
-    }
-
-    /**
-     * คำนวณ Liability 3 ตัว - แก้ไขให้นับจำนวนใบถูกต้อง
-     */
-    private function calculateThreeDigitLiability($bets, $settings)
-    {
-        $liability = [];
-
-        for ($i = 0; $i <= 999; $i++) {
-            $number = str_pad($i, 3, '0', STR_PAD_LEFT);
-            $liability[$number] = [
-                'liability' => 0,
-                'bet_count' => 0,
-                'total_amount' => 0
-            ];
-        }
-
-        // นับจำนวนใบจริง
-        $betCounts = [];
-        foreach ($bets as $bet) {
-            if (strlen($bet->number) === 3) {
-                $num = $bet->number;
-
-                // นับใบสำหรับเลขหลัก
-                if (!isset($betCounts[$num])) {
-                    $betCounts[$num] = 0;
-                }
-                $betCounts[$num]++;
-
-                // 3 ตัวตรง
-                if ($bet->amount_top > 0) {
-                    $liability[$num]['liability'] += $bet->amount_top * $settings['rate_3_top'];
-                    $liability[$num]['total_amount'] += $bet->amount_top;
-                }
-
-                // 3 ตัวโต๊ด - กระจายไปยังเลขโต๊ด
-                if ($bet->amount_toad > 0) {
-                    $toadNumbers = $this->getToadNumbers($num);
-                    foreach ($toadNumbers as $toadNum) {
-                        $liability[$toadNum]['liability'] += $bet->amount_toad * $settings['rate_3_toad'];
-                        $liability[$toadNum]['total_amount'] += $bet->amount_toad;
-
-                        // นับใบสำหรับโต๊ด
-                        if (!isset($betCounts[$toadNum])) {
-                            $betCounts[$toadNum] = 0;
-                        }
-                        $betCounts[$toadNum]++;
-                    }
-                }
-            }
-        }
-
-        // อัพเดทจำนวนใบ
-        foreach ($betCounts as $num => $count) {
-            $liability[$num]['bet_count'] = $count;
-        }
-
-        return $liability;
-    }
-
+    // ── Toad helpers ──
     private function getToadNumbers($number)
     {
         $digits = str_split($number);
-        $permutations = [];
-        $this->generatePermutations($digits, 0, count($digits) - 1, $permutations);
-
-        return array_unique(array_map(function ($perm) {
-            return implode('', $perm);
-        }, $permutations));
+        $perms  = [];
+        $this->generatePermutations($digits, 0, count($digits)-1, $perms);
+        return array_unique(array_map(fn($p) => implode('',$p), $perms));
     }
 
     private function generatePermutations(&$arr, $left, $right, &$result)
     {
-        if ($left == $right) {
-            $result[] = $arr;
-        } else {
-            for ($i = $left; $i <= $right; $i++) {
-                $temp = $arr[$left];
-                $arr[$left] = $arr[$i];
-                $arr[$i] = $temp;
-
-                $this->generatePermutations($arr, $left + 1, $right, $result);
-
-                $temp = $arr[$left];
-                $arr[$left] = $arr[$i];
-                $arr[$i] = $temp;
-            }
+        if ($left == $right) { $result[] = $arr; return; }
+        for ($i=$left;$i<=$right;$i++) {
+            [$arr[$left],$arr[$i]] = [$arr[$i],$arr[$left]];
+            $this->generatePermutations($arr,$left+1,$right,$result);
+            [$arr[$left],$arr[$i]] = [$arr[$i],$arr[$left]];
         }
     }
 
-    private function prepareHeatmapData($liability, $digits)
+    // ── Legacy calculation methods (kept for backward compat) ──
+    private function calculateTwoDigitLiability($bets, $settings)
     {
-        $data = [];
-
-        if ($digits === 2) {
-            for ($y = 0; $y < 10; $y++) {
-                for ($x = 0; $x < 10; $x++) {
-                    $number = str_pad(($y * 10 + $x), 2, '0', STR_PAD_LEFT);
-                    $data[] = [
-                        $x,
-                        $y,
-                        round($liability[$number]['liability'], 2),
-                        $liability[$number]['bet_count'],
-                        $liability[$number]['total_amount'],  // index 4: ยอดแทงจริง
-                    ];
-                }
-            }
-        } else {
-            for ($y = 0; $y < 25; $y++) {
-                for ($x = 0; $x < 40; $x++) {
-                    $index = $y * 40 + $x;
-                    if ($index <= 999) {
-                        $number = str_pad($index, 3, '0', STR_PAD_LEFT);
-                        $data[] = [
-                            $x,
-                            $y,
-                            round($liability[$number]['liability'], 2),
-                            $liability[$number]['bet_count'],
-                            $liability[$number]['total_amount'],
-                        ];
-                    }
-                }
-            }
-        }
-
-        return $data;
+        $top    = $this->calculateTwoTopLiability($bets, $settings);
+        $bottom = $this->calculateTwoBottomLiability($bets, $settings);
+        return $this->mergeTwoLiability($top, $bottom);
     }
 
-    private function getTopExposure($liability, $limit, $maxPayout)
+    private function calculateThreeDigitLiability($bets, $settings)
     {
-        uasort($liability, function ($a, $b) {
-            return $b['liability'] - $a['liability'];
-        });
-
-        $top = array_slice($liability, 0, $limit, true);
-
-        $result = [];
-        foreach ($top as $number => $data) {
-            $percentage = ($data['liability'] / $maxPayout) * 100;
-
-            $result[] = [
-                'number' => $number,
-                'liability' => $data['liability'],
-                'bet_count' => $data['bet_count'],
-                'total_amount' => $data['total_amount'],
-                'percentage' => $percentage,
-                'status' => $this->getExposureStatus($percentage),
-                'should_transfer' => $percentage >= 100
-            ];
-        }
-
-        return $result;
+        $top  = $this->calculateThreeTopLiability($bets, $settings);
+        $toad = $this->calculateThreeToadLiability($bets, $settings);
+        return $this->mergeThreeLiability($top, $toad);
     }
 
-    private function getExposureStatus($percentage)
-    {
-        if ($percentage >= 100) {
-            return 'critical';
-        } elseif ($percentage >= 50) {
-            return 'warning';
-        } else {
-            return 'safe';
-        }
-    }
+    // ── Export Excel (bet history) ──
     public function exportExcel(Request $request, $drawId)
     {
-        $draw = \App\Models\LotteryDraw::findOrFail($drawId);
+        $draw  = LotteryDraw::findOrFail($drawId);
+        $query = LotteryBet::with(['creator'])->whereNull('deleted_at')->where('draw_date', $draw->draw_date);
 
-        $query = \App\Models\LotteryBet::with(['creator'])
-            ->whereNull('deleted_at')
-            ->where('draw_date', $draw->draw_date);
+        if ($request->has('customer_names') && count($request->customer_names)) $query->whereIn('customer_name', $request->customer_names);
+        if ($request->search_number) $query->where('number','like','%'.$request->search_number.'%');
+        if ($request->win_status === 'won')  $query->where(fn($q) => $q->where('is_win_top',true)->orWhere('is_win_bottom',true)->orWhere('is_win_toad',true)->orWhere('is_win_bottom_3',true));
+        if ($request->win_status === 'lost') $query->where('is_win_top',false)->where('is_win_bottom',false)->where('is_win_toad',false)->where('is_win_bottom_3',false);
+        if ($request->number_type === '2_digit')  $query->whereRaw('LENGTH(number)=2');
+        if ($request->number_type === '3_digit')  $query->whereRaw('LENGTH(number)=3');
+        if ($request->number_type === '3_bottom') $query->whereRaw('LENGTH(number)=3')->where('amount_bottom_3','>',0);
 
-        // Filter เหมือนกับ summary method
-        if ($request->has('customer_names') && count($request->customer_names)) {
-            $query->whereIn('customer_name', $request->customer_names);
-        }
-        if ($request->search_number) {
-            $query->where('number', 'like', '%' . $request->search_number . '%');
-        }
-        if ($request->win_status === 'won') {
-            $query->where(function ($q) {
-                $q->where('is_win_top', true)->orWhere('is_win_bottom', true)->orWhere('is_win_toad', true);
-            });
-        } elseif ($request->win_status === 'lost') {
-            $query->where('is_win_top', false)->where('is_win_bottom', false)->where('is_win_toad', false);
-        }
-        if ($request->number_type === '2_digit') {
-            $query->whereRaw('LENGTH(number) = 2');
-        } elseif ($request->number_type === '3_digit') {
-            $query->whereRaw('LENGTH(number) = 3');
-        }
-
-        $bets = $query->orderBy('customer_name')->orderBy('created_at')->get();
-
-        $drawDateLabel = \Carbon\Carbon::parse($draw->draw_date)->format('d/m/Y');
-        $rows = [];
-        $rows[] = ['ชื่อลูกค้า', 'เลข', 'บน', 'ล่าง', 'โต๊ด', 'รวม (฿)', 'บันทึกโดย', 'วันที่บันทึก', 'ผล'];
+        $bets  = $query->orderBy('customer_name')->orderBy('created_at')->get();
+        $rows  = [];
+        $rows[] = ['ชื่อลูกค้า','เลข','บน','ล่าง','โต๊ด','3ตัวล่าง','รวม (฿)','บันทึกโดย','วันที่บันทึก','ผล'];
 
         foreach ($bets as $bet) {
-            $total = $bet->amount_top + $bet->amount_bottom + $bet->amount_toad;
-            $createdAt = \Carbon\Carbon::parse($bet->created_at)->format('d/m/y H:i');
-            $createdBy = $bet->creator ? $bet->creator->name : '-';
+            $total   = $bet->total_amount;
+            $created = \Carbon\Carbon::parse($bet->created_at)->format('d/m/y H:i');
+            $creator = $bet->creator ? $bet->creator->name : '-';
 
             if ($draw->is_announced) {
-                if ($bet->is_win_top || $bet->is_win_bottom || $bet->is_win_toad) {
-                    $payout = $bet->payout_top + $bet->payout_bottom + $bet->payout_toad;
-                    $result = 'ถูก ' . number_format($payout, 0) . ' ฿';
-                } else {
-                    $result = 'ไม่ถูก';
-                }
+                $won = $bet->is_win_top||$bet->is_win_bottom||$bet->is_win_toad||($bet->is_win_bottom_3??false);
+                $pay = $bet->payout_top+$bet->payout_bottom+$bet->payout_toad+($bet->payout_bottom_3??0);
+                $res = $won ? 'ถูก '.number_format($pay,0).' ฿' : 'ไม่ถูก';
             } else {
-                $result = 'รอประกาศ';
+                $res = 'รอประกาศ';
             }
 
             $rows[] = [
                 $bet->customer_name,
                 $bet->number,
-                $bet->amount_top > 0 ? $bet->amount_top : '',
+                $bet->amount_top    > 0 ? $bet->amount_top    : '',
                 $bet->amount_bottom > 0 ? $bet->amount_bottom : '',
-                $bet->amount_toad > 0 ? $bet->amount_toad : '',
-                $total,
-                $createdBy,
-                $createdAt,
-                $result,
+                $bet->amount_toad   > 0 ? $bet->amount_toad   : '',
+                ($bet->amount_bottom_3??0) > 0 ? $bet->amount_bottom_3 : '',
+                $total, $creator, $created, $res,
             ];
         }
 
-        $dateStr = \Carbon\Carbon::parse($draw->draw_date)->format('Y-m-d');
-        $filename = 'bets_' . $dateStr . '.csv';
-        $filenameUtf8 = rawurlencode('บัญชีแทงหวย_' . $dateStr . '.csv');
-
-        $handle = fopen('php://temp', 'r+');
-        fwrite($handle, "\xEF\xBB\xBF"); // UTF-8 BOM สำหรับ Excel
-        foreach ($rows as $row) {
-            fputcsv($handle, $row);
-        }
-        rewind($handle);
-        $csv = stream_get_contents($handle);
-        fclose($handle);
-
-        return response($csv, 200, [
-            'Content-Type' => 'text/csv; charset=UTF-8',
-            'Content-Disposition' => "attachment; filename=\"{$filename}\"; filename*=UTF-8''{$filenameUtf8}",
-        ]);
+        $dateStr     = \Carbon\Carbon::parse($draw->draw_date)->format('Y-m-d');
+        $filename    = 'bets_'.$dateStr.'.csv';
+        $filenameUtf = rawurlencode('บัญชีแทงหวย_'.$dateStr.'.csv');
+        $handle      = fopen('php://temp','r+');
+        fwrite($handle,"\xEF\xBB\xBF");
+        foreach ($rows as $r) fputcsv($handle,$r);
+        rewind($handle); $csv=stream_get_contents($handle); fclose($handle);
+        return response($csv,200,['Content-Type'=>'text/csv; charset=UTF-8','Content-Disposition'=>"attachment; filename=\"{$filename}\"; filename*=UTF-8''{$filenameUtf}"]);
     }
+
+    // ── Export Customer Summary ──
     public function exportCustomerSummary(Request $request, $drawId)
     {
-        $draw = \App\Models\LotteryDraw::findOrFail($drawId);
-        $settings = [
-            'commission_rate' => \App\Models\Setting::get('commission_rate', 10),
-        ];
-
-        $bets = \App\Models\LotteryBet::with(['creator'])
-            ->whereNull('deleted_at')
-            ->where('draw_date', $draw->draw_date)
-            ->get();
-
+        $draw     = LotteryDraw::findOrFail($drawId);
+        $settings = ['commission_rate' => Setting::get('commission_rate', 10)];
+        $bets     = LotteryBet::with(['creator'])->whereNull('deleted_at')->where('draw_date',$draw->draw_date)->get();
         $customerSummary = $this->getCustomerSummary($bets, $settings['commission_rate']);
-        $drawDateLabel = \Carbon\Carbon::parse($draw->draw_date)->format('d/m/Y');
 
-        $rows = [];
-        // Header
-        $rows[] = ['ชื่อลูกค้า', 'บันทึกโดย', 'ยอดซื้อ (฿)', 'ส่วนลด (฿)', 'หลังหัก (฿)', 'รางวัล (฿)', 'สุทธิ', 'เลขที่ถูก'];
-
+        $rows   = [];
+        $rows[] = ['ชื่อลูกค้า','บันทึกโดย','ยอดซื้อ (฿)','ส่วนลด (฿)','หลังหัก (฿)','รางวัล (฿)','สุทธิ','เลขที่ถูก'];
         foreach ($customerSummary as $s) {
-            $winningStr = '';
+            $winStr = '';
             if (!empty($s['winning_numbers'])) {
-                $parts = [];
-                foreach ($s['winning_numbers'] as $w) {
-                    $parts[] = $w['number'] . '(' . $w['win_type'] . ')=' . number_format($w['payout'], 0);
-                }
-                $winningStr = implode(', ', $parts);
+                $winStr = implode(', ', array_map(fn($w) => $w['number'].'('.$w['win_type'].')='.number_format($w['payout'],0), $s['winning_numbers']));
             }
-
-            $netLabel = $s['net_amount'] < 0
-                ? 'จ่าย ' . number_format(abs($s['net_amount']), 0)
-                : 'รับ ' . number_format($s['net_amount'], 0);
-
-            $rows[] = [
-                $s['customer_name'],
-                $s['created_by'],
-                number_format($s['total_bet_before_discount'], 0),
-                number_format($s['discount'], 0),
-                number_format($s['total_bet_after_discount'], 0),
-                number_format($s['total_payout'], 0),
-                $netLabel,
-                $winningStr,
-            ];
+            $netLabel = $s['net_amount'] < 0 ? 'จ่าย '.number_format(abs($s['net_amount']),0) : 'รับ '.number_format($s['net_amount'],0);
+            $rows[]   = [$s['customer_name'],$s['created_by'],number_format($s['total_bet_before_discount'],0),number_format($s['discount'],0),number_format($s['total_bet_after_discount'],0),number_format($s['total_payout'],0),$netLabel,$winStr];
         }
 
         $dateStr = \Carbon\Carbon::parse($draw->draw_date)->format('Y-m-d');
-        $filename = 'customer_summary_' . $dateStr . '.csv';
-        $filenameUtf8 = rawurlencode('สรุปรายบุคคล_' . $dateStr . '.csv');
-
-        $handle = fopen('php://temp', 'r+');
-        fwrite($handle, "\xEF\xBB\xBF"); // UTF-8 BOM สำหรับ Excel
-        foreach ($rows as $row) {
-            fputcsv($handle, $row);
-        }
-        rewind($handle);
-        $csv = stream_get_contents($handle);
-        fclose($handle);
-
-        return response($csv, 200, [
-            'Content-Type' => 'text/csv; charset=UTF-8',
-            'Content-Disposition' => "attachment; filename=\"{$filename}\"; filename*=UTF-8''{$filenameUtf8}",
-        ]);
+        $fn      = 'customer_summary_'.$dateStr.'.csv';
+        $fnUtf   = rawurlencode('สรุปรายบุคคล_'.$dateStr.'.csv');
+        $handle  = fopen('php://temp','r+'); fwrite($handle,"\xEF\xBB\xBF");
+        foreach ($rows as $r) fputcsv($handle,$r);
+        rewind($handle); $csv=stream_get_contents($handle); fclose($handle);
+        return response($csv,200,['Content-Type'=>'text/csv; charset=UTF-8','Content-Disposition'=>"attachment; filename=\"{$fn}\"; filename*=UTF-8''{$fnUtf}"]);
     }
 
-    /**
-     * Export เลขที่เกิน 100% ทั้ง 4 ประเภท เป็น CSV
-     */
+    // ── Export Over Limit ──
     public function exportOverLimit(Request $request, $drawId)
     {
-        $draw = \App\Models\LotteryDraw::findOrFail($drawId);
-
+        $draw = LotteryDraw::findOrFail($drawId);
         $settings = [
-            'max_payout_2_digit' => \App\Models\Setting::get('max_payout_2_digit', 50000),
-            'max_payout_3_digit' => \App\Models\Setting::get('max_payout_3_digit', 100000),
-            'max_payout_3_toad'  => \App\Models\Setting::get('max_payout_3_toad', 50000),   // ← ใหม่
-            'rate_2_top' => \App\Models\Setting::get('rate_2_top', 90),
-            'rate_2_bottom' => \App\Models\Setting::get('rate_2_bottom', 90),
-            'rate_3_top' => \App\Models\Setting::get('rate_3_top', 900),
-            'rate_3_toad' => \App\Models\Setting::get('rate_3_toad', 120),
-            'commission_rate' => \App\Models\Setting::get('commission_rate', 10),
+            'max_payout_2_digit'  => Setting::get('max_payout_2_digit', 50000),
+            'max_payout_3_digit'  => Setting::get('max_payout_3_digit', 100000),
+            'max_payout_3_toad'   => Setting::get('max_payout_3_toad', 50000),
+            'max_payout_3_bottom' => Setting::get('max_payout_3_bottom', 50000),
+            'rate_2_top'          => Setting::get('rate_2_top', 90),
+            'rate_2_bottom'       => Setting::get('rate_2_bottom', 90),
+            'rate_3_top'          => Setting::get('rate_3_top', 900),
+            'rate_3_toad'         => Setting::get('rate_3_toad', 120),
+            'rate_3_bottom'       => Setting::get('rate_3_bottom', 500),
+            'commission_rate'     => Setting::get('commission_rate', 10),
         ];
+        $bets = LotteryBet::whereNull('deleted_at')->where('draw_date',$draw->draw_date)->get();
 
-        $bets = \App\Models\LotteryBet::whereNull('deleted_at')
-            ->where('draw_date', $draw->draw_date)
-            ->get();
-
-        // คำนวณ liability แยก 4 ประเภท
-        $twoTopLiab = $this->calculateTwoTopLiability($bets, $settings);
+        $twoTopLiab    = $this->calculateTwoTopLiability($bets, $settings);
         $twoBottomLiab = $this->calculateTwoBottomLiability($bets, $settings);
-        $threeTopLiab = $this->calculateThreeTopLiability($bets, $settings);
+        $threeTopLiab  = $this->calculateThreeTopLiability($bets, $settings);
         $threeToadLiab = $this->calculateThreeToadLiability($bets, $settings);
+        $threeBottomLiab = $this->calculateThreeBottomLiability($bets, $settings);
 
-        $maxPay2 = $settings['max_payout_2_digit'];
-        $maxPay3 = $settings['max_payout_3_digit'];
-        $maxPay3Toad = $settings['max_payout_3_toad'];   // ← ใหม่
+        $maxPay2     = $settings['max_payout_2_digit'];
+        $maxPay3     = $settings['max_payout_3_digit'];
+        // โต๊ดใช้เพดาน max_payout_3_digit (ยืนยันจาก Correct CSV: เพดาน 50,000)
+        $maxPay3Toad = $settings['max_payout_3_digit'];
+        $maxPay3Bot  = $settings['max_payout_3_bottom'];
 
-        // กรองเฉพาะที่เกิน 100%
-        $filterOver = function ($liabilityArr, $maxPayout) {
+        $filterOver = function ($liab, $maxPayout) {
             $result = [];
-            foreach ($liabilityArr as $number => $data) {
-                if ($data['liability'] <= 0)
-                    continue;
+            foreach ($liab as $number => $data) {
+                if ($data['liability'] <= 0) continue;
                 $pct = ($data['liability'] / $maxPayout) * 100;
-                if ($pct >= 100) {
-                    $result[] = [
-                        'number' => $number,
-                        'bet_count' => $data['bet_count'],
-                        'total_amount' => $data['total_amount'],
-                        'liability' => round($data['liability']),
-                        'percentage' => round($pct, 2),
-                    ];
-                }
+                if ($pct >= 100) $result[] = ['number'=>$number,'bet_count'=>$data['bet_count'],'total_amount'=>$data['total_amount'],'liability'=>round($data['liability']),'percentage'=>round($pct,2)];
             }
-            usort($result, fn($a, $b) => $b['liability'] - $a['liability']);
+            usort($result, fn($a,$b) => $b['liability']-$a['liability']);
             return $result;
         };
 
-        $over2Top = $filterOver($twoTopLiab, $maxPay2);
+        $over2Top    = $filterOver($twoTopLiab, $maxPay2);
         $over2Bottom = $filterOver($twoBottomLiab, $maxPay2);
-        $over3Top = $filterOver($threeTopLiab, $maxPay3);
-        $over3Toad = $filterOver($threeToadLiab, $maxPay3);
-        $over3Toad = $filterOver($threeToadLiab, $maxPay3Toad);
+        $over3Top    = $filterOver($threeTopLiab, $maxPay3);
+        $over3Toad   = $filterOver($threeToadLiab, $maxPay3Toad);
+        $over3Bottom = $filterOver($threeBottomLiab, $maxPay3Bot);
 
-        $drawDateLabel = \Carbon\Carbon::parse($draw->draw_date)->format('d/m/Y');
-        $rows = [];
+        $dLabel = \Carbon\Carbon::parse($draw->draw_date)->format('d/m/Y');
+        $rows   = [];
 
-        // Section headers + data helper
-        $addSection = function ($title, $data, $maxPayout) use (&$rows, $drawDateLabel) {
+        $addSection = function ($title, $data, $maxPayout) use (&$rows, $dLabel) {
             $rows[] = [];
-            $rows[] = ["=== $title ===", "งวด $drawDateLabel", "เพดาน: " . number_format($maxPayout, 0) . " บาท"];
-            $rows[] = ['เลข', 'จำนวนใบ', 'ยอดซื้อ (฿)', 'ยอดจ่าย (฿)', '% ของเพดาน'];
+            $rows[] = ["=== $title ===","งวด $dLabel","เพดาน: ".number_format($maxPayout,0)." บาท"];
+            $rows[] = ['เลข','จำนวนใบ','ยอดซื้อ (฿)','ยอดจ่าย (฿)','% ของเพดาน'];
             if (empty($data)) {
-                $rows[] = ['-', '-', '-', '-', 'ไม่มีเลขเกินเพดาน'];
+                $rows[] = ['-','-','-','-','ไม่มีเลขเกินเพดาน'];
             } else {
-                foreach ($data as $item) {
-                    $rows[] = [
-                        $item['number'],
-                        $item['bet_count'],
-                        number_format($item['total_amount'], 0),
-                        number_format($item['liability'], 0),
-                        number_format($item['percentage'], 2) . '%',
-                    ];
-                }
+                foreach ($data as $item)
+                    $rows[] = [$item['number'],$item['bet_count'],number_format($item['total_amount'],0),number_format($item['liability'],0),number_format($item['percentage'],2).'%'];
             }
         };
 
-        $addSection('2 ตัวบน (เกิน 100%)', $over2Top, $maxPay2);
-        $addSection('2 ตัวล่าง (เกิน 100%)', $over2Bottom, $maxPay2);
-        $addSection('3 ตัวบน (เกิน 100%)', $over3Top, $maxPay3);
-        $addSection('3 ตัวโต๊ด (เกิน 100%)', $over3Toad, $maxPay3Toad);
-
+        $addSection('2 ตัวบน (เกิน 100%)',   $over2Top,    $maxPay2);
+        $addSection('2 ตัวล่าง (เกิน 100%)',  $over2Bottom, $maxPay2);
+        $addSection('3 ตัวบน (เกิน 100%)',   $over3Top,    $maxPay3);
+        $addSection('3 ตัวโต๊ด (เกิน 100%)',  $over3Toad,   $maxPay3Toad);
+        $addSection('3 ตัวล่าง (เกิน 100%)',  $over3Bottom, $maxPay3Bot);
 
         $dateStr = \Carbon\Carbon::parse($draw->draw_date)->format('Y-m-d');
-        $filename = 'over_limit_' . $dateStr . '.csv';
-        $filenameUtf8 = rawurlencode('เลขเกินเพดาน_' . $dateStr . '.csv');
+        $fn      = 'over_limit_'.$dateStr.'.csv';
+        $fnUtf   = rawurlencode('เลขเกินเพดาน_'.$dateStr.'.csv');
+        $handle  = fopen('php://temp','r+'); fwrite($handle,"\xEF\xBB\xBF");
+        foreach ($rows as $r) fputcsv($handle,$r);
+        rewind($handle); $csv=stream_get_contents($handle); fclose($handle);
+        return response($csv,200,['Content-Type'=>'text/csv; charset=UTF-8','Content-Disposition'=>"attachment; filename=\"{$fn}\"; filename*=UTF-8''{$fnUtf}"]);
+    }
 
-        $handle = fopen('php://temp', 'r+');
-        fwrite($handle, "\xEF\xBB\xBF"); // UTF-8 BOM
-        foreach ($rows as $row) {
-            fputcsv($handle, $row);
+    // ── [FIX #1] เพิ่ม method statistics() ที่หายไป ──
+
+    public function statistics()
+    {
+        // งวดที่ประกาศผลแล้วทั้งหมด
+        $announcedDraws = LotteryDraw::where('is_announced', true)
+            ->orderBy('draw_date', 'desc')
+            ->get();
+
+        // สร้าง pastDraws array สำหรับ view
+        $pastDraws = $announcedDraws->map(function ($draw) {
+            $bets = LotteryBet::where('draw_date', $draw->draw_date)
+                ->whereNull('deleted_at')->get();
+
+            $totalBet    = $bets->sum(fn($b) => $b->amount_top + $b->amount_bottom + $b->amount_toad + ($b->amount_bottom_3 ?? 0));
+            $totalPayout = $bets->sum(fn($b) => $b->payout_top + $b->payout_bottom + $b->payout_toad + ($b->payout_bottom_3 ?? 0));
+
+            return [
+                'id'           => $draw->id,
+                'draw_date'    => $draw->draw_date->format('Y-m-d'),
+                'result_3_top' => $draw->result_3_top,
+                'result_2_top' => $draw->result_2_top,
+                'result_2_bottom' => $draw->result_2_bottom,
+                'total_bet'    => $totalBet,
+                'total_payout' => $totalPayout,
+                'profit'       => $totalBet - $totalPayout,
+                'bet_count'    => $bets->count(),
+            ];
+        })->toArray();
+
+        // สถิติแยกตามประเภทเดิม (รวมทุกงวด)
+        $allBets = LotteryBet::whereNull('deleted_at')
+            ->whereHas('draw', fn($q) => $q->where('is_announced', true))
+            ->get();
+
+        $betTypeStats = [
+            'top'    => ['total_bet' => 0, 'total_payout' => 0],
+            'bottom' => ['total_bet' => 0, 'total_payout' => 0],
+            'toad'   => ['total_bet' => 0, 'total_payout' => 0],
+        ];
+        foreach ($allBets as $bet) {
+            $betTypeStats['top']['total_bet']       += $bet->amount_top;
+            $betTypeStats['top']['total_payout']    += $bet->payout_top;
+            $betTypeStats['bottom']['total_bet']    += $bet->amount_bottom;
+            $betTypeStats['bottom']['total_payout'] += $bet->payout_bottom;
+            $betTypeStats['toad']['total_bet']      += $bet->amount_toad;
+            $betTypeStats['toad']['total_payout']   += $bet->payout_toad;
         }
-        rewind($handle);
-        $csv = stream_get_contents($handle);
-        fclose($handle);
 
-        return response($csv, 200, [
-            'Content-Type' => 'text/csv; charset=UTF-8',
-            'Content-Disposition' => "attachment; filename=\"{$filename}\"; filename*=UTF-8''{$filenameUtf8}",
+        // เลขผลที่ออกบ่อย (result_3_top และ result_2_top)
+        $numberFreq = [];
+        foreach ($announcedDraws as $draw) {
+            foreach ([$draw->result_3_top, $draw->result_2_top, $draw->result_2_bottom] as $num) {
+                if ($num) $numberFreq[$num] = ($numberFreq[$num] ?? 0) + 1;
+            }
+        }
+        arsort($numberFreq);
+        $frequentNumbers = array_slice(
+            array_map(fn($n, $c) => ['number' => $n, 'count' => $c], array_keys($numberFreq), $numberFreq),
+            0, 10
+        );
+
+        // 10 งวดล่าสุดสำหรับ chart
+        $recentDraws = collect(array_slice($pastDraws, 0, 10))->map(fn($d) => [
+            'date'         => \Carbon\Carbon::parse($d['draw_date'])->format('d/m'),
+            'total_bet'    => $d['total_bet'],
+            'total_payout' => $d['total_payout'],
+            'profit'       => $d['profit'],
         ]);
+
+        // สถิติรายเดือน
+        $monthlyStats = collect($pastDraws)->groupBy(fn($d) => \Carbon\Carbon::parse($d['draw_date'])->format('Y-m'))
+            ->map(fn($group, $month) => [
+                'month'        => \Carbon\Carbon::parse($month . '-01')->locale('th')->translatedFormat('M Y'),
+                'total_bet'    => collect($group)->sum('total_bet'),
+                'total_payout' => collect($group)->sum('total_payout'),
+                'profit'       => collect($group)->sum('profit'),
+            ])->values();
+
+        return view('admin.reports.statistics', compact(
+            'pastDraws', 'betTypeStats', 'frequentNumbers', 'recentDraws', 'monthlyStats'
+        ));
+    }
+
+    // ── [FIX #1] เพิ่ม method exportPDF() ที่หายไป ──
+
+    public function exportPDF($drawId)
+    {
+        $draw = LotteryDraw::with([
+            'bets' => fn($q) => $q->whereNull('deleted_at')->with('creator')->orderBy('customer_name')
+        ])->findOrFail($drawId);
+
+        $bets = $draw->bets;
+
+        $totalBetAmount = $bets->sum(fn($b) => $b->amount_top + $b->amount_bottom + $b->amount_toad + ($b->amount_bottom_3 ?? 0));
+        $totalPayout    = $bets->sum(fn($b) => $b->payout_top + $b->payout_bottom + $b->payout_toad + ($b->payout_bottom_3 ?? 0));
+        $profit         = $totalBetAmount - $totalPayout;
+
+        // จัดกลุ่ม winners ตามลูกค้า
+        $winnerMap = [];
+        foreach ($bets as $bet) {
+            if (!($bet->is_win_top || $bet->is_win_bottom || $bet->is_win_toad || ($bet->is_win_bottom_3 ?? false))) {
+                continue;
+            }
+            $customer = $bet->customer_name;
+            if (!isset($winnerMap[$customer])) {
+                $winnerMap[$customer] = [
+                    'customer_name' => $customer,
+                    'total_bet'     => 0,
+                    'total_win'     => 0,
+                    'details'       => [],
+                ];
+            }
+            $winnerMap[$customer]['total_bet'] += $bet->amount_top + $bet->amount_bottom + $bet->amount_toad + ($bet->amount_bottom_3 ?? 0);
+            $winnerMap[$customer]['total_win'] += $bet->payout_top + $bet->payout_bottom + $bet->payout_toad + ($bet->payout_bottom_3 ?? 0);
+            $winnerMap[$customer]['details'][]  = $bet;
+        }
+
+        foreach ($winnerMap as $customer => &$data) {
+            $data['net'] = $data['total_bet'] - $data['total_win'];
+        }
+        unset($data);
+
+        $winners = collect(array_values($winnerMap));
+
+        return view('admin.reports.pdf', compact('draw', 'totalBetAmount', 'totalPayout', 'profit', 'winners'));
     }
 }

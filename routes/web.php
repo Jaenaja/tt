@@ -24,6 +24,9 @@ Route::middleware(['auth'])->group(function () {
     // API สำหรับดึงงวดที่เปิดรับแทง
     Route::get('/api/open-draws', [DashboardController::class, 'getOpenDraws'])->name('api.open-draws');
 
+    // [FIX #7] เพิ่ม route สำหรับ realtimeSales ที่มี method แต่ขาด route
+    Route::get('/api/realtime-sales', [DashboardController::class, 'realtimeSales'])->name('api.realtime-sales');
+
     // Lottery Bets (General + Admin)
     Route::prefix('bets')->name('bets.')->group(function () {
         Route::get('/', [LotteryBetController::class, 'index'])->name('index');
@@ -42,11 +45,11 @@ Route::middleware(['auth'])->group(function () {
         Route::put('/users/{id}', [AdminController::class, 'updateUser'])->name('users.update');
         Route::delete('/users/{id}', [AdminController::class, 'deleteUser'])->name('users.delete');
 
-        // Config Management (เก่า - อาจลบทิ้งได้)
+        // Config Management
         Route::get('/config', [AdminController::class, 'config'])->name('config');
         Route::post('/config', [AdminController::class, 'updateConfig'])->name('config.update');
 
-        // Risk Settings (ใหม่ - แทนที่ Config)
+        // Risk Settings
         Route::get('/risk-settings', [RiskSettingsController::class, 'index'])->name('risk-settings');
         Route::put('/risk-settings', [RiskSettingsController::class, 'update'])->name('risk-settings.update');
 
@@ -59,15 +62,15 @@ Route::middleware(['auth'])->group(function () {
         Route::prefix('reports')->name('reports.')->group(function () {
             Route::get('/', [ReportController::class, 'index'])->name('index');
             Route::get('/summary/{drawId}', [ReportController::class, 'summary'])->name('summary');
+            // [FIX #1] เพิ่ม 2 routes ที่มีอยู่ใน web.php เดิม แต่ไม่มี method ใน controller
             Route::get('/pdf/{drawId}', [ReportController::class, 'exportPDF'])->name('pdf');
             Route::get('/statistics', [ReportController::class, 'statistics'])->name('statistics');
-            // เพิ่ม Route สำหรับลบ Bet (เฉพาะงวดที่ยังไม่ประกาศผล)
+            // ลบ Bet (เฉพาะงวดที่ยังไม่ประกาศผล)
+            // [FIX #2] ลบ Route ซ้ำ '/admin/reports/bets/{betId}' ที่ทำให้ URL = /admin/admin/reports/bets/{id}
             Route::delete('/bets/{betId}', [ReportController::class, 'deleteBet'])->name('bets.delete');
             Route::get('/export-excel/{drawId}', [ReportController::class, 'exportExcel'])->name('export-excel');
             Route::get('/export-customer-summary/{drawId}', [ReportController::class, 'exportCustomerSummary'])->name('export-customer-summary');
             Route::get('/export-over-limit/{drawId}', [ReportController::class, 'exportOverLimit'])->name('export-over-limit');
-            Route::delete('/admin/reports/bets/{betId}', [ReportController::class, 'deleteBet'])
-                ->name('admin.reports.bets.delete');
         });
     });
 });

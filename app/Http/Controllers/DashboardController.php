@@ -21,11 +21,14 @@ class DashboardController extends Controller
             ->whereNull('deleted_at');
 
         $todayStats = [
-            'total_bets' => $todayBets->count(),
-            'total_amount' => $todayBets->sum(DB::raw('amount_top + amount_bottom + amount_toad')),
-            'total_top' => $todayBets->sum('amount_top'),
+            'total_bets'   => $todayBets->count(),
+            // [FIX #3] เพิ่ม COALESCE(amount_bottom_3, 0) เข้าไปในสูตรคำนวณ total_amount
+            'total_amount' => $todayBets->sum(DB::raw('amount_top + amount_bottom + amount_toad + COALESCE(amount_bottom_3, 0)')),
+            'total_top'    => $todayBets->sum('amount_top'),
             'total_bottom' => $todayBets->sum('amount_bottom'),
-            'total_toad' => $todayBets->sum('amount_toad'),
+            'total_toad'   => $todayBets->sum('amount_toad'),
+            // [FIX #3] เพิ่ม total_bottom_3 แยกต่างหากเพื่อให้ Dashboard แสดงครบ
+            'total_bottom_3' => $todayBets->sum('amount_bottom_3'),
         ];
 
         // งวดล่าสุดที่ยังไม่ประกาศผล
@@ -38,7 +41,7 @@ class DashboardController extends Controller
             ->orderBy('draw_date', 'desc')
             ->first();
 
-        // รายการแทงล่าสุด 100 รายการ
+        // รายการแทงล่าสุด 25 รายการ
         $recentBets = LotteryBet::with(['creator', 'draw'])
             ->whereNull('deleted_at')
             ->orderBy('created_at', 'desc')
@@ -49,15 +52,16 @@ class DashboardController extends Controller
         $adminStats = null;
         if ($user->isAdmin()) {
             $adminStats = [
-                'total_users' => User::count(),
-                'total_draws' => LotteryDraw::count(),
-                'announced_draws' => LotteryDraw::where('is_announced', true)->count(),
+                'total_users'      => User::count(),
+                'total_draws'      => LotteryDraw::count(),
+                'announced_draws'  => LotteryDraw::where('is_announced', true)->count(),
             ];
         }
 
         return view('dashboard', compact('todayStats', 'upcomingDraw', 'latestDraw', 'recentBets', 'adminStats', 'user'));
     }
 
+    // [FIX #7] method นี้มีอยู่แล้ว — เพิ่ม route ใน web.php แล้ว (api.realtime-sales)
     public function realtimeSales()
     {
         $today = now()->toDateString();
@@ -65,10 +69,12 @@ class DashboardController extends Controller
             ->whereNull('deleted_at');
 
         return response()->json([
-            'totalSales' => $todayBets->sum(DB::raw('amount_top + amount_bottom + amount_toad')),
-            'totalTop' => $todayBets->sum('amount_top'),
-            'totalBottom' => $todayBets->sum('amount_bottom'),
-            'totalToad' => $todayBets->sum('amount_toad'),
+            // [FIX #3] รวม amount_bottom_3 ใน totalSales ด้วย
+            'totalSales'   => $todayBets->sum(DB::raw('amount_top + amount_bottom + amount_toad + COALESCE(amount_bottom_3, 0)')),
+            'totalTop'     => $todayBets->sum('amount_top'),
+            'totalBottom'  => $todayBets->sum('amount_bottom'),
+            'totalToad'    => $todayBets->sum('amount_toad'),
+            'totalBottom3' => $todayBets->sum('amount_bottom_3'),
         ]);
     }
 
@@ -79,8 +85,6 @@ class DashboardController extends Controller
     {
         $today = now()->startOfDay();
 
-        // ดึงเฉพาะงวดที่มีใน DB จริง, ยังไม่ประกาศผล, วันนี้หรืออนาคต
-        // งวดจะถูกสร้างอัตโนมัติเมื่อมีคนแทงครั้งแรก (Dynamic Draw)
         $openDraws = LotteryDraw::where('draw_date', '>=', $today->format('Y-m-d'))
             ->where('is_announced', false)
             ->orderBy('draw_date', 'asc')
@@ -88,10 +92,10 @@ class DashboardController extends Controller
 
         return response()->json([
             'success' => true,
-            'draws' => $openDraws->map(function ($draw) {
+            'draws'   => $openDraws->map(function ($draw) {
                 return [
-                    'value' => $draw->draw_date->format('Y-m-d'),
-                    'label' => $draw->draw_date->locale('th')->translatedFormat('j F Y'),
+                    'value'        => $draw->draw_date->format('Y-m-d'),
+                    'label'        => $draw->draw_date->locale('th')->translatedFormat('j F Y'),
                     'is_announced' => $draw->is_announced,
                 ];
             })
