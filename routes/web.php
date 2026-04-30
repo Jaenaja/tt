@@ -36,6 +36,12 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/export-excel', [LotteryBetController::class, 'exportExcel'])->name('export-excel');
     });
 
+    // Reports — เปิดให้พนักงาน (general) ดูได้ด้วย — ต้องอยู่นอก admin middleware group
+    Route::middleware(['staff_or_admin'])->prefix('admin/reports')->name('admin.reports.')->group(function () {
+        Route::get('/', [ReportController::class, 'index'])->name('index');
+        Route::get('/summary/{drawId}', [ReportController::class, 'summary'])->name('summary');
+    });
+
     // Admin Only Routes
     Route::middleware(['admin'])->prefix('admin')->name('admin.')->group(function () {
 
@@ -58,13 +64,8 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/draws', [LotteryDrawController::class, 'store'])->name('draws.store');
         Route::get('/draws/{id}/results', [LotteryDrawController::class, 'results'])->name('draws.results');
 
-        // Reports — view (เปิดให้พนักงาน general ดูได้ด้วย)
+        // Reports actions — admin เท่านั้น
         Route::prefix('reports')->name('reports.')->group(function () {
-            Route::middleware(['staff_or_admin'])->group(function () {
-                Route::get('/', [ReportController::class, 'index'])->name('index');
-                Route::get('/summary/{drawId}', [ReportController::class, 'summary'])->name('summary');
-            });
-            // Reports actions — admin เท่านั้น
             Route::get('/pdf/{drawId}', [ReportController::class, 'exportPDF'])->name('pdf');
             Route::get('/statistics', [ReportController::class, 'statistics'])->name('statistics');
             Route::delete('/bets/{betId}', [ReportController::class, 'deleteBet'])->name('bets.delete');
