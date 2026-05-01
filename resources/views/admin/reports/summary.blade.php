@@ -179,39 +179,44 @@
             3 ตัวล่าง = {{ number_format($settings['max_payout_3_bottom'],0) }} ฿
         </p>
 
-        {{-- 2 ตัว --}}
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+        {{-- 2 ตัว: 2 คอลัมน์ --}}
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
             <div>
                 <h3 class="text-sm font-bold text-emerald-700 dark:text-emerald-300 mb-2">🟢 2 ตัวบน (00-99)</h3>
-                <div class="bg-slate-50 dark:bg-slate-800 rounded-xl p-2"><div id="heatmap2Top" style="width:100%;height:320px;"></div></div>
+                <div class="bg-slate-50 dark:bg-slate-800 rounded-xl p-2"><div id="heatmap2Top" style="width:100%;height:360px;"></div></div>
             </div>
             <div>
                 <h3 class="text-sm font-bold text-sky-700 dark:text-sky-300 mb-2">🔵 2 ตัวล่าง (00-99)</h3>
-                <div class="bg-slate-50 dark:bg-slate-800 rounded-xl p-2"><div id="heatmap2Bottom" style="width:100%;height:320px;"></div></div>
+                <div class="bg-slate-50 dark:bg-slate-800 rounded-xl p-2"><div id="heatmap2Bottom" style="width:100%;height:360px;"></div></div>
             </div>
         </div>
 
-        {{-- 3 ตัว --}}
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {{-- 3 ตัว: 2 คอลัมน์ (บน + โต๊ด) --}}
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
             <div>
                 <h3 class="text-sm font-bold text-violet-700 dark:text-violet-300 mb-2">🟣 3 ตัวบน (000-999)</h3>
-                <div class="bg-slate-50 dark:bg-slate-800 rounded-xl p-2"><div id="heatmap3Top" style="width:100%;height:480px;"></div></div>
+                <div class="bg-slate-50 dark:bg-slate-800 rounded-xl p-2"><div id="heatmap3Top" style="width:100%;height:500px;"></div></div>
             </div>
             <div>
                 <h3 class="text-sm font-bold text-amber-700 dark:text-amber-300 mb-2">🟡 3 ตัวโต๊ด (000-999)</h3>
-                <div class="bg-slate-50 dark:bg-slate-800 rounded-xl p-2"><div id="heatmap3Toad" style="width:100%;height:480px;"></div></div>
-            </div>
-            <div>
-                <h3 class="text-sm font-bold text-orange-700 dark:text-orange-300 mb-2">🟠 3 ตัวล่าง (000-999)</h3>
-                <div class="bg-slate-50 dark:bg-slate-800 rounded-xl p-2"><div id="heatmap3Bottom" style="width:100%;height:480px;"></div></div>
+                <div class="bg-slate-50 dark:bg-slate-800 rounded-xl p-2"><div id="heatmap3Toad" style="width:100%;height:500px;"></div></div>
             </div>
         </div>
 
-        <div class="flex items-center gap-4 mt-4 text-xs flex-wrap">
-            <span class="flex items-center gap-1"><span class="w-3 h-3 bg-slate-300 dark:bg-slate-600 rounded inline-block"></span>ไม่มีคนซื้อ</span>
-            <span class="flex items-center gap-1"><span class="w-3 h-3 bg-emerald-400 rounded inline-block"></span>ปกติ (&lt;50%)</span>
-            <span class="flex items-center gap-1"><span class="w-3 h-3 bg-orange-400 rounded inline-block"></span>เฝ้าระวัง (50-99%)</span>
-            <span class="flex items-center gap-1"><span class="w-3 h-3 bg-red-500 rounded inline-block"></span>อั้น/ตัดยอด (≥100%)</span>
+        {{-- 3 ตัวล่าง: เต็มแถว --}}
+        <div class="mb-6">
+            <h3 class="text-sm font-bold text-orange-700 dark:text-orange-300 mb-2">🟠 3 ตัวล่าง (000-999)</h3>
+            <div class="bg-slate-50 dark:bg-slate-800 rounded-xl p-2"><div id="heatmap3Bottom" style="width:100%;height:500px;"></div></div>
+        </div>
+
+        {{-- Legend --}}
+        <div class="flex items-center gap-4 mt-2 text-xs flex-wrap">
+            <span class="flex items-center gap-1"><span class="w-3 h-3 rounded inline-block" style="background:#0f172a;border:1px solid #334155"></span>ไม่มีคนซื้อ</span>
+            <span class="flex items-center gap-1"><span class="w-3 h-3 rounded inline-block" style="background:#166534"></span>น้อยมาก (&lt;30%)</span>
+            <span class="flex items-center gap-1"><span class="w-3 h-3 rounded inline-block" style="background:#16a34a"></span>ปกติ (30-60%)</span>
+            <span class="flex items-center gap-1"><span class="w-3 h-3 rounded inline-block" style="background:#ca8a04"></span>เฝ้าระวัง (60-80%)</span>
+            <span class="flex items-center gap-1"><span class="w-3 h-3 rounded inline-block" style="background:#ea580c"></span>ใกล้เพดาน (80-100%)</span>
+            <span class="flex items-center gap-1"><span class="w-3 h-3 rounded inline-block" style="background:#dc2626"></span>เกินเพดาน (≥100%)</span>
         </div>
     </div>
 
@@ -532,94 +537,168 @@ const data3Top    = {!! json_encode($threeTopHeatmapData) !!};
 const data3Toad   = {!! json_encode($threeToadHeatmapData) !!};
 const data3Bottom = {!! json_encode($threeBottomHeatmapData) !!};
 
-const max2Top    = {{ $maxTwoTop    > 0 ? $maxTwoTop    : 1 }};
-const max2Bottom = {{ $maxTwoBottom > 0 ? $maxTwoBottom : 1 }};
-const max3Top    = {{ $maxThreeTop  > 0 ? $maxThreeTop  : 1 }};
-const max3Toad   = {{ $maxThreeToad > 0 ? $maxThreeToad : 1 }};
-const max3Bottom = {{ $maxThreeBottom > 0 ? $maxThreeBottom : 1 }};
+const maxPayout2D    = {{ $settings['max_payout_2_digit'] }};
+const maxPayout3D    = {{ $settings['max_payout_3_digit'] }};
+const maxPayout3Toad = {{ $settings['max_payout_3_toad'] }};
+const maxPayout3Bot  = {{ $settings['max_payout_3_bottom'] }};
 
-const maxPayout2D     = {{ $settings['max_payout_2_digit'] }};
-const maxPayout3D     = {{ $settings['max_payout_3_digit'] }};
-const maxPayout3Toad  = {{ $settings['max_payout_3_toad'] }};
-const maxPayout3Bot   = {{ $settings['max_payout_3_bottom'] }};
-
-// ── Color logic ──
-function getRiskColor(liability, maxPayout){
-    if(liability<=0) return '#334155';
-    const pct=liability/maxPayout*100;
-    if(pct>=100) return '#ef4444';
-    if(pct>=50)  return '#f97316';
-    return '#10b981';
+// ── Helpers ──
+function fmtK(v) {
+    if (!v || v <= 0) return '';
+    if (v >= 1000000) return (v/1000000).toFixed(1).replace(/\.0$/,'') + 'M';
+    if (v >= 1000)    return (v/1000).toFixed(1).replace(/\.0$/,'') + 'k';
+    return String(Math.round(v));
 }
 
-function make2DOption(data, maxVal, maxPayout, textColor){
-    const xLabels=[]; for(let i=0;i<10;i++) xLabels.push(String(i));
-    const yLabels=[]; for(let i=0;i<10;i++) yLabels.push(String(i));
-    const visualData = data.map(d=>{
-        const liability=d[2],betCount=d[3],amount=d[4];
-        return {value:[d[0],d[1],liability],betCount,amount,
-            itemStyle:{color:getRiskColor(liability,maxPayout)}};
+function riskColor(pct) {
+    if (pct <= 0)    return '#0f172a';   // ไม่มีคนซื้อ — dark
+    if (pct < 30)    return '#14532d';   // น้อยมาก — dark green
+    if (pct < 60)    return '#16a34a';   // ปกติ — green
+    if (pct < 80)    return '#ca8a04';   // เฝ้าระวัง — yellow
+    if (pct < 100)   return '#ea580c';   // ใกล้เพดาน — orange
+    return '#dc2626';                    // เกินเพดาน — red
+}
+
+// ── 2-digit heatmap (10×10 grid) ──
+function make2DOption(rawData, maxPayout, isDark) {
+    const bg    = isDark ? '#1e293b' : '#f8fafc';
+    const axisC = isDark ? '#94a3b8' : '#475569';
+    const lblC  = '#ffffff';
+
+    // build lookup [x][y] = data point
+    const cells = rawData.map(d => {
+        const [x, y, liability, bet_count, amount] = d;
+        const pct = maxPayout > 0 ? liability / maxPayout * 100 : 0;
+        return { value: [x, y, liability], bet_count, amount, pct,
+                 itemStyle: { color: riskColor(pct), borderColor: isDark ? '#0f172a' : '#e2e8f0', borderWidth: 1 } };
     });
+
+    const xLabels = ['0','1','2','3','4','5','6','7','8','9'];
+    const yLabels = ['0','1','2','3','4','5','6','7','8','9'];
+
     return {
-        tooltip:{trigger:'item',formatter:p=>{
-            const d=p.data;
-            const num=String(p.data.value[1])+String(p.data.value[0]);
-            const pct=(d.value[2]/maxPayout*100).toFixed(1);
-            return `<b>เลข ${num}</b><br/>จำนวนใบ: ${d.betCount}<br/>ยอดซื้อ: ${d.amount.toLocaleString()}<br/>ยอดจ่าย: ${Math.round(d.value[2]).toLocaleString()}<br/><b>%เพดาน: ${pct}%</b>`;
-        }},
-        grid:{top:30,bottom:30,left:30,right:30},
-        xAxis:{type:'category',data:xLabels,splitArea:{show:true},axisLabel:{color:textColor,fontSize:10}},
-        yAxis:{type:'category',data:yLabels,splitArea:{show:true},axisLabel:{color:textColor,fontSize:10}},
-        series:[{type:'heatmap',data:visualData,label:{show:true,formatter:p=>p.data.value[2]>0?p.data.value[1]+''+p.data.value[0]:'',fontSize:8,color:'#fff'},emphasis:{itemStyle:{shadowBlur:10,shadowColor:'rgba(0,0,0,0.5)'}}}]
+        backgroundColor: 'transparent',
+        tooltip: {
+            trigger: 'item',
+            backgroundColor: isDark ? '#1e293b' : '#fff',
+            borderColor: isDark ? '#475569' : '#e2e8f0',
+            textStyle: { color: isDark ? '#f1f5f9' : '#0f172a', fontSize: 13 },
+            formatter: p => {
+                const d = p.data;
+                const num = String(d.value[1]) + String(d.value[0]);
+                const pct = (d.value[2] / maxPayout * 100).toFixed(1);
+                const bar = d.pct >= 100 ? '🔴' : d.pct >= 80 ? '🟠' : d.pct >= 60 ? '🟡' : d.pct > 0 ? '🟢' : '⬛';
+                return `<b>เลข ${num}</b> ${bar}<br/>ยอดแทง: <b>${Math.round(d.amount).toLocaleString()} บาท</b><br/>ยอดจ่าย: <b>${Math.round(d.value[2]).toLocaleString()} บาท</b><br/>จำนวนใบ: ${d.bet_count} ใบ<br/>เปอร์เซ็นต์: <b>${pct}%</b>`;
+            }
+        },
+        grid: { top: 28, bottom: 28, left: 28, right: 12 },
+        xAxis: { type: 'category', data: xLabels, position: 'top',
+                 axisLabel: { color: axisC, fontSize: 11, fontWeight: 'bold' },
+                 axisLine: { show: false }, axisTick: { show: false }, splitLine: { show: false } },
+        yAxis: { type: 'category', data: yLabels,
+                 axisLabel: { color: axisC, fontSize: 11, fontWeight: 'bold' },
+                 axisLine: { show: false }, axisTick: { show: false }, splitLine: { show: false } },
+        series: [{
+            type: 'heatmap',
+            data: cells,
+            label: {
+                show: true,
+                formatter: p => {
+                    const num  = String(p.data.value[1]) + String(p.data.value[0]);
+                    const amt  = fmtK(p.data.amount);
+                    return amt ? `{n|${num}}\n{a|${amt}}` : `{n|${num}}`;
+                },
+                rich: {
+                    n: { fontSize: 10, fontWeight: 'bold', color: lblC, lineHeight: 14 },
+                    a: { fontSize: 9,  color: '#e2e8f0', lineHeight: 12 }
+                }
+            },
+            itemStyle: { borderRadius: 3 },
+            emphasis: { itemStyle: { shadowBlur: 8, shadowColor: 'rgba(0,0,0,0.4)' } }
+        }]
     };
 }
 
-function make3DOption(data, maxVal, maxPayout, textColor){
-    const xLabels=[]; for(let i=0;i<40;i++) xLabels.push(i%10===0?String(i):'');
-    const yLabels=[]; for(let i=0;i<25;i++) yLabels.push(String(i*40));
-    const visualData = data.map(d=>{
-        const liability=d[2],betCount=d[3],amount=d[4];
-        return {value:[d[0],d[1],liability],betCount,amount,
-            itemStyle:{color:getRiskColor(liability,maxPayout)}};
+// ── 3-digit heatmap (40×25 grid) ──
+function make3DOption(rawData, maxPayout, isDark) {
+    const axisC = isDark ? '#64748b' : '#94a3b8';
+
+    const cells = rawData.map(d => {
+        const [x, y, liability, bet_count, amount] = d;
+        const num = String(y * 40 + x).padStart(3, '0');
+        const pct = maxPayout > 0 ? liability / maxPayout * 100 : 0;
+        return { value: [x, y, liability], bet_count, amount, pct, num,
+                 itemStyle: { color: riskColor(pct), borderColor: isDark ? '#020617' : '#f1f5f9', borderWidth: 0.5 } };
     });
+
+    // x-axis labels: every 10th (0,10,20,30)
+    const xLabels = [];
+    for (let i = 0; i < 40; i++) xLabels.push(i % 10 === 0 ? String(i) : '');
+    // y-axis labels: row × 40
+    const yLabels = [];
+    for (let i = 0; i < 25; i++) yLabels.push(String(i * 40));
+
     return {
-        tooltip:{trigger:'item',formatter:p=>{
-            const d=p.data;
-            const num=String(p.data.value[1]*40+p.data.value[0]).padStart(3,'0');
-            const pct=(d.value[2]/maxPayout*100).toFixed(1);
-            return `<b>เลข ${num}</b><br/>จำนวนใบ: ${d.betCount}<br/>ยอดซื้อ: ${d.amount.toLocaleString()}<br/>ยอดจ่าย: ${Math.round(d.value[2]).toLocaleString()}<br/><b>%เพดาน: ${pct}%</b>`;
-        }},
-        grid:{top:10,bottom:20,left:40,right:10},
-        xAxis:{type:'category',data:xLabels,splitArea:{show:true},axisLabel:{color:textColor,fontSize:8}},
-        yAxis:{type:'category',data:yLabels,splitArea:{show:true},axisLabel:{color:textColor,fontSize:8}},
-        series:[{type:'heatmap',data:visualData,label:{show:false},emphasis:{itemStyle:{shadowBlur:10,shadowColor:'rgba(0,0,0,0.5)'}}}]
+        backgroundColor: 'transparent',
+        tooltip: {
+            trigger: 'item',
+            backgroundColor: isDark ? '#1e293b' : '#fff',
+            borderColor: isDark ? '#475569' : '#e2e8f0',
+            textStyle: { color: isDark ? '#f1f5f9' : '#0f172a', fontSize: 13 },
+            formatter: p => {
+                const d = p.data;
+                const pct = (d.value[2] / maxPayout * 100).toFixed(1);
+                const bar = d.pct >= 100 ? '🔴' : d.pct >= 80 ? '🟠' : d.pct >= 60 ? '🟡' : d.pct > 0 ? '🟢' : '⬛';
+                return `<b>เลข ${d.num}</b> ${bar}<br/>ยอดแทง: <b>${Math.round(d.amount).toLocaleString()} บาท</b><br/>ยอดจ่าย: <b>${Math.round(d.value[2]).toLocaleString()} บาท</b><br/>จำนวนใบ: ${d.bet_count} ใบ<br/>เปอร์เซ็นต์: <b>${pct}%</b>`;
+            }
+        },
+        grid: { top: 10, bottom: 24, left: 36, right: 10 },
+        xAxis: { type: 'category', data: xLabels,
+                 axisLabel: { color: axisC, fontSize: 8 },
+                 axisLine: { show: false }, axisTick: { show: false }, splitLine: { show: false } },
+        yAxis: { type: 'category', data: yLabels,
+                 axisLabel: { color: axisC, fontSize: 8 },
+                 axisLine: { show: false }, axisTick: { show: false }, splitLine: { show: false } },
+        series: [{
+            type: 'heatmap',
+            data: cells,
+            label: {
+                show: true,
+                formatter: p => {
+                    const amt = fmtK(p.data.amount);
+                    return amt ? `{n|${p.data.num}}\n{a|${amt}}` : `{n|${p.data.num}}`;
+                },
+                rich: {
+                    n: { fontSize: 7, fontWeight: 'bold', color: '#ffffff', lineHeight: 9 },
+                    a: { fontSize: 6, color: '#e2e8f0', lineHeight: 8 }
+                }
+            },
+            itemStyle: { borderRadius: 1 },
+            emphasis: { itemStyle: { shadowBlur: 6, shadowColor: 'rgba(0,0,0,0.5)' } }
+        }]
     };
 }
 
-let c2Top,c2Bottom,c3Top,c3Toad,c3Bottom;
+let c2Top, c2Bottom, c3Top, c3Toad, c3Bottom;
 
-function renderCharts(){
-    const isDark=document.documentElement.classList.contains('dark');
-    const textColor=isDark?'#94a3b8':'#475569';
+function renderCharts() {
+    const isDark = document.documentElement.classList.contains('dark');
 
-    if(c2Top)c2Top.dispose();
-    if(c2Bottom)c2Bottom.dispose();
-    if(c3Top)c3Top.dispose();
-    if(c3Toad)c3Toad.dispose();
-    if(c3Bottom)c3Bottom.dispose();
+    [c2Top, c2Bottom, c3Top, c3Toad, c3Bottom].forEach(c => c && c.dispose());
 
-    c2Top    = echarts.init(document.getElementById('heatmap2Top'),   isDark?'dark':null);
-    c2Bottom = echarts.init(document.getElementById('heatmap2Bottom'),isDark?'dark':null);
-    c3Top    = echarts.init(document.getElementById('heatmap3Top'),   isDark?'dark':null);
-    c3Toad   = echarts.init(document.getElementById('heatmap3Toad'),  isDark?'dark':null);
-    c3Bottom = echarts.init(document.getElementById('heatmap3Bottom'),isDark?'dark':null);
+    c2Top    = echarts.init(document.getElementById('heatmap2Top'));
+    c2Bottom = echarts.init(document.getElementById('heatmap2Bottom'));
+    c3Top    = echarts.init(document.getElementById('heatmap3Top'));
+    c3Toad   = echarts.init(document.getElementById('heatmap3Toad'));
+    c3Bottom = echarts.init(document.getElementById('heatmap3Bottom'));
 
-    c2Top.setOption(make2DOption(data2Top,    max2Top,    maxPayout2D,    textColor));
-    c2Bottom.setOption(make2DOption(data2Bottom, max2Bottom, maxPayout2D, textColor));
-    c3Top.setOption(make3DOption(data3Top,    max3Top,    maxPayout3D,    textColor));
-    c3Toad.setOption(make3DOption(data3Toad,  max3Toad,   maxPayout3Toad, textColor));
-    c3Bottom.setOption(make3DOption(data3Bottom,max3Bottom,maxPayout3Bot, textColor));
+    c2Top.setOption(make2DOption(data2Top,    maxPayout2D,    isDark));
+    c2Bottom.setOption(make2DOption(data2Bottom, maxPayout2D, isDark));
+    c3Top.setOption(make3DOption(data3Top,    maxPayout3D,    isDark));
+    c3Toad.setOption(make3DOption(data3Toad,  maxPayout3Toad, isDark));
+    c3Bottom.setOption(make3DOption(data3Bottom, maxPayout3Bot, isDark));
 }
+
 
 window.addEventListener('resize',()=>{
     [c2Top,c2Bottom,c3Top,c3Toad,c3Bottom].forEach(c=>c&&c.resize());
