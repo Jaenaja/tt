@@ -191,16 +191,14 @@
             </div>
         </div>
 
-        {{-- 3 ตัว: 2 คอลัมน์ (บน + โต๊ด) --}}
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-            <div>
-                <h3 class="text-sm font-bold text-violet-700 dark:text-violet-300 mb-2">🟣 3 ตัวบน (000-999)</h3>
-                <div class="bg-slate-50 dark:bg-slate-800 rounded-xl p-2"><div id="heatmap3Top" style="width:100%;height:500px;"></div></div>
-            </div>
-            <div>
-                <h3 class="text-sm font-bold text-amber-700 dark:text-amber-300 mb-2">🟡 3 ตัวโต๊ด (000-999)</h3>
-                <div class="bg-slate-50 dark:bg-slate-800 rounded-xl p-2"><div id="heatmap3Toad" style="width:100%;height:500px;"></div></div>
-            </div>
+        {{-- 3 ตัว: คอลัมน์เดียว --}}
+        <div class="mb-6">
+            <h3 class="text-sm font-bold text-violet-700 dark:text-violet-300 mb-2">🟣 3 ตัวบน (000-999)</h3>
+            <div class="bg-slate-50 dark:bg-slate-800 rounded-xl p-2"><div id="heatmap3Top" style="width:100%;height:500px;"></div></div>
+        </div>
+        <div class="mb-6">
+            <h3 class="text-sm font-bold text-amber-700 dark:text-amber-300 mb-2">🟡 3 ตัวโต๊ด (000-999)</h3>
+            <div class="bg-slate-50 dark:bg-slate-800 rounded-xl p-2"><div id="heatmap3Toad" style="width:100%;height:500px;"></div></div>
         </div>
 
         {{-- 3 ตัวล่าง: เต็มแถว --}}
@@ -211,12 +209,12 @@
 
         {{-- Legend --}}
         <div class="flex items-center gap-4 mt-2 text-xs flex-wrap">
-            <span class="flex items-center gap-1"><span class="w-3 h-3 rounded inline-block" style="background:#0f172a;border:1px solid #334155"></span>ไม่มีคนซื้อ</span>
-            <span class="flex items-center gap-1"><span class="w-3 h-3 rounded inline-block" style="background:#166534"></span>น้อยมาก (&lt;30%)</span>
-            <span class="flex items-center gap-1"><span class="w-3 h-3 rounded inline-block" style="background:#16a34a"></span>ปกติ (30-60%)</span>
-            <span class="flex items-center gap-1"><span class="w-3 h-3 rounded inline-block" style="background:#ca8a04"></span>เฝ้าระวัง (60-80%)</span>
-            <span class="flex items-center gap-1"><span class="w-3 h-3 rounded inline-block" style="background:#ea580c"></span>ใกล้เพดาน (80-100%)</span>
-            <span class="flex items-center gap-1"><span class="w-3 h-3 rounded inline-block" style="background:#dc2626"></span>เกินเพดาน (≥100%)</span>
+            <span class="flex items-center gap-1"><span class="w-3 h-3 rounded inline-block" style="background:#1e293b;border:1px solid #475569"></span>ไม่มีคนซื้อ</span>
+            <span class="flex items-center gap-1"><span class="w-3 h-3 rounded inline-block" style="background:#4ade80"></span>น้อยมาก (&lt;30%)</span>
+            <span class="flex items-center gap-1"><span class="w-3 h-3 rounded inline-block" style="background:#a3e635"></span>ปกติ (30-60%)</span>
+            <span class="flex items-center gap-1"><span class="w-3 h-3 rounded inline-block" style="background:#fbbf24"></span>เฝ้าระวัง (60-80%)</span>
+            <span class="flex items-center gap-1"><span class="w-3 h-3 rounded inline-block" style="background:#f97316"></span>ใกล้เพดาน (80-100%)</span>
+            <span class="flex items-center gap-1"><span class="w-3 h-3 rounded inline-block" style="background:#ef4444"></span>เกินเพดาน (≥100%)</span>
         </div>
     </div>
 
@@ -240,7 +238,7 @@
                         <span class="text-xs text-slate-400">({{ $item['bet_count'] }})</span>
                     </div>
                     <div class="text-right">
-                        <div class="text-xs font-bold {{ $item['status']==='critical'?'text-red-500':($item['status']==='warning'?'text-amber-500':'text-emerald-500') }}">{{ number_format($item['liability'],0) }}฿</div>
+                        <div class="text-xs font-bold {{ $item['status']==='critical'?'text-red-500':($item['status']==='warning'?'text-amber-500':'text-emerald-500') }}">{{ number_format($item['individual_payout'] ?? $item['liability'],0) }}฿</div>
                         <div class="text-xs text-blue-500 dark:text-blue-400">แทง {{ number_format($item['total_amount'],0) }}฿</div>
                         <div class="text-xs text-slate-400">{{ number_format($item['percentage'],0) }}%</div>
                     </div>
@@ -290,7 +288,7 @@
                     <div class="flex items-center justify-between px-2 py-1 bg-red-50 dark:bg-red-900/20 rounded border border-red-200 dark:border-red-800 text-xs">
                         <span class="font-bold text-slate-900 dark:text-white">{{ $item['number'] }}</span>
                         <div class="text-right">
-                            <div class="font-bold text-red-600 dark:text-red-400">{{ number_format($item['liability'],0) }}฿</div>
+                            <div class="font-bold text-red-600 dark:text-red-400">{{ number_format($item['individual_payout'] ?? $item['liability'],0) }}฿</div>
                             <div class="text-red-500 dark:text-red-400">{{ number_format($item['percentage'],1) }}%</div>
                         </div>
                     </div>
@@ -551,12 +549,19 @@ function fmtK(v) {
 }
 
 function riskColor(pct) {
-    if (pct <= 0)    return '#0f172a';   // ไม่มีคนซื้อ — dark
-    if (pct < 30)    return '#14532d';   // น้อยมาก — dark green
-    if (pct < 60)    return '#16a34a';   // ปกติ — green
-    if (pct < 80)    return '#ca8a04';   // เฝ้าระวัง — yellow
-    if (pct < 100)   return '#ea580c';   // ใกล้เพดาน — orange
-    return '#dc2626';                    // เกินเพดาน — red
+    if (pct <= 0)    return '#1e293b';
+    if (pct < 30)    return '#4ade80';
+    if (pct < 60)    return '#a3e635';
+    if (pct < 80)    return '#fbbf24';
+    if (pct < 100)   return '#f97316';
+    return '#ef4444';
+}
+
+// ตัวอักษรสีเข้มบนพื้นอ่อน, สีขาวบนพื้นเข้ม
+function labelColor(pct) {
+    if (pct <= 0)  return '#64748b';   // พื้นดำ → เทา
+    if (pct < 80)  return '#0f172a';   // พื้นเขียว/เหลือง → ดำ
+    return '#ffffff';                   // พื้นส้ม/แดง → ขาว
 }
 
 // ── 2-digit heatmap (10×10 grid) ──
@@ -569,7 +574,8 @@ function make2DOption(rawData, maxPayout, isDark) {
     const cells = rawData.map(d => {
         const [x, y, liability, bet_count, amount] = d;
         const pct = maxPayout > 0 ? liability / maxPayout * 100 : 0;
-        return { value: [x, y, liability], bet_count, amount, pct,
+        const lc  = labelColor(pct);
+        return { value: [x, y, liability], bet_count, amount, pct, lc,
                  itemStyle: { color: riskColor(pct), borderColor: isDark ? '#0f172a' : '#e2e8f0', borderWidth: 1 } };
     });
 
@@ -606,12 +612,17 @@ function make2DOption(rawData, maxPayout, isDark) {
                 formatter: p => {
                     const num  = String(p.data.value[1]) + String(p.data.value[0]);
                     const amt  = fmtK(p.data.amount);
-                    return amt ? `{n|${num}}\n{a|${amt}}` : `{n|${num}}`;
+                    const lc   = p.data.lc;
+                    return amt ? `{n${lc.replace('#','')}|${num}}\n{a${lc.replace('#','')}|${amt}}` : `{n${lc.replace('#','')}|${num}}`;
                 },
-                rich: {
-                    n: { fontSize: 10, fontWeight: 'bold', color: lblC, lineHeight: 14 },
-                    a: { fontSize: 9,  color: '#e2e8f0', lineHeight: 12 }
-                }
+                rich: (()=>{
+                    const r = {};
+                    ['0f172a','ffffff','64748b'].forEach(c=>{
+                        r[`n${c}`] = { fontSize:10, fontWeight:'bold', color:`#${c}`, lineHeight:14 };
+                        r[`a${c}`] = { fontSize:9,  color:`#${c}`, lineHeight:12 };
+                    });
+                    return r;
+                })()
             },
             itemStyle: { borderRadius: 3 },
             emphasis: { itemStyle: { shadowBlur: 8, shadowColor: 'rgba(0,0,0,0.4)' } }
@@ -627,7 +638,8 @@ function make3DOption(rawData, maxPayout, isDark) {
         const [x, y, liability, bet_count, amount] = d;
         const num = String(y * 40 + x).padStart(3, '0');
         const pct = maxPayout > 0 ? liability / maxPayout * 100 : 0;
-        return { value: [x, y, liability], bet_count, amount, pct, num,
+        const lc  = labelColor(pct);
+        return { value: [x, y, liability], bet_count, amount, pct, num, lc,
                  itemStyle: { color: riskColor(pct), borderColor: isDark ? '#020617' : '#f1f5f9', borderWidth: 0.5 } };
     });
 
@@ -666,12 +678,17 @@ function make3DOption(rawData, maxPayout, isDark) {
                 show: true,
                 formatter: p => {
                     const amt = fmtK(p.data.amount);
-                    return amt ? `{n|${p.data.num}}\n{a|${amt}}` : `{n|${p.data.num}}`;
+                    const lc  = p.data.lc;
+                    return amt ? `{n${lc.replace('#','')}|${p.data.num}}\n{a${lc.replace('#','')}|${amt}}` : `{n${lc.replace('#','')}|${p.data.num}}`;
                 },
-                rich: {
-                    n: { fontSize: 7, fontWeight: 'bold', color: '#ffffff', lineHeight: 9 },
-                    a: { fontSize: 6, color: '#e2e8f0', lineHeight: 8 }
-                }
+                rich: (()=>{
+                    const r = {};
+                    ['0f172a','ffffff','64748b'].forEach(c=>{
+                        r[`n${c}`] = { fontSize:7, fontWeight:'bold', color:`#${c}`, lineHeight:9 };
+                        r[`a${c}`] = { fontSize:6, color:`#${c}`, lineHeight:8 };
+                    });
+                    return r;
+                })()
             },
             itemStyle: { borderRadius: 1 },
             emphasis: { itemStyle: { shadowBlur: 6, shadowColor: 'rgba(0,0,0,0.5)' } }

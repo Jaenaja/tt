@@ -69,9 +69,16 @@ class ReportController extends Controller
         $topTwoTopExposure    = $this->getTopExposure($twoTopLiability, 10, $settings['max_payout_2_digit']);
         $topTwoBottomExposure = $this->getTopExposure($twoBottomLiability, 10, $settings['max_payout_2_digit']);
         $topThreeTopExposure  = $this->getTopExposure($threeTopLiability, 10, $settings['max_payout_3_digit']);
-        // โต๊ดใช้เพดาน max_payout_3_digit (ยืนยันจาก Correct CSV: เพดาน 50,000 ไม่ใช่ 99,000)
+        // โต๊ด: ใช้เพดาน max_payout_3_digit สำหรับ %
         $topThreeToadExposure = $this->getTopExposure($threeToadLiability, 10, $settings['max_payout_3_digit']);
         $topThreeBottomExposure = $this->getTopExposure($threeBottomLiability, 10, $settings['max_payout_3_bottom']);
+
+        // เพิ่ม individual_payout สำหรับโต๊ด = total_amount × rate (ต่อ perm)
+        $rateToad = $settings['rate_3_toad'];
+        $topThreeToadExposure = array_map(function($item) use ($rateToad) {
+            $item['individual_payout'] = round($item['total_amount'] * $rateToad);
+            return $item;
+        }, $topThreeToadExposure);
 
         $topTwoDigitExposure   = $topTwoTopExposure;
         $topThreeDigitExposure = $topThreeTopExposure;
@@ -99,9 +106,15 @@ class ReportController extends Controller
         $overLimit2Top    = $filterOverLimit($twoTopLiability,    $settings['max_payout_2_digit']);
         $overLimit2Bottom = $filterOverLimit($twoBottomLiability, $settings['max_payout_2_digit']);
         $overLimit3Top    = $filterOverLimit($threeTopLiability,  $settings['max_payout_3_digit']);
-        // โต๊ดใช้เพดาน max_payout_3_digit (ยืนยันจาก Correct CSV)
+        // โต๊ด: ใช้เพดาน max_payout_3_digit
         $overLimit3Toad   = $filterOverLimit($threeToadLiability, $settings['max_payout_3_digit']);
         $overLimit3Bottom = $filterOverLimit($threeBottomLiability, $settings['max_payout_3_bottom']);
+
+        // เพิ่ม individual_payout สำหรับโต๊ด over-limit
+        $overLimit3Toad = array_map(function($item) use ($rateToad) {
+            $item['individual_payout'] = round($item['total_amount'] * $rateToad);
+            return $item;
+        }, $overLimit3Toad);
 
         // Sales stats
         $totalTransactions = $draw->bets->count();
