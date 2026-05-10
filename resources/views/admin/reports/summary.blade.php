@@ -601,7 +601,7 @@ function make2DOption(rawData, maxPayout, isDark) {
         xAxis: { type: 'category', data: xLabels, position: 'top',
                  axisLabel: { color: axisC, fontSize: 11, fontWeight: 'bold' },
                  axisLine: { show: false }, axisTick: { show: false }, splitLine: { show: false } },
-        yAxis: { type: 'category', data: yLabels,
+        yAxis: { type: 'category', data: yLabels, inverse: true,
                  axisLabel: { color: axisC, fontSize: 11, fontWeight: 'bold' },
                  axisLine: { show: false }, axisTick: { show: false }, splitLine: { show: false } },
         series: [{
@@ -668,7 +668,7 @@ function make3DOption(rawData, maxPayout, isDark) {
         xAxis: { type: 'category', data: xLabels,
                  axisLabel: { color: axisC, fontSize: 8 },
                  axisLine: { show: false }, axisTick: { show: false }, splitLine: { show: false } },
-        yAxis: { type: 'category', data: yLabels,
+        yAxis: { type: 'category', data: yLabels, inverse: true,
                  axisLabel: { color: axisC, fontSize: 8 },
                  axisLine: { show: false }, axisTick: { show: false }, splitLine: { show: false } },
         series: [{
