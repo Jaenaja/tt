@@ -301,18 +301,9 @@
             const today = new Date(); const cm = today.getMonth(); const cy = today.getFullYear();
             const draws = []; for (let o = 0; o <= 3; o++) { draws.push(new Date(cy, cm + o, 1)); draws.push(new Date(cy, cm + o, 16)); }
             const todayStr = formatDateForDatabase(today);
-            // grace period 3 วัน: งวดที่ผ่านมาแล้วไม่เกิน 3 วัน ยังถือว่าอยู่ในงวดเดิม
-            // เช่น วันที่ 1-3 ให้ default เป็นงวด 1, วันที่ 16-18 ให้ default เป็นงวด 16
-            const graceDays = 3;
-            const graceDate = new Date(today); graceDate.setDate(graceDate.getDate() - graceDays);
-            const graceStr = formatDateForDatabase(graceDate);
-            // แสดงเฉพาะงวดที่ draw_date >= วันก่อนหน้า 3 วัน (คือยังอยู่ใน grace)
-            const futureDraws = draws.filter(d => formatDateForDatabase(d) >= graceStr);
+            const futureDraws = draws.filter(d => formatDateForDatabase(d) >= todayStr);
             if (!futureDraws.length) { sel.innerHTML = '<option value="">ไม่พบงวด</option>'; return; }
-            // default: งวดล่าสุดที่ยังอยู่ใน grace period (draw_date <= today) มิฉะนั้นใช้งวดถัดไป
-            const inGrace = futureDraws.filter(d => formatDateForDatabase(d) <= todayStr);
-            const defaultDraw = inGrace.length ? inGrace[inGrace.length - 1] : futureDraws[0];
-            const def = formatDateForDatabase(defaultDraw);
+            const def = formatDateForDatabase(futureDraws[0]);
             sel.innerHTML = futureDraws.map(d => { const v = formatDateForDatabase(d); return `<option value="${v}"${v === def ? ' selected' : ''}>${formatDateThai(d)}</option>`; }).join('');
         }
 
