@@ -53,7 +53,11 @@ class LotteryBetController extends Controller
 
     public function history(Request $request)
     {
-        $query = LotteryBet::with(['creator','deleter','draw'])->whereNull('deleted_at');
+        $isAdmin = Auth::user()->role === 'admin';
+        $viewDeleted = $isAdmin && $request->get('record_status') === 'deleted';
+        $query = $viewDeleted
+            ? LotteryBet::with(['creator','deleter','draw'])->onlyTrashed()
+            : LotteryBet::with(['creator','deleter','draw'])->whereNull('deleted_at');
         if ($request->customer_name) $query->where('customer_name','like','%'.$request->customer_name.'%');
         if ($request->draw_date)     $query->where('draw_date',$request->draw_date);
         if ($request->search_number) $query->where('number','like','%'.$request->search_number.'%');
@@ -76,7 +80,7 @@ class LotteryBetController extends Controller
 
         $bets = $query->paginate(50)->appends($request->all());
         $drawDates = LotteryBet::select('draw_date')->whereNull('deleted_at')->distinct()->orderBy('draw_date','desc')->get();
-        return view('bets.history', compact('bets','drawDates'));
+        return view('bets.history', compact('bets','drawDates','isAdmin','viewDeleted'));
     }
 
     public function destroy(Request $request, $id)
@@ -118,7 +122,7 @@ class LotteryBetController extends Controller
             if ($bet->draw && $bet->draw->is_announced) {
                 $status=($bet->is_win_top||$bet->is_win_bottom||$bet->is_win_toad||($bet->is_win_bottom_3??false))?'ถูกรางวัล':'ไม่ถูก';
             } else { $status='รอประกาศ'; }
-            $rows[]=[$dDate,$bet->customer_name,$bet->number,$bet->amount_top>0?$bet->amount_top:'',
+            $rows[]=[$dDate,$bet->customer_name,"\t".$bet->number,$bet->amount_top>0?$bet->amount_top:'',
                 $bet->amount_bottom>0?$bet->amount_bottom:'', $bet->amount_toad>0?$bet->amount_toad:'',
                 ($bet->amount_bottom_3??0)>0?$bet->amount_bottom_3:'',$total,$creator,$cDate,$status];
         }

@@ -36,6 +36,16 @@ All routes are defined in `routes/web.php`. There is no `routes/api.php` — the
 | DELETE | `/bets/{id}` | `LotteryBetController@destroy` | `bets.destroy` |
 | GET | `/bets/export-excel` | `LotteryBetController@exportExcel` | `bets.export-excel` |
 
+**`GET /bets/history` — query params:**
+
+| Param | Values | Notes |
+|---|---|---|
+| `record_status` | `active` (default) / `deleted` | **Admin only.** When `deleted`, queries `onlyTrashed()` and shows ลบโดย/เวลาลบ column instead of จัดการ. Non-admin users always see active records regardless of param. |
+| `draw_date` | `YYYY-MM-DD` | Filter by draw date |
+| `customer_name` | string | Partial match |
+| `search_number` | string | Partial match |
+| `sort_by` / `sort_order` | whitelisted column / `asc`\|`desc` | Default `created_at desc` |
+
 ---
 
 ## Staff or Admin Routes (`staff_or_admin` middleware)
@@ -94,6 +104,12 @@ All routes are defined in `routes/web.php`. There is no `routes/api.php` — the
 | GET | `/admin/reports/export-excel/{drawId}` | `ReportController@exportExcel` | `admin.reports.export-excel` |
 | GET | `/admin/reports/export-customer-summary/{drawId}` | `ReportController@exportCustomerSummary` | `admin.reports.export-customer-summary` |
 | GET | `/admin/reports/export-over-limit/{drawId}` | `ReportController@exportOverLimit` | `admin.reports.export-over-limit` |
+
+**`GET /admin/reports/summary/{drawId}` — query params:**
+
+| Param | Values | Notes |
+|---|---|---|
+| `record_status` | `active` (default) / `deleted` | **Admin only.** When `deleted`, the bet list queries `onlyTrashed()` and shows ลบโดย/เวลาลบ column. All financial totals (risk, exposure, heatmap) always use active bets regardless of this param. |
 
 ---
 

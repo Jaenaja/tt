@@ -79,6 +79,7 @@ class ReportController extends Controller
             $item['individual_payout'] = round($item['total_amount'] * $rateToad);
             return $item;
         }, $topThreeToadExposure);
+        $topThreeToadExposure = $this->groupAndSortToadExposure($topThreeToadExposure);
 
         $topTwoDigitExposure   = $topTwoTopExposure;
         $topThreeDigitExposure = $topThreeTopExposure;
@@ -115,6 +116,7 @@ class ReportController extends Controller
             $item['individual_payout'] = round($item['total_amount'] * $rateToad);
             return $item;
         }, $overLimit3Toad);
+        $overLimit3Toad = $this->groupAndSortToadExposure($overLimit3Toad);
 
         // Sales stats
         $totalTransactions = $draw->bets->count();
@@ -162,7 +164,11 @@ class ReportController extends Controller
         $customerNames = $draw->bets()->whereNull('deleted_at')->distinct()->pluck('customer_name')->sort()->values();
 
         // Bet history with filters
-        $betsQuery = $draw->bets()->with('creator')->whereNull('deleted_at');
+        $isAdmin = Auth::user()->role === 'admin';
+        $viewDeleted = $isAdmin && $request->get('record_status') === 'deleted';
+        $betsQuery = $viewDeleted
+            ? $draw->bets()->with(['creator','deleter'])->onlyTrashed()
+            : $draw->bets()->with('creator')->whereNull('deleted_at');
 
         if ($request->filled('customer_names')) $betsQuery->whereIn('customer_name', $request->customer_names);
         if ($request->filled('search_number'))  $betsQuery->where('number', $request->search_number);
@@ -213,7 +219,7 @@ class ReportController extends Controller
             'topThreeToadExposure','topThreeBottomExposure',
             'topTwoDigitExposure','topThreeDigitExposure',
             'overLimit2Top','overLimit2Bottom','overLimit3Top','overLimit3Toad','overLimit3Bottom',
-            'betsHistory','customerSummary','customerNames','settings'
+            'betsHistory','customerSummary','customerNames','settings','isAdmin','viewDeleted'
         ));
     }
 
@@ -448,10 +454,33 @@ class ReportController extends Controller
     // ── Toad helpers ──
     private function getToadNumbers($number)
     {
-        $digits = str_split($number);
-        $perms  = [];
-        $this->generatePermutations($digits, 0, count($digits)-1, $perms);
-        return array_unique(array_map(fn($p) => implode('',$p), $perms));
+        $d = str_split($number); $seen = []; $result = [];
+        foreach ([[0,1,2],[0,2,1],[1,0,2],[1,2,0],[2,0,1],[2,1,0]] as $idx) {
+            $p = $d[$idx[0]].$d[$idx[1]].$d[$idx[2]];
+            if (!isset($seen[$p])) { $seen[$p] = true; $result[] = $p; }
+        }
+        return $result;
+    }
+
+    private function groupAndSortToadExposure(array $list): array
+    {
+        $byNumber = array_column($list, null, 'number');
+        $groups = [];
+        foreach ($byNumber as $number => $item) {
+            $digits = str_split($number); sort($digits); $key = implode('', $digits);
+            if (!isset($groups[$key])) $groups[$key] = ['liability' => $item['liability'], 'items' => []];
+            $groups[$key]['items'][$number] = $item;
+        }
+        uasort($groups, fn($a,$b) => $b['liability'] - $a['liability']);
+        $result = [];
+        foreach ($groups as $key => $group) {
+            $d = str_split($key); $seen = [];
+            foreach ([[0,1,2],[0,2,1],[1,0,2],[1,2,0],[2,0,1],[2,1,0]] as $idx) {
+                $p = $d[$idx[0]].$d[$idx[1]].$d[$idx[2]];
+                if (!isset($seen[$p])) { $seen[$p] = true; if (isset($group['items'][$p])) $result[] = $group['items'][$p]; }
+            }
+        }
+        return $result;
     }
 
     private function generatePermutations(&$arr, $left, $right, &$result)
@@ -512,7 +541,7 @@ class ReportController extends Controller
 
             $rows[] = [
                 $bet->customer_name,
-                $bet->number,
+                "\t".$bet->number,
                 $bet->amount_top    > 0 ? $bet->amount_top    : '',
                 $bet->amount_bottom > 0 ? $bet->amount_bottom : '',
                 $bet->amount_toad   > 0 ? $bet->amount_toad   : '',
@@ -603,53 +632,53 @@ class ReportController extends Controller
         $over2Top    = $filterOver($twoTopLiab, $maxPay2);
         $over2Bottom = $filterOver($twoBottomLiab, $maxPay2);
         $over3Top    = $filterOver($threeTopLiab, $maxPay3);
-        $over3Toad   = $filterOver($threeToadLiab, $maxPay3Toad);
+        $over3Toad   = $this->groupAndSortToadExposure($filterOver($threeToadLiab, $maxPay3Toad));
         $over3Bottom = $filterOver($threeBottomLiab, $maxPay3Bot);
 
         $dLabel = \Carbon\Carbon::parse($draw->draw_date)->format('d/m/Y');
         $rows   = [];
 
-        $addSection = function ($title, $data, $maxPayout) use (&$rows, $dLabel) {
+        $addSection = function ($title, $data, $maxPayout, $rate) use (&$rows, $dLabel) {
             $rows[] = [];
             $rows[] = ["=== $title ===","งวด $dLabel","เพดาน: ".number_format($maxPayout,0)." บาท"];
-            $rows[] = ['เลข','จำนวนใบ','ยอดซื้อ (฿)','ยอดจ่าย (฿)','% ของเพดาน'];
+            $rows[] = ['เลข','จำนวนใบ','ยอดซื้อ (฿)','ยอดจ่าย (฿)','% ของเพดาน','ยอดจ่ายเกิน (฿)','ยอดซื้อส่งต่อ (฿)'];
             if (empty($data)) {
-                $rows[] = ['-','-','-','-','ไม่มีเลขเกินเพดาน'];
+                $rows[] = ['-','-','-','-','ไม่มีเลขเกินเพดาน','',''];
             } else {
                 foreach ($data as $item)
-                    $rows[] = [$item['number'],$item['bet_count'],number_format($item['total_amount'],0),number_format($item['liability'],0),number_format($item['percentage'],2).'%'];
+                    $rows[] = ["\t".$item['number'],$item['bet_count'],number_format($item['total_amount'],0),number_format($item['liability'],0),number_format($item['percentage'],2).'%',number_format($item['liability']-$maxPayout,0),number_format($item['total_amount']-(int)floor($maxPayout/$rate),0)];
             }
         };
 
-        // section พิเศษสำหรับโต๊ด: ยอดจ่าย (฿) = ยอดซื้อ × rate ต่อ perm (ไม่ใช่ group liability)
-        // แต่ % ของเพดาน ยังใช้ group liability / ceiling
         $addToadSection = function ($title, $data, $maxPayout, $rate) use (&$rows, $dLabel) {
             $rows[] = [];
             $rows[] = ["=== $title ===","งวด $dLabel","เพดาน: ".number_format($maxPayout,0)." บาท"];
-            $rows[] = ['เลข','จำนวนใบ','ยอดซื้อ (฿)','ยอดจ่าย (฿)','% ของเพดาน'];
+            $rows[] = ['เลข','จำนวนใบ','ยอดซื้อ (฿)','ยอดจ่าย (฿)','% ของเพดาน','ยอดจ่ายเกิน (฿)','ยอดซื้อส่งต่อ (฿)'];
             if (empty($data)) {
-                $rows[] = ['-','-','-','-','ไม่มีเลขเกินเพดาน'];
+                $rows[] = ['-','-','-','-','ไม่มีเลขเกินเพดาน','',''];
             } else {
+                $prevKey = null;
                 foreach ($data as $item) {
-                    // ยอดจ่าย = ยอดซื้อ × rate ของ perm นั้นๆ (แยกทีละตัว)
-                    $individualPayout = round($item['total_amount'] * $rate);
+                    $digits = str_split($item['number']); sort($digits); $key = implode('', $digits);
+                    $isFirst = ($key !== $prevKey); $prevKey = $key;
                     $rows[] = [
-                        $item['number'],
+                        "\t".$item['number'],
                         $item['bet_count'],
                         number_format($item['total_amount'], 0),
-                        number_format($individualPayout, 0),
+                        number_format(round($item['total_amount'] * $rate), 0),
                         number_format($item['percentage'], 2).'%',
+                        $isFirst ? number_format($item['liability'] - $maxPayout, 0) : '',
+                        $isFirst ? number_format((int)round($item['liability']/$rate)-(int)floor($maxPayout/$rate), 0) : '',
                     ];
                 }
             }
         };
 
-        $addSection('2 ตัวบน (เกิน 100%)',   $over2Top,    $maxPay2);
-        $addSection('2 ตัวล่าง (เกิน 100%)',  $over2Bottom, $maxPay2);
-        $addSection('3 ตัวบน (เกิน 100%)',   $over3Top,    $maxPay3);
-        // โต๊ด: แสดงแยกทีละ permutation พร้อมคอลัมน์ "ยอดจ่าย" (ยอดซื้อ × rate) ต่อตัว
+        $addSection('2 ตัวบน (เกิน 100%)',   $over2Top,    $maxPay2, $settings['rate_2_top']);
+        $addSection('2 ตัวล่าง (เกิน 100%)',  $over2Bottom, $maxPay2, $settings['rate_2_bottom']);
+        $addSection('3 ตัวบน (เกิน 100%)',   $over3Top,    $maxPay3, $settings['rate_3_top']);
         $addToadSection('3 ตัวโต๊ด (เกิน 100%)', $over3Toad, $maxPay3Toad, $settings['rate_3_toad']);
-        $addSection('3 ตัวล่าง (เกิน 100%)',  $over3Bottom, $maxPay3Bot);
+        $addSection('3 ตัวล่าง (เกิน 100%)',  $over3Bottom, $maxPay3Bot, $settings['rate_3_bottom']);
 
         $dateStr = \Carbon\Carbon::parse($draw->draw_date)->format('Y-m-d');
         $fn      = 'over_limit_'.$dateStr.'.csv';

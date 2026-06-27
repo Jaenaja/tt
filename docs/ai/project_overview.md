@@ -33,6 +33,7 @@ A **Thai underground lottery (หวย) back-office system** for a single opera
 | [`workflow.md`](workflow.md) | How to approach a task (before / during / after) + local environment |
 | [`known-issues.md`](known-issues.md) | Dead code, dual config systems, traps — **read before changing anything** |
 | [`design-decisions.md`](design-decisions.md) | Why the code is shaped the way it is (two generations, denormalized results, etc.) |
+| [`tasks/2026-06-implementation-plan.md`](tasks/2026-06-implementation-plan.md) | **Pending task** — approved spec for 3 features (Excel leading zeros, toad grouping, view deleted bets) |
 
 ## Key Concepts to Know
 

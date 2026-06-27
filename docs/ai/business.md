@@ -36,6 +36,8 @@ Each bet is linked to a draw date and a customer name. A single bet row can have
 
 **Toad logic:** For a toad bet on `123`, the system generates all permutations (`123`, `132`, `213`, `231`, `312`, `321`) and checks if any match the announced top result. Liability is spread across all permutations in the risk heatmap.
 
+**Toad display order in reports and exports:** Numbers from the same digit-set (e.g., `{1,4,7}`) are always displayed **contiguously**, sorted by positional index order: `abc, acb, bac, bca, cab, cba` (where `a<b<c` are the sorted digits). Groups are ordered by **liability descending**. Duplicate permutations (caused by repeated digits, e.g., `{1,1,2}`) are deduplicated while preserving the positional order. This is implemented in `ReportController::groupAndSortToadExposure()` and `getToadNumbers()`.
+
 **Constraints enforced at bet entry:**
 - A 2-digit number cannot have a toad amount or a 3-digit-bottom amount.
 - A 3-digit number cannot have a 2-digit-bottom amount.
@@ -104,3 +106,9 @@ The customer summary report shows each customer's position: how much they bet, t
 | `general` | พนักงาน | Record bets, view bet history, view reports (read-only) |
 
 **Delete code:** Deleting any bet requires entering a 6-digit numeric code configured by the admin in Risk Settings. This acts as a second-factor confirmation regardless of role.
+
+**Admin-only: viewing soft-deleted bets:** Admins can view deleted bet records (view-only, no restore) on two pages by selecting "รายการที่ลบแล้ว" from the แสดงรายการ dropdown:
+- `/bets/history?record_status=deleted` — switches the bet list to `onlyTrashed()`, shows ลบโดย / เวลาลบ column, hides delete button.
+- `/admin/reports/summary/{id}?record_status=deleted` — switches the bet detail list only; all financial totals (risk, exposure, heatmap, payout) continue to be calculated from **active bets only** and are unaffected by the param.
+
+The param is enforced server-side: non-admin users always see active records regardless of what they pass.

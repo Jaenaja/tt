@@ -139,6 +139,16 @@
         <div
             class="transition-all duration-300 bg-white dark:bg-slate-900 rounded-2xl shadow-xl dark:shadow-2xl p-6 border border-slate-200 dark:border-slate-800">
             <!-- ฟิลเตอร์ -->
+            @if($isAdmin)
+            <div class="mb-4">
+                <label class="block text-slate-700 dark:text-slate-300 font-semibold mb-2">แสดงรายการ</label>
+                <select id="recordStatus"
+                    class="px-4 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white rounded-lg focus:ring-2 focus:ring-emerald-500 dark:focus:ring-emerald-600 transition-all">
+                    <option value="active" {{ !$viewDeleted ? 'selected' : '' }}>รายการปัจจุบัน</option>
+                    <option value="deleted" {{ $viewDeleted ? 'selected' : '' }}>รายการที่ลบแล้ว</option>
+                </select>
+            </div>
+            @endif
             <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
                 <div>
                     <label class="block text-slate-700 dark:text-slate-300 font-semibold mb-2">ค้นหาชื่อลูกค้า</label>
@@ -220,7 +230,11 @@
                                 </button>
                             </th>
                             <th class="px-3 py-3 text-center text-slate-900 dark:text-slate-200 font-bold">สถานะ</th>
+                            @if($viewDeleted)
+                            <th class="px-3 py-3 text-left text-slate-900 dark:text-slate-200 font-bold">ลบโดย / เวลาลบ</th>
+                            @else
                             <th class="px-3 py-3 text-center text-slate-900 dark:text-slate-200 font-bold">จัดการ</th>
+                            @endif
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-200 dark:divide-slate-700 bg-white dark:bg-slate-900">
@@ -284,6 +298,12 @@
                                         </span>
                                     @endif
                                 </td>
+                                @if($viewDeleted)
+                                <td class="px-3 py-3 text-xs text-red-600 dark:text-red-400">
+                                    <div>{{ $bet->deleter ? $bet->deleter->name : '-' }}</div>
+                                    <div>{{ $bet->deleted_at ? \Carbon\Carbon::parse($bet->deleted_at)->format('d/m/y H:i') : '-' }}</div>
+                                </td>
+                                @else
                                 <td class="px-3 py-3 text-center">
                                     @if(!$bet->draw || !$bet->draw->is_announced)
                                         <button
@@ -295,6 +315,7 @@
                                         <span class="text-slate-400 dark:text-slate-600 text-xs">-</span>
                                     @endif
                                 </td>
+                                @endif
                             </tr>
                         @empty
                             <tr>
@@ -413,6 +434,11 @@
             if (customer) params.append('customer_name', customer);
             if (drawDate) params.append('draw_date', drawDate);
             if (number) params.append('search_number', number);
+
+            @if($isAdmin)
+            const recordStatus = document.getElementById('recordStatus').value;
+            if (recordStatus && recordStatus !== 'active') params.append('record_status', recordStatus);
+            @endif
 
             const currentSort = "{{ request('sort_by') }}";
             const currentOrder = "{{ request('sort_order') }}";

@@ -82,6 +82,10 @@ return response($csv, 200, [
 
 Thai filenames use `rawurlencode()` and the `filename*=UTF-8''...` RFC 5987 format for browser compatibility.
 
+**Leading-zero preservation for number columns:** Lottery numbers such as `"06"` or `"089"` would be auto-converted to integers by Excel. To prevent this, prefix the value with a tab character: `"\t" . $bet->number`. When `fputcsv` wraps this in quotes the cell becomes `"	06"`, which Excel treats as text and preserves the leading zero. Apply this to any cell whose value is a lottery number string (not to section headers or placeholder `"-"` rows).
+
+**Toad permutation display order in exports:** When listing toad numbers in the over-limit export (or any ordered toad display), permutations must be emitted in **positional index order**: `[0,1,2], [0,2,1], [1,0,2], [1,2,0], [2,0,1], [2,1,0]` applied to the canonical sorted digits. For canonical key `abc` (digits sorted ascending) this produces: `abc, acb, bac, bca, cab, cba`. Duplicate permutations (repeated digits) are skipped. Groups of the same digit-set must be kept contiguous; inter-group order is by liability descending.
+
 ---
 
 ## Security

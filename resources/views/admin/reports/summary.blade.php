@@ -423,6 +423,15 @@
                     </select>
                 </div>
             </div>
+            @if($isAdmin)
+            <div class="mb-3">
+                <label class="text-sm font-semibold text-slate-700 dark:text-slate-300 mr-2">แสดงรายการ:</label>
+                <select name="record_status" class="px-3 py-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white focus:border-emerald-500 focus:outline-none">
+                    <option value="active" {{ !$viewDeleted ? 'selected' : '' }}>รายการปัจจุบัน</option>
+                    <option value="deleted" {{ $viewDeleted ? 'selected' : '' }}>รายการที่ลบแล้ว</option>
+                </select>
+            </div>
+            @endif
             <div class="flex gap-2 flex-wrap">
                 <button type="submit" class="px-6 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-semibold transition-colors">🔍 ค้นหา</button>
                 <a href="{{ route('admin.reports.summary', $draw->id) }}" class="px-6 py-2 bg-slate-600 hover:bg-slate-700 text-white rounded-lg font-semibold transition-colors">ล้างค่า</a>
@@ -446,7 +455,9 @@
                         <th class="px-4 py-3 text-right text-slate-700 dark:text-slate-300 font-semibold text-orange-600 dark:text-orange-400">3ตัวล่าง</th>
                         <th class="px-4 py-3 text-right text-slate-700 dark:text-slate-300 font-semibold">รวม</th>
                         <th class="px-4 py-3 text-left text-slate-700 dark:text-slate-300 font-semibold text-xs">บันทึกเมื่อ</th>
-                        @if($draw->is_announced)
+                        @if($viewDeleted)
+                        <th class="px-4 py-3 text-left text-slate-700 dark:text-slate-300 font-semibold text-xs">ลบโดย / เวลาลบ</th>
+                        @elseif($draw->is_announced)
                         <th class="px-4 py-3 text-center text-slate-700 dark:text-slate-300 font-semibold">ผล</th>
                         @else
                         <th class="px-4 py-3 text-center text-slate-700 dark:text-slate-300 font-semibold no-print">จัดการ</th>
@@ -469,7 +480,12 @@
                             <div>{{ $bet->creator ? $bet->creator->name : '-' }}</div>
                             <div>{{ \Carbon\Carbon::parse($bet->created_at)->format('d/m/y H:i') }}</div>
                         </td>
-                        @if($draw->is_announced)
+                        @if($viewDeleted)
+                        <td class="px-4 py-3 text-xs text-red-600 dark:text-red-400">
+                            <div>{{ $bet->deleter ? $bet->deleter->name : '-' }}</div>
+                            <div>{{ $bet->deleted_at ? \Carbon\Carbon::parse($bet->deleted_at)->format('d/m/y H:i') : '-' }}</div>
+                        </td>
+                        @elseif($draw->is_announced)
                         <td class="px-4 py-3 text-center">
                             @if($bet->is_win_top||$bet->is_win_bottom||$bet->is_win_toad||($bet->is_win_bottom_3??false))
                                 <span class="inline-block px-3 py-1 bg-emerald-100 dark:bg-emerald-900 text-emerald-700 dark:text-emerald-300 rounded-full text-sm font-bold">
