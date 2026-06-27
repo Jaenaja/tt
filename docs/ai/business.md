@@ -78,6 +78,16 @@ The operator sets **max payout ceilings** per number type. The report summary pa
 
 Settings are stored in the `settings` table and can be changed live from the **Risk Settings** admin page (`/admin/risk-settings`).
 
+**Over-limit Excel export (`/admin/reports/export-over-limit/{drawId}`)** includes two additional columns to assist manual transfer decisions:
+
+- `ยอดจ่ายเกิน (฿)` = `liability − เพดาน` — the payout amount the operator cannot cover alone.
+- `ยอดซื้อส่งต่อ (฿)` = `total_stake − floor(เพดาน ÷ rate)` — the minimum stake amount to hand to the big bookmaker so that the operator's retained exposure equals exactly the ceiling. Formula assumes the big bookmaker pays at the **same rate** as the operator.
+
+For **toad groups**, both columns are computed at group level (not per-permutation) and shown only on the **first row** of each contiguous group:
+- `group_liability` = all permutations share the same liability value (spread equally by `calculateThreeToadLiability`).
+- `ยอดซื้อส่งต่อ` = `round(group_liability ÷ rate_3_toad) − floor(เพดาน ÷ rate_3_toad)`.
+- Remaining rows in the group show `''` in both columns.
+
 > The older `/admin/config` page also shows "payout rates" but writes to a dead `configs` table that no calculation reads. Always configure rates via Risk Settings. See [`known-issues.md`](known-issues.md) #1.
 
 > An **Auto Transfer** (automatic over-limit cut) feature once existed but was removed (CHANGELOG #4). Over-limit handling is now manual/informational only.
