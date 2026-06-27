@@ -34,7 +34,9 @@ $sortOrd = in_array($request->get('sort_order'), ['asc','desc']) ? $request->get
 - `$casts` is defined for all non-string columns.
 - Scopes follow the `scope{Name}($query)` convention.
 - Computed attributes use `get{Name}Attribute()` accessors.
-- `Setting::get($key, $default)` / `Setting::set(...)` are the canonical way to read/write config values.
+- `Setting::get($key, $default)` / `Setting::set(...)` are the canonical way to read/write config values. **Never use the `Config` model** — it is dead (see [`known-issues.md`](known-issues.md) #1).
+- The active bet/draw models are `LotteryBet` and `LotteryDraw`. **Never use `Bet`, `LotteryResult`, or `NumberStatistic`** — they belong to the orphaned first-generation subsystem.
+- Note `app/Models/User.php` defines four classes (`User`, `Config`, `LotteryDraw`, `LotteryBet`); `LotteryDraw.php`/`LotteryBet.php` files do not exist.
 
 ---
 

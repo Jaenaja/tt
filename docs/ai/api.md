@@ -1,6 +1,8 @@
 # Routes & API Reference
 
-All routes are defined in `routes/web.php`. There is no `routes/api.php`.
+All routes are defined in `routes/web.php`. There is no `routes/api.php` — the two `/api/*` endpoints below are plain web routes.
+
+> **Orphaned controllers:** `BetController` and `LotteryResultController` exist but are **not referenced by any route** and are dead code. Ignore them. See [`known-issues.md`](known-issues.md) #2.
 
 ---
 
@@ -58,12 +60,14 @@ All routes are defined in `routes/web.php`. There is no `routes/api.php`.
 | PUT | `/admin/users/{id}` | `AdminController@updateUser` | `admin.users.update` |
 | DELETE | `/admin/users/{id}` | `AdminController@deleteUser` | `admin.users.delete` |
 
-### Config
+### Config ⚠️ LEGACY / DEAD
 
 | Method | URI | Controller | Name |
 |---|---|---|---|
 | GET | `/admin/config` | `AdminController@config` | `admin.config` |
 | POST | `/admin/config` | `AdminController@updateConfig` | `admin.config.update` |
+
+> These routes are still registered but **deprecated**. They read/write payout rates via the `Config` model (table `configs`), which **no calculation reads**. The dashboard menu no longer links here (CHANGELOG #3). Use `/admin/risk-settings` instead. See [`known-issues.md`](known-issues.md) #1.
 
 ### Risk Settings
 

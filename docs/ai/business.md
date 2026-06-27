@@ -43,12 +43,16 @@ Each bet is linked to a draw date and a customer name. A single bet row can have
 
 ---
 
+## Draw Schedule
+
+**ข้อสังเกตจากโค้ด:** The `add_close_time_to_lottery_draws` migration special-cases draws on the **1st and 16th of the month**, matching the **Thai Government Lottery (สลากกินแบ่งรัฐบาล)** schedule, which draws twice monthly on those dates. The system is built around this cadence, but the schema does **not** enforce it — any `draw_date` can be created. See [`design-decisions.md`](design-decisions.md).
+
 ## Draw Lifecycle
 
-1. **Open:** A draw exists (or is implicitly created on first bet) with `is_announced = false`.
-2. **Close time:** Optional `close_time` field; after this timestamp the draw is considered closed for new bets.
-3. **Announce:** Admin enters the result numbers and submits. System sets `is_announced = true`, records `announced_at` and `announced_by`, then calculates winnings for all bets in that draw.
-4. **Immutable:** Once announced, no bets can be added or deleted for that draw.
+1. **Open:** A draw exists (or is implicitly created on the first bet for that date) with `is_announced = false`.
+2. **Close time:** Optional `close_time` field; after this timestamp `LotteryDraw::isClosed()` returns true. The `scopeOpen()` query treats a draw as open if `close_time` is null or in the future. When `close_time` was back-filled by migration, draws on the 1st/16th close at 23:59:59 the day before; other draws close at 23:59:59 on the draw date.
+3. **Announce:** Admin enters the result numbers and submits. System sets `is_announced = true`, records `announced_at` and `announced_by`, then calculates and **stores** winnings (`payout_*`, `is_win_*`) on every bet row in that draw.
+4. **Immutable:** Once announced, no bets can be added or deleted for that draw (enforced in `LotteryBetController::store/destroy` and `ReportController::deleteBet`).
 
 ---
 
@@ -70,7 +74,11 @@ The operator sets **max payout ceilings** per number type. The report summary pa
 - Top-10 exposure lists per bet type.
 - **Over-limit** numbers where projected payout exceeds 100% of the ceiling — these require manual action (e.g. transfer the bet to another operator).
 
-Settings are stored in the `settings` table and can be changed live from the Risk Settings admin page.
+Settings are stored in the `settings` table and can be changed live from the **Risk Settings** admin page (`/admin/risk-settings`).
+
+> The older `/admin/config` page also shows "payout rates" but writes to a dead `configs` table that no calculation reads. Always configure rates via Risk Settings. See [`known-issues.md`](known-issues.md) #1.
+
+> An **Auto Transfer** (automatic over-limit cut) feature once existed but was removed (CHANGELOG #4). Over-limit handling is now manual/informational only.
 
 ---
 

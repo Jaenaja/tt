@@ -1,15 +1,19 @@
 # Database
 
+**Engine:** MySQL (MAMP). `.env` → `DB_CONNECTION=mysql`, `DB_DATABASE=projects`, `DB_USERNAME=root`, `DB_PASSWORD=root`. Some migrations use MySQL-specific SQL.
+
 ## Tables Overview
 
-| Table | Model | Notes |
+| Table | Model | Status |
 |---|---|---|
-| `users` | `User` | Auth + role |
-| `lottery_draws` | `LotteryDraw` | One row per draw date |
-| `lottery_bets` | `LotteryBet` | All bets; manual soft-delete |
-| `settings` | `Setting` | Typed key/value with cache |
-| `configs` | `Config` | Legacy key/value (simpler, no cache) |
-| `number_statistics` | `NumberStatistic` | Minimally used |
+| `users` | `User` | Active — auth + role |
+| `lottery_draws` | `LotteryDraw` | Active — one row per draw date |
+| `lottery_bets` | `LotteryBet` | Active — all bets; soft-delete via trait |
+| `settings` | `Setting` | Active — typed key/value with cache (**authoritative config**) |
+| `number_statistics` | `NumberStatistic` | Migrated, but written only by the orphaned `LotteryResultController` |
+| `configs` | `Config` | **Dead** — only `/admin/config` writes it; nothing reads it. See [`known-issues.md`](known-issues.md) #1 |
+| `bets` | `Bet` | **Not created** — its migration is a disabled `.zip`. First-generation table; the `Bet` model is orphaned |
+| `lottery_results` | `LotteryResult` | First-generation table; used only by orphaned controllers |
 
 ---
 
@@ -92,21 +96,25 @@
 | `group` | string | `general`, `risk`, `payout`, `security` |
 | `created_at`, `updated_at` | timestamps | |
 
-**Default settings seeded in migration:**
+**Default settings (seeded across several migrations):**
 
-| Key | Default | Group |
-|---|---|---|
-| `max_payout_2_digit` | 50000 | risk |
-| `max_payout_3_digit` | 100000 | risk |
-| `max_payout_3_toad` | 50000 | risk |
-| `max_payout_3_bottom` | 50000 | risk |
-| `rate_2_top` | 90 | payout |
-| `rate_2_bottom` | 90 | payout |
-| `rate_3_top` | 900 | payout |
-| `rate_3_toad` | 120 | payout |
-| `rate_3_bottom` | 500 | payout |
-| `commission_rate` | 10 | general |
-| `delete_code` | (empty) | security |
+| Key | Default | Group | Seeded by |
+|---|---|---|---|
+| `max_payout_2_digit` | 50000 | risk | create_settings |
+| `max_payout_3_digit` | 100000 | risk | create_settings |
+| `max_payout_3_toad` | 50000 | risk | `1_migration_add_max_payout_3_toad` |
+| `max_payout_3_bottom` | 50000 | risk | `migration_add_3bottom` |
+| `rate_2_top` | 90 | payout | create_settings |
+| `rate_2_bottom` | 90 | payout | create_settings |
+| `rate_3_top` | 900 | payout | create_settings |
+| `rate_3_toad` | 120 | payout | create_settings |
+| `rate_3_bottom` | 500 | payout | `migration_add_3bottom` |
+| `commission_rate` | 10 | general | create_settings |
+| `delete_code` | (empty) | security | `add_delete_code_to_settings` |
+| `auto_transfer_enabled` | false | risk | create_settings — **DEAD** (feature removed, CHANGELOG #4) |
+| `auto_transfer_threshold` | 100 | risk | create_settings — **DEAD** (feature removed, CHANGELOG #4) |
+
+> The `auto_transfer_*` keys are still seeded but no code reads them. Ignore them.
 
 ---
 
@@ -133,17 +141,39 @@ $this->belongsTo(LotteryDraw::class, 'draw_date', 'draw_date');
 
 ---
 
+## Seeder
+
+`database/seeders/DatabaseSeeder.php` is **active** and `updateOrCreate`s a default admin:
+
+| Field | Value |
+|---|---|
+| `username` | `admin` |
+| `role` | `admin` |
+| `id` | 1 |
+| `password` | bcrypt hash (seeded literally) |
+
+Run with `php artisan db:seed`. This is the only seeded data.
+
+---
+
 ## Migration Files
 
-| File | Purpose |
-|---|---|
-| `2026_02_11_020700_create_users_table.php` | Users |
-| `2026_02_11_020712_create_configs_table.php` | Legacy configs |
-| `2026_02_11_020720_create_lottery_draws_table.php` | Draws |
-| `2026_02_11_020729_create_lottery_bets_table.php` | Bets (original) |
-| `2026_02_15_000000_create_settings_table.php` | Settings + seed defaults |
-| `2026_02_23_000000_add_delete_code_to_settings.php` | Adds delete_code setting |
-| `2026_02_24_000000_add_close_time_to_lottery_draws.php` | Adds close_time column |
-| `2026_04_25_000000_fix_result_3_bottom_column_size.php` | Expands result_3_bottom to varchar(200) |
-| `migration_add_3bottom.php` | Adds amount_bottom_3 / payout_bottom_3 / is_win_bottom_3 columns |
-| `1_migration_add_max_payout_3_toad.php` | Adds max_payout_3_toad setting |
+Run order is **filename string order** — note the inconsistent naming (see [`known-issues.md`](known-issues.md) #5).
+
+| File | Runs? | Purpose |
+|---|---|---|
+| `1_migration_add_max_payout_3_toad.php` | ✅ (sorts first) | Seeds `max_payout_3_toad` setting |
+| `2026_01_14_055025_create_bets_table.zip` | ❌ `.zip` disabled | First-gen `bets` table (never created) |
+| `2026_01_14_055030_create_number_statistics_table.php` | ✅ | `number_statistics` table |
+| `2026_02_11_000001_create_users_table.zip` | ❌ `.zip` disabled | Old users migration (superseded) |
+| `2026_02_11_020700_create_users_table.php` | ✅ | Users |
+| `2026_02_11_020712_create_configs_table.php` | ✅ | Legacy `configs` (now dead) |
+| `2026_02_11_020720_create_lottery_draws_table.php` | ✅ | Draws |
+| `2026_02_11_020729_create_lottery_bets_table.php` | ✅ | Bets (without `*_bottom_3` cols) |
+| `2026_02_15_000000_create_settings_table.php` | ✅ | Settings + seed defaults |
+| `2026_02_23_000000_add_delete_code_to_settings.php` | ✅ | Seeds `delete_code` |
+| `2026_02_24_000000_add_close_time_to_lottery_draws.php` | ✅ | Adds `close_time` (MySQL-specific back-fill for days 1 & 16) |
+| `2026_04_25_000000_fix_result_3_bottom_column_size.php` | ✅ | `result_3_bottom` varchar(60) → varchar(200) |
+| `migration_add_3bottom.php` | ✅ (sorts last) | Adds `result_3_bottom`(60) + `amount/payout/is_win_bottom_3` cols + `rate_3_bottom`/`max_payout_3_bottom` settings |
+
+> **ข้อสังเกตจากโค้ด:** `migration_add_3bottom.php` first creates `result_3_bottom` at `varchar(60)`, while `fix_result_3_bottom_column_size` enlarges it to 200. Because of the filename ordering, on a **fresh** database the `fix` runs *before* `add_3bottom`, which could leave the column at 60. On the existing DB it is already 200. Verify column size on any fresh setup.
