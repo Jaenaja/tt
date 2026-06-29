@@ -549,6 +549,16 @@
             const sortBy = "{{ request('sort_by', 'created_at') }}";
             const sortOrder = "{{ request('sort_order', 'desc') }}";
 
+            if (!drawDate) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'กรุณาเลือกงวดวันที่',
+                    text: 'กรุณาเลือกงวดวันที่ก่อนทำการส่งออก Excel',
+                    confirmButtonText: 'ตกลง'
+                });
+                return;
+            }
+
             const params = new URLSearchParams();
             if (customer) params.append('customer_name', customer);
             if (drawDate) params.append('draw_date', drawDate);

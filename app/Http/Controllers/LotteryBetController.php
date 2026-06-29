@@ -104,6 +104,9 @@ class LotteryBetController extends Controller
 
     public function exportExcel(Request $request)
     {
+        if (!$request->draw_date) {
+            return response()->json(['success'=>false, 'message'=>'กรุณาเลือกงวดวันที่ก่อนทำการส่งออก Excel'], 400);
+        }
         $query = LotteryBet::with(['creator','draw'])->whereNull('deleted_at');
         if ($request->customer_name) $query->where('customer_name','like','%'.$request->customer_name.'%');
         if ($request->draw_date)     $query->where('draw_date',$request->draw_date);
