@@ -618,6 +618,9 @@ class ReportController extends Controller
         $maxPay3Toad = $settings['max_payout_3_toad'];
         $maxPay3Bot  = $settings['max_payout_3_bottom'];
 
+        $columnsParam = $request->query('columns', 'short');
+        $columnsMode  = in_array($columnsParam, ['short', 'full'], true) ? $columnsParam : 'short';
+
         $filterOver = function ($liab, $maxPayout) {
             $result = [];
             foreach ($liab as $number => $data) {
@@ -638,47 +641,75 @@ class ReportController extends Controller
         $dLabel = \Carbon\Carbon::parse($draw->draw_date)->format('d/m/Y');
         $rows   = [];
 
-        $addSection = function ($title, $data, $maxPayout, $rate) use (&$rows, $dLabel) {
+        $addSection = function ($title, $data, $maxPayout, $rate, $mode) use (&$rows, $dLabel) {
             $rows[] = [];
             $rows[] = ["=== $title ===","งวด $dLabel","เพดาน: ".number_format($maxPayout,0)." บาท"];
-            $rows[] = ['เลข','จำนวนใบ','ยอดซื้อ (฿)','ยอดจ่าย (฿)','% ของเพดาน','ยอดจ่ายเกิน (฿)','ยอดซื้อส่งต่อ (฿)'];
-            if (empty($data)) {
-                $rows[] = ['-','-','-','-','ไม่มีเลขเกินเพดาน','',''];
+            if ($mode === 'full') {
+                $rows[] = ['เลข','จำนวนใบ','ยอดซื้อ (฿)','ยอดจ่าย (฿)','% ของเพดาน','ยอดจ่ายเกิน (฿)','ยอดซื้อส่งต่อ (฿)'];
+                if (empty($data)) {
+                    $rows[] = ['-','-','-','-','ไม่มีเลขเกินเพดาน','',''];
+                } else {
+                    foreach ($data as $item)
+                        $rows[] = ["\t".$item['number'],$item['bet_count'],number_format($item['total_amount'],0),number_format($item['liability'],0),number_format($item['percentage'],2).'%',number_format($item['liability']-$maxPayout,0),number_format($item['total_amount']-(int)floor($maxPayout/$rate),0)];
+                }
             } else {
-                foreach ($data as $item)
-                    $rows[] = ["\t".$item['number'],$item['bet_count'],number_format($item['total_amount'],0),number_format($item['liability'],0),number_format($item['percentage'],2).'%',number_format($item['liability']-$maxPayout,0),number_format($item['total_amount']-(int)floor($maxPayout/$rate),0)];
-            }
-        };
-
-        $addToadSection = function ($title, $data, $maxPayout, $rate) use (&$rows, $dLabel) {
-            $rows[] = [];
-            $rows[] = ["=== $title ===","งวด $dLabel","เพดาน: ".number_format($maxPayout,0)." บาท"];
-            $rows[] = ['เลข','จำนวนใบ','ยอดซื้อ (฿)','ยอดจ่าย (฿)','% ของเพดาน','ยอดจ่ายเกิน (฿)','ยอดซื้อส่งต่อ (฿)'];
-            if (empty($data)) {
-                $rows[] = ['-','-','-','-','ไม่มีเลขเกินเพดาน','',''];
-            } else {
-                $prevKey = null;
-                foreach ($data as $item) {
-                    $digits = str_split($item['number']); sort($digits); $key = implode('', $digits);
-                    $isFirst = ($key !== $prevKey); $prevKey = $key;
-                    $rows[] = [
-                        "\t".$item['number'],
-                        $item['bet_count'],
-                        number_format($item['total_amount'], 0),
-                        number_format(round($item['total_amount'] * $rate), 0),
-                        number_format($item['percentage'], 2).'%',
-                        $isFirst ? number_format($item['liability'] - $maxPayout, 0) : '',
-                        $isFirst ? number_format((int)round($item['liability']/$rate)-(int)floor($maxPayout/$rate), 0) : '',
-                    ];
+                $rows[] = ['เลข','ยอดซื้อ (฿)','ยอดซื้อส่งต่อ (฿)'];
+                if (empty($data)) {
+                    $rows[] = ['-','ไม่มีเลขเกินเพดาน',''];
+                } else {
+                    foreach ($data as $item)
+                        $rows[] = ["\t".$item['number'],number_format($item['total_amount'],0),number_format($item['total_amount']-(int)floor($maxPayout/$rate),0)];
                 }
             }
         };
 
-        $addSection('2 ตัวบน (เกิน 100%)',   $over2Top,    $maxPay2, $settings['rate_2_top']);
-        $addSection('2 ตัวล่าง (เกิน 100%)',  $over2Bottom, $maxPay2, $settings['rate_2_bottom']);
-        $addSection('3 ตัวบน (เกิน 100%)',   $over3Top,    $maxPay3, $settings['rate_3_top']);
-        $addToadSection('3 ตัวโต๊ด (เกิน 100%)', $over3Toad, $maxPay3Toad, $settings['rate_3_toad']);
-        $addSection('3 ตัวล่าง (เกิน 100%)',  $over3Bottom, $maxPay3Bot, $settings['rate_3_bottom']);
+        $addToadSection = function ($title, $data, $maxPayout, $rate, $mode) use (&$rows, $dLabel) {
+            $rows[] = [];
+            $rows[] = ["=== $title ===","งวด $dLabel","เพดาน: ".number_format($maxPayout,0)." บาท"];
+            if ($mode === 'full') {
+                $rows[] = ['เลข','จำนวนใบ','ยอดซื้อ (฿)','ยอดจ่าย (฿)','% ของเพดาน','ยอดจ่ายเกิน (฿)','ยอดซื้อส่งต่อ (฿)'];
+                if (empty($data)) {
+                    $rows[] = ['-','-','-','-','ไม่มีเลขเกินเพดาน','',''];
+                } else {
+                    $prevKey = null;
+                    foreach ($data as $item) {
+                        $digits = str_split($item['number']); sort($digits); $key = implode('', $digits);
+                        $isFirst = ($key !== $prevKey); $prevKey = $key;
+                        $rows[] = [
+                            "\t".$item['number'],
+                            $item['bet_count'],
+                            number_format($item['total_amount'], 0),
+                            number_format(round($item['total_amount'] * $rate), 0),
+                            number_format($item['percentage'], 2).'%',
+                            $isFirst ? number_format($item['liability'] - $maxPayout, 0) : '',
+                            $isFirst ? number_format((int)round($item['liability']/$rate)-(int)floor($maxPayout/$rate), 0) : '',
+                        ];
+                    }
+                }
+            } else {
+                $rows[] = ['เลข','ยอดซื้อ (฿)','ยอดซื้อส่งต่อ (฿)'];
+                if (empty($data)) {
+                    $rows[] = ['-','ไม่มีเลขเกินเพดาน',''];
+                } else {
+                    $prevKey = null;
+                    foreach ($data as $item) {
+                        $digits = str_split($item['number']); sort($digits); $key = implode('', $digits);
+                        $isFirst = ($key !== $prevKey); $prevKey = $key;
+                        $rows[] = [
+                            "\t".$item['number'],
+                            number_format($item['total_amount'], 0),
+                            $isFirst ? number_format((int)round($item['liability']/$rate)-(int)floor($maxPayout/$rate), 0) : '',
+                        ];
+                    }
+                }
+            }
+        };
+
+        $addSection('2 ตัวบน (เกิน 100%)',   $over2Top,    $maxPay2, $settings['rate_2_top'], $columnsMode);
+        $addSection('2 ตัวล่าง (เกิน 100%)',  $over2Bottom, $maxPay2, $settings['rate_2_bottom'], $columnsMode);
+        $addSection('3 ตัวบน (เกิน 100%)',   $over3Top,    $maxPay3, $settings['rate_3_top'], $columnsMode);
+        $addToadSection('3 ตัวโต๊ด (เกิน 100%)', $over3Toad, $maxPay3Toad, $settings['rate_3_toad'], $columnsMode);
+        $addSection('3 ตัวล่าง (เกิน 100%)',  $over3Bottom, $maxPay3Bot, $settings['rate_3_bottom'], $columnsMode);
 
         $dateStr = \Carbon\Carbon::parse($draw->draw_date)->format('Y-m-d');
         $fn      = 'over_limit_'.$dateStr.'.csv';

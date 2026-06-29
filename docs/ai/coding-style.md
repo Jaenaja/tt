@@ -86,15 +86,17 @@ Thai filenames use `rawurlencode()` and the `filename*=UTF-8''...` RFC 5987 form
 
 **Toad permutation display order in exports:** When listing toad numbers in the over-limit export (or any ordered toad display), permutations must be emitted in **positional index order**: `[0,1,2], [0,2,1], [1,0,2], [1,2,0], [2,0,1], [2,1,0]` applied to the canonical sorted digits. For canonical key `abc` (digits sorted ascending) this produces: `abc, acb, bac, bca, cab, cba`. Duplicate permutations (repeated digits) are skipped. Groups of the same digit-set must be kept contiguous; inter-group order is by liability descending.
 
-**Over-limit export columns (7 columns):** `exportOverLimit()` outputs two extra columns appended after `% ของเพดาน`:
+**Over-limit export columns (`?columns=short|full`, default `short`):** `exportOverLimit()` accepts the `columns` query param. Default `short` outputs 3 columns (`เลข`, `ยอดซื้อ`, `ยอดซื้อส่งต่อ`); `full` outputs 7 columns by appending two extra columns after `ยอดซื้อ`:
 
 | Column | Formula (non-toad) | Formula (toad group) |
 |---|---|---|
 | `ยอดจ่ายเกิน (฿)` | `liability − เพดาน` | `group_liability − เพดาน` (first row of group only) |
 | `ยอดซื้อส่งต่อ (฿)` | `total_amount − floor(เพดาน ÷ rate)` | `round(group_liability ÷ rate) − floor(เพดาน ÷ rate)` (first row only) |
 
-- `$addSection` closure signature is `($title, $data, $maxPayout, $rate)` — `$rate` is the payout rate for that bet type, used to compute the retained-stake amount.
-- `$addToadSection` detects group boundaries by re-computing the canonical key (`sort(str_split($number))`) per row and comparing to `$prevKey`. Non-first rows in a group show `''` for both transfer columns.
+Unknown `columns` values fall back to `short` (whitelist). The 7-column header order is: `เลข | จำนวนใบ | ยอดซื้อ (฿) | ยอดจ่าย (฿) | % ของเพดาน | ยอดจ่ายเกิน (฿) | ยอดซื้อส่งต่อ (฿)`.
+
+- `$addSection` closure signature is `($title, $data, $maxPayout, $rate, $mode)` — `$rate` is the payout rate for that bet type, used to compute the retained-stake amount; `$mode` is `'short'` or `'full'`.
+- `$addToadSection` signature is `($title, $data, $maxPayout, $rate, $mode)`. It detects group boundaries by re-computing the canonical key (`sort(str_split($number))`) per row and comparing to `$prevKey`. Non-first rows in a group show `''` for both transfer columns (in both modes).
 - Assumption: the big bookmaker pays at the same rate as the operator. If big bookmaker rates differ, the "ยอดซื้อส่งต่อ" formula must be revised.
 - All rates and ceilings are read from `Setting::` (never hardcoded); using wrong defaults will produce wrong transfer amounts.
 

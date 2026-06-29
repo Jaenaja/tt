@@ -263,7 +263,7 @@
                     <span class="px-2 py-0.5 bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-300 rounded-full text-xs font-bold">✅ ไม่มีเลขเกินเพดาน</span>
                 @endif
             </div>
-            <a href="{{ route('admin.reports.export-over-limit', $draw->id) }}" class="no-print inline-flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-semibold text-sm transition-colors shadow">
+            <a href="{{ route('admin.reports.export-over-limit', ['drawId' => $draw->id, 'columns' => 'short']) }}" class="no-print inline-flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-semibold text-sm transition-colors shadow">
                 <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="3" width="18" height="18" rx="2" fill="white" fill-opacity="0.25"/><text x="12" y="16" text-anchor="middle" fill="white" font-size="11" font-weight="bold" font-family="Arial">X</text></svg>
                 ดาวน์โหลด Excel เลขเกิน 100%
             </a>

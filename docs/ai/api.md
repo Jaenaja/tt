@@ -105,6 +105,12 @@ All routes are defined in `routes/web.php`. There is no `routes/api.php` — the
 | GET | `/admin/reports/export-customer-summary/{drawId}` | `ReportController@exportCustomerSummary` | `admin.reports.export-customer-summary` |
 | GET | `/admin/reports/export-over-limit/{drawId}` | `ReportController@exportOverLimit` | `admin.reports.export-over-limit` |
 
+**`GET /admin/reports/export-over-limit/{drawId}` — query params:**
+
+| Param | Type | Default | Allowed | Effect |
+|---|---|---|---|---|
+| `columns` | string | `short` | `short`, `full` | `short` = 3 columns (เลข, ยอดซื้อ, ยอดซื้อส่งต่อ); `full` = 7 columns (เพิ่ม จำนวนใบ, ยอดจ่าย, % ของเพดาน, ยอดจ่ายเกิน). Unknown values → `short` (whitelist). |
+
 **`GET /admin/reports/summary/{drawId}` — query params:**
 
 | Param | Values | Notes |
