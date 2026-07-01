@@ -391,7 +391,7 @@
                 if (!number || !/^\d+$/.test(number)) continue;
                 let isReverse = false;
                 if (i < tokens.length && (tokens[i] === 'กลับ' || tokens[i] === 'ก')) { isReverse = true; i++; }
-                else if (number.length === 3 && amounts && amounts.includes('*6')) { isReverse = true; }
+                else if (number.length === 3 && amounts && amounts.endsWith('*6')) { isReverse = true; }
                 if (isReverse) { bets.push(...parseBetAmountReverse(number, amounts)); }
                 else { bets.push(parseAmounts(number, amounts)); }
             }

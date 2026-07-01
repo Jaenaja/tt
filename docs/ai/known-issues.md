@@ -98,3 +98,13 @@ There is no test suite (`tests/` contains only the Laravel skeleton; `phpunit.xm
 The app locale is `en`, yet all UI is Thai. Thai date formatting is done explicitly via `ThaiDateHelper` / global helpers and per-call `->locale('th')`, not via the global locale.
 
 **Guidance:** Use the Thai date helpers for display; do not rely on `APP_LOCALE`.
+
+---
+
+## 10. `parseShortFormat` `*6` literal matched `*6xx` substrings (FIXED 2026-07-01)
+
+3-digit number with amounts like `600*60` or `600*600` was incorrectly expanded to 6 reverse permutations, because the `*6` literal check used `amounts.includes('*6')` which matched any substring starting with `*6` (e.g. `*60`, `*600`, `*6500`).
+
+- **Rule** (per user, 2026-07-01): "6 กลับ" syntax is strictly `xxx*6` (the second value is exactly the single digit `6`). Anything with more digits after the `*6` is treated as "บน*โต๊ด" per normal.
+- **Fix:** replaced `amounts.includes('*6')` with `amounts.endsWith('*6')` in `parseShortFormat()`.
+- **Guardrail:** Do not weaken this back to `includes()`. If a new "6 กลับ" syntax is ever added, the check must remain at-end-of-string.
